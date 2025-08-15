@@ -9,6 +9,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
   const [loading, setLoading] = useState(false);
   const [clickedIn, setClickedIn] = useState(false);
   const circleRef = useRef(null);
+  const emailInputRef = useRef(null);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -33,6 +34,19 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    if (stage === "email" && emailInputRef.current) {
+      emailInputRef.current.focus();
+    }
+  }, [stage]);
+
+  // Focus on email input when component first loads
+  useEffect(() => {
+    if (emailInputRef.current) {
+      emailInputRef.current.focus();
+    }
   }, []);
 
   const onRequest = async () => {
@@ -126,6 +140,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             {stage === "email" ? (
               <>
                 <input
+                  ref={emailInputRef}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
