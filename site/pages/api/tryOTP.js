@@ -119,5 +119,3 @@ async function getMostRecentOtpForEmail(email, minutesWindow = 5) {
   const record = data.records && data.records[0];
   return record || null;
 }
-
-

@@ -88,23 +88,63 @@ async function getUserById(id) {
 
 function buildAirtableFieldsFromProfile(p) {
   const out = {};
-  if (typeof p.githubUsername === 'string') out['github username'] = p.githubUsername;
-  if (typeof p.firstName === 'string') out['First Name'] = p.firstName;
-  if (typeof p.lastName === 'string') out['Last Name'] = p.lastName;
-  if (typeof p.birthday === 'string') {
-    const trimmed = p.birthday.trim();
-    // Expecting HTML date input (YYYY-MM-DD). If empty or invalid, omit field to avoid Airtable 422
-    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-      out['birthday'] = trimmed;
+  if (typeof p.githubUsername === 'string') {
+    const c = p.githubUsername.trim();
+    if (c.length > 0 && c.length <= 39 && /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/.test(c)) {
+      out['github username'] = c;
     }
   }
-  if (typeof p.slackId === 'string') out['slack id'] = p.slackId;
+  
+  if (typeof p.firstName === 'string') {
+    const c = p.firstName.trim().replace(/[<>&"']/g, '').substring(0, 50);
+    if (c.length > 0) out['First Name'] = c;
+  }
+  if (typeof p.lastName === 'string') {
+    const c = p.lastName.trim().replace(/[<>&"']/g, '').substring(0, 50);
+    if (c.length > 0) out['Last Name'] = c;
+  }
+  
+  if (typeof p.birthday === 'string') {
+    const t = p.birthday.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(t)) {
+      const date = new Date(t);
+      const [year, month, day] = t.split('-').map(Number);
+      if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
+        if (year >= 1900 && year <= new Date().getFullYear()) {
+          out['birthday'] = t;
+        }
+      }
+    }
+  }
+  
+  if (typeof p.slackId === 'string') {
+    const c = p.slackId.trim();
+    if (/^[A-Za-z0-9_-]{1,50}$/.test(c)) {
+      out['slack id'] = c;
+    }
+  }
+  
   if (p.address && typeof p.address === 'object') {
-    if (typeof p.address.street1 === 'string') out['street address'] = p.address.street1;
-    if (typeof p.address.street2 === 'string') out['street address #2'] = p.address.street2;
-    if (typeof p.address.city === 'string') out['city'] = p.address.city;
-    if (typeof p.address.zipcode === 'string') out['zipcode'] = p.address.zipcode;
-    if (typeof p.address.country === 'string') out['country'] = p.address.country;
+    if (typeof p.address.street1 === 'string') {
+      const c = p.address.street1.trim().substring(0, 100);
+      if (c.length > 0) out['street address'] = c;
+    }
+    if (typeof p.address.street2 === 'string') {
+      const c = p.address.street2.trim().substring(0, 100);
+      if (c.length > 0) out['street address #2'] = c;
+    }
+    if (typeof p.address.city === 'string') {
+      const c = p.address.city.trim().replace(/[<>&"']/g, '').substring(0, 50);
+      if (c.length > 0) out['city'] = c;
+    }
+    if (typeof p.address.zipcode === 'string') {
+      const c = p.address.zipcode.trim().replace(/[^A-Za-z0-9\s-]/g, '').substring(0, 20);
+      if (c.length > 0) out['zipcode'] = c;
+    }
+    if (typeof p.address.country === 'string') {
+      const c = p.address.country.trim().replace(/[<>&"']/g, '').substring(0, 50);
+      if (c.length > 0) out['country'] = c;
+    }
   }
   return out;
 }
