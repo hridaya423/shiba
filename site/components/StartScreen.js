@@ -95,7 +95,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             zIndex: 2,
           }} />
 
-        <iframe className="opening-video"  src="https://www.youtube.com/embed/ehH_52fzSt?si=FMBsR4wvCLBPr02p" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <iframe className="opening-video"  src="https://www.youtube.com/embed/Mapfcs9jziA?si=LCaM9upjckpTPWiZ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
           
         
         
@@ -140,6 +140,33 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             <div className="info-screen-overlay"></div>
           </div>
 
+          <img src="/landing/sparkle.png" className="sparkle" style={{
+            top: "-40%",
+            animationDelay: "0s",
+          }}/>
+
+          <img src="/landing/sparkle.png" className="sparkle" style={{
+            top: "-50%",
+            left: "10%",
+            width: "8%",
+            animationDelay: "0.3s",
+          }}/>
+
+
+          <img src="/landing/sparkle.png" className="sparkle" style={{
+            top: "-50%",
+            right: "0%",
+            width: "9%",
+            animationDelay: "0.5s",
+          }}/>
+
+          <img src="/landing/sparkle.png" className="sparkle" style={{
+            top: "-30%",
+            right: "8%",
+            width: "6%",
+            animationDelay: "0.8s",
+          }}/>
+
           <div className="content">
             <div className="firetext online"><p>online!</p></div>
             <h1>MAKE A GAME<br/>for 2 months</h1>
@@ -177,10 +204,38 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             </div>
 
 
-
+              
+     
         </div>
 
+       
+
         <div className="taiko-divider">
+        <img src="/landing/sparkle.png" className="sparkle" style={{
+            top: "25%",
+            left: "3%",
+            width: "8%",
+            animationDelay: "0.2s",
+
+          }}/>
+
+        <img src="/landing/sparkle.png" className="sparkle" style={{
+            top: "50%",
+            left: "1%",
+            width: "6%",
+            animationDelay: "0.7s",
+          }}/>
+
+<img src="/landing/sparkle.png" className="sparkle" style={{
+            top: "50%",
+            right: "1%",
+            width: "6%",
+            animationDelay: "0.3s",
+          }}/>
+
+          
+
+
         <img  src="/landing/taiko_divider.png"></img>
           <div className="jumpy">
             <div className="jumpy-item" style={{
@@ -352,6 +407,22 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
       border-radius: 32px;
       border: 3px solid var(--yellow);
       margin-top: -35px;
+      }
+
+      .sparkle {
+      z-index: 10;
+      width: 10%;
+      position: absolute;
+      animation: sparkle-hover 1s infinite alternate ease-in-out;
+      }
+
+      @keyframes sparkle-hover {
+        0% {
+          transform: translateY(0);
+        }
+        100% {
+          transform: translateY(-15px);
+        }
       }
 
 
