@@ -9,6 +9,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: 'Missing slackId' });
   }
 
+  if (!/^[A-Za-z0-9_-]{1,50}$/.test(slackId)) {
+    return res.status(400).json({ message: 'That is a funny looking slack id' });
+  }
+
   const url = `https://hackatime.hackclub.com/api/v1/users/${encodeURIComponent(slackId)}/stats?features=projects`;
   try {
     const r = await fetch(url, { headers: { Accept: 'application/json' } });

@@ -36,20 +36,55 @@ export default async function handler(req, res) {
     }
 
     const fields = {};
-    if (typeof name === 'string') fields.Name = name;
-    if (typeof description === 'string') fields.Description = description;
-    if (typeof GitHubURL === 'string') fields.GitHubURL = GitHubURL;
+    
+    if (typeof name === 'string') {
+      const sname = name.trim().substring(0, 100);
+      if (sname.length > 0) fields.Name = sname;
+    }
+    
+    if (typeof description === 'string') {
+      const sdesc = description.trim().substring(0, 1000);
+      if (sdesc.length > 0) fields.Description = sdesc;
+    }
+    
+    if (typeof GitHubURL === 'string') {
+      const t = GitHubURL.trim();
+      if (t.length > 0) {
+        try {
+          const url = new URL(t);
+          if (url.protocol === 'https:' && url.hostname === 'github.com') {
+            fields.GitHubURL = t;
+          }
+        } catch {
+          // wonky
+        }
+      }
+    }
     if (typeof HackatimeProjects === 'string') {
       // Accept comma-separated list of names; store as a single CSV string in Airtable
-      const parts = HackatimeProjects.split(',').map((s) => s.trim()).filter(Boolean);
-      fields['Hackatime Projects'] = parts.join(', ');
+      const sproj = HackatimeProjects.substring(0, 500);
+      const parts = sproj.split(',')
+        .map((s) => s.trim().replace(/[<>&"']/g, ''))
+        .filter(Boolean)
+        .slice(0, 5);
+      if (parts.length > 0) {
+        fields['Hackatime Projects'] = parts.join(', ');
+      }
     }
     if (typeof thumbnailUrl === 'string' && thumbnailUrl.trim().length > 0) {
-      fields.Thumbnail = [
-        {
-          url: thumbnailUrl.trim(),
-        },
-      ];
+      const t = thumbnailUrl.trim().substring(0, 500);
+      try {
+        const url = new URL(t);
+        if (url.protocol === 'https:' || url.protocol === 'http:') {
+          fields.Thumbnail = [
+            {
+              url: t,
+            },
+          ];
+        }
+      } catch {
+        // wonky
+      }
     }
     if (Object.keys(fields).length === 0) {
       return res.status(400).json({ message: 'Nothing to update' });

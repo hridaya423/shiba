@@ -55,7 +55,11 @@ export default async function handler(req, res) {
     }
 
     // Pass slackUserId back to app via simple HTML to postMessage the id then close
-    return res.send(`<!doctype html><html><body><script>window.opener && window.opener.postMessage({ type: 'SLACK_CONNECTED', slackId: '${slackUserId || ''}' }, '*'); window.close();</script></body></html>`);
+    const s = String(slackUserId || '').replace(/[<>&'"]/g, (char) => {
+      const e = { '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&#39;', '"': '&quot;' };
+      return e[char];
+    });
+    return res.send(`<!doctype html><html><body><script>window.opener && window.opener.postMessage({ type: 'SLACK_CONNECTED', slackId: '${s}' }, '*'); window.close();</script></body></html>`);
   } catch (e) {
     return res.status(500).send('OAuth error');
   }
