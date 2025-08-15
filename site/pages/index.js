@@ -8,8 +8,6 @@ import HelpComponent from "@/components/HelpComponent";
 import TopBar from "@/components/TopBar";
 
 export default function Home() {
-  
-
   const games = [
     {
       name: "My Games",
@@ -23,8 +21,7 @@ export default function Home() {
       description: "View global activity & playtest games",
       image: "Play.png",
       bgColor: "rgba(214, 245, 255, 1)",
-      gameClipAudio: "Global.mp3"
-
+      gameClipAudio: "Global.mp3",
     },
     {
       name: "Shop",
@@ -42,7 +39,6 @@ export default function Home() {
     },
   ];
 
-
   const [token, setToken] = useState(null);
   const [profile, setProfile] = useState(null);
 
@@ -53,7 +49,6 @@ export default function Home() {
   const goHome = () => {
     setAppOpen("Home");
   };
-
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -66,11 +61,14 @@ export default function Home() {
   useEffect(() => {
     let isMounted = true;
     const fetchProfile = async () => {
-      if (!token) { setProfile(null); return; }
+      if (!token) {
+        setProfile(null);
+        return;
+      }
       try {
-        const res = await fetch('/api/getMyProfile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/getMyProfile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
         });
         const data = await res.json().catch(() => ({}));
@@ -83,7 +81,9 @@ export default function Home() {
       }
     };
     fetchProfile();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [token]);
 
   const requestOtp = async (email) => {
@@ -118,7 +118,13 @@ export default function Home() {
   };
 
   if (token === null) {
-    return <StartScreen setToken={setToken} requestOtp={requestOtp} verifyOtp={verifyOtp} />;
+    return (
+      <StartScreen
+        setToken={setToken}
+        requestOtp={requestOtp}
+        verifyOtp={verifyOtp}
+      />
+    );
   }
 
   if (token !== null) {
@@ -141,8 +147,8 @@ export default function Home() {
     const componentsMap = {
       "My Games": MyGamesComponent,
       "Global Games": GlobalGamesComponent,
-      "Shop": ShopComponent,
-      "Help": HelpComponent,
+      Shop: ShopComponent,
+      Help: HelpComponent,
     };
 
     const SelectedComponent = componentsMap[appOpen];
@@ -151,7 +157,7 @@ export default function Home() {
         <div style={{ position: "relative", minHeight: "100vh" }}>
           {!disableTopBar && (
             <TopBar
-            backgroundColor={games[selectedGame].bgColor}
+              backgroundColor={games[selectedGame].bgColor}
               title={games[selectedGame].name}
               image={games[selectedGame].image}
               onBack={() => setAppOpen("Home")}
