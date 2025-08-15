@@ -95,7 +95,7 @@ function ShaderToyBackground() {
   );
 }
 
-export default function MyGamesComponent({ disableTopBar, setDisableTopBar, goHome, token, SlackId }) {
+export default function MyGamesComponent({ disableTopBar, setDisableTopBar, goHome, token, SlackId, onOpenProfile }) {
   
   const [myGames, setMyGames] = useState([]);
   const [createGamePopupOpen, setCreateGamePopupOpen] = useState(false);
@@ -314,6 +314,7 @@ export default function MyGamesComponent({ disableTopBar, setDisableTopBar, goHo
                       setMyGames((prev) => prev.map((g) => (g.id === updated.id ? { ...g, ...updated } : g)));
                     }}
                     SlackId={SlackId}
+                    onOpenProfile={onOpenProfile}
                   />
                 </div>
               </div>
@@ -485,7 +486,7 @@ export default function MyGamesComponent({ disableTopBar, setDisableTopBar, goHo
 
 
 
-function DetailView({ game, onBack, token, onUpdated, SlackId }) {
+function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) {
   const [name, setName] = useState(game?.name || "");
   const [description, setDescription] = useState(game?.description || "");
   const [thumbnailFile, setThumbnailFile] = useState(null);
@@ -510,6 +511,7 @@ function DetailView({ game, onBack, token, onUpdated, SlackId }) {
   const overTotalLimit = totalAttachmentBytes > MAX_TOTAL_BYTES;
   const [buildFile, setBuildFile] = useState(null);
   const [uploadAuthToken, setUploadAuthToken] = useState(process.env.NEXT_PUBLIC_UPLOAD_AUTH_TOKEN || "NeverTrustTheLiving#446");
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
     setName(game?.name || "");
@@ -539,6 +541,30 @@ function DetailView({ game, onBack, token, onUpdated, SlackId }) {
     };
     fetchProjects();
   }, [SlackId]);
+
+  // Fetch user profile
+  useEffect(() => {
+    let cancelled = false;
+    const fetchProfile = async () => {
+      if (!token) return;
+      try {
+        const res = await fetch("/api/getMyProfile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok && data?.ok) {
+          setUserProfile(data.profile || null);
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+      }
+    };
+    fetchProfile();
+    return () => { cancelled = true; };
+  }, [token]);
 
   // Fetch Slack displayName and image via cachet
   useEffect(() => {
@@ -605,6 +631,25 @@ function DetailView({ game, onBack, token, onUpdated, SlackId }) {
     const thumbnailChanged = Boolean(thumbnailFile);
     return nameChanged || descriptionChanged || gitChanged || projectsChanged || thumbnailChanged;
   }, [game?.name, game?.description, game?.GitHubURL, game?.HackatimeProjects, name, description, GitHubURL, selectedProjectsCsv, thumbnailFile]);
+
+  const isProfileComplete = useMemo(() => {
+    if (!userProfile) return false;
+    
+    const missingFields = [
+      !userProfile.firstName && 'firstName',
+      !userProfile.lastName && 'lastName',
+      !userProfile.email && 'email',
+      !userProfile.githubUsername && 'githubUsername',
+      !userProfile.birthday && 'birthday',
+      !userProfile.slackId && 'slackId',
+      !userProfile.address?.street1 && 'street1',
+      !userProfile.address?.city && 'city',
+      !userProfile.address?.zipcode && 'zipcode',
+      !userProfile.address?.country && 'country'
+    ].filter(Boolean);
+    
+    return missingFields.length === 0;
+  }, [userProfile]);
 
   const handleUpdate = async () => {
     if (!token || !game?.id) return;
@@ -874,9 +919,14 @@ function DetailView({ game, onBack, token, onUpdated, SlackId }) {
               >
             <textarea
               className="moments-textarea"
-                  placeholder="Write what you added here..."
+              placeholder={postType === 'ship' && !isProfileComplete ? "Complete your profile to unlock demo posting" : "Write what you added here..."}
               value={postContent}
               onChange={(e) => setPostContent(e.target.value)}
+              disabled={postType === 'ship' && !isProfileComplete}
+              style={{
+                opacity: postType === 'ship' && !isProfileComplete ? 0.5 : 1,
+                cursor: postType === 'ship' && !isProfileComplete ? 'not-allowed' : 'text'
+              }}
             />
             {/* Previews */}
             {Array.isArray(postFiles) && postFiles.length > 0 && (
@@ -949,7 +999,7 @@ function DetailView({ game, onBack, token, onUpdated, SlackId }) {
                     className="moments-attach-btn"
                     onClick={() => document.getElementById('moments-file-input')?.click()}
                   >
-                    {postFiles.length ? `Selected: ${postFiles[0].name}` : 'Upload media file'}
+                    {postFiles.length ? `Selected: ${postFiles[0].name}` : 'Upload Screenshots'}
                   </button>
                 </>
               )}
@@ -975,16 +1025,22 @@ function DetailView({ game, onBack, token, onUpdated, SlackId }) {
               </div>
               <button
                 className="moments-post-btn"
-                disabled={isPosting}
+                disabled={isPosting || (postType === 'ship' && !isProfileComplete)}
                 onClick={async () => {
             if (!token || !game?.id || !postContent.trim()) return;
             if (postType === 'moment' && postFiles.length === 0) {
               alert('Add a media file (image/video/audio) of what you added in this update');
               return;
             }
-            if (postType === 'ship' && (!buildFile || !uploadAuthToken)) {
-              alert('Zip your godot web build and add it here with a msg of what you added!');
-              return;
+            if (postType === 'ship') {
+              if (!isProfileComplete) {
+                alert('You must finish filling out your profile before you can upload your demo. See your profile on the top left corner of the main Shiba Homescreen');
+                return;
+              }
+              if (!buildFile || !uploadAuthToken) {
+                alert('Zip your godot web build and add it here with a msg of what you added!');
+                return;
+              }
             }
             setIsPosting(true);
             setPostMessage("");
@@ -1059,6 +1115,42 @@ function DetailView({ game, onBack, token, onUpdated, SlackId }) {
         {overTotalLimit ? (
           <p style={{ marginTop: 8, color: '#b00020' }}>Total screenshots must be under 5MB. Try removing some files or using smaller ones.</p>
         ) : null}
+        {postType === 'ship' && !isProfileComplete && (
+          <div style={{ 
+            marginTop: 8, 
+            padding: '12px', 
+            backgroundColor: 'white', 
+            border: '2px solid #b00020', 
+            borderRadius: '8px',
+            fontSize: '12px',
+            color: '#b00020',
+            fontWeight: 'bold'
+          }}>
+            ⚠️ Missing profile details,{' '}
+            <button
+              onClick={() => {
+                onBack();
+                if (onOpenProfile) {
+                  onOpenProfile();
+                }
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#ff6fa5',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                padding: 0,
+                font: 'inherit',
+                fontSize: 'inherit',
+                fontWeight: 'bold'
+              }}
+            >
+              complete your profile
+            </button>
+            {' '}to unlock demo posting
+          </div>
+        )}
         {postMessage ? <p style={{ marginTop: 8, opacity: 0.7 }}>{postMessage}</p> : null}
         {Array.isArray(game.posts) && game.posts.length > 0 && (
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1261,6 +1353,11 @@ function DetailView({ game, onBack, token, onUpdated, SlackId }) {
           cursor: pointer;
           font-weight: 800;
           font-size: 13px;
+        }
+        .moments-post-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          background: #ccc;
         }
         .nice-input {
           padding: 10px;

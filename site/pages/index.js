@@ -45,10 +45,22 @@ export default function Home() {
   const [appOpen, setAppOpen] = useState("Home");
   const [selectedGame, setSelectedGame] = useState(0);
   const [disableTopBar, setDisableTopBar] = useState(false);
+  const [autoOpenProfile, setAutoOpenProfile] = useState(false);
 
   const goHome = () => {
     setAppOpen("Home");
   };
+
+  // Reset autoOpenProfile after it's been used
+  useEffect(() => {
+    if (autoOpenProfile && appOpen === "Home") {
+      // Reset the flag after a short delay to ensure HomeScreen has processed it
+      const timer = setTimeout(() => {
+        setAutoOpenProfile(false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [autoOpenProfile, appOpen]);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -153,6 +165,7 @@ export default function Home() {
           token={token}
           profile={profile}
           setProfile={setProfile}
+          autoOpenProfile={autoOpenProfile}
         />
       );
     }
@@ -183,6 +196,11 @@ export default function Home() {
               goHome={goHome}
               token={token}
               SlackId={profile?.slackId || null}
+              onOpenProfile={appOpen === "My Games" ? () => {
+                setAutoOpenProfile(true);
+                setDisableTopBar(false);
+                setAppOpen("Home");
+              } : undefined}
             />
           </div>
         </div>

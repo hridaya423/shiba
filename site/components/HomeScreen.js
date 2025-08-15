@@ -869,7 +869,7 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
   );
 }
 
-export default function HomeScreen({ games, setAppOpen, selectedGame, setSelectedGame, SlackId, token, profile, setProfile }) {
+export default function HomeScreen({ games, setAppOpen, selectedGame, setSelectedGame, SlackId, token, profile, setProfile, autoOpenProfile }) {
 
 
   // selectedGame is now controlled by the parent (index.js)
@@ -941,6 +941,13 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
     fetchSlack();
     return () => { cancelled = true; };
   }, [SlackId]);
+
+  // Auto-open profile modal if requested
+  useEffect(() => {
+    if (autoOpenProfile) {
+      setIsProfileOpen(true);
+    }
+  }, [autoOpenProfile]);
 
   return (
     <>
