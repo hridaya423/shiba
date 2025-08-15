@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { MovingBackground } from "./HomeScreen";
+import { formatJamCountdown } from './jamConfig';
 
 export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
   const [email, setEmail] = useState("");
@@ -10,6 +11,18 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
   const [clickedIn, setClickedIn] = useState(false);
   const circleRef = useRef(null);
   const emailInputRef = useRef(null);
+  // Start with empty string to avoid SSR/client mismatch, populate after mount.
+  const [jamCountdownText, setJamCountdownText] = useState('');
+  const mountedRef = useRef(false);
+
+  // Live dual-phase countdown update after mount only (prevents hydration mismatch)
+  useEffect(() => {
+    mountedRef.current = true;
+    const update = () => setJamCountdownText(formatJamCountdown());
+    update(); // initial client render
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -468,6 +481,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             </details>
           </div>
         </div>
+  <p className="top-text english" suppressHydrationWarning>{jamCountdownText || 'jam timeline loading...'}</p>
       </div>
 
       <style jsx>{`
