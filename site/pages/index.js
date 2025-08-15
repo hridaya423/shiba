@@ -72,12 +72,25 @@ export default function Home() {
           body: JSON.stringify({ token }),
         });
         const data = await res.json().catch(() => ({}));
-        if (isMounted && res.ok && data?.ok) {
-          setProfile(data.profile || null);
+        if (isMounted) {
+          if (res.ok && data?.ok) {
+            setProfile(data.profile || null);
+          } else if (res.status === 401) {
+            // Token is invalid, log user out
+            localStorage.removeItem("token");
+            setToken(null);
+            setProfile(null);
+          }
         }
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
+        // On network error, also log out to be safe
+        if (isMounted) {
+          localStorage.removeItem("token");
+          setToken(null);
+          setProfile(null);
+        }
       }
     };
     fetchProfile();

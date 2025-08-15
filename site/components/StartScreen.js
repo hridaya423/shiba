@@ -353,7 +353,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             </h1>
             <p>
               use SSS you earned to win a ticket to japan. fly to tokyo and
-              build an arcade with us, fully paid-for. put your game into the
+              build an arcade with us, food covered, hotel covered, & flight stipends available. put your game into the
               arcade and let the public try it!
             </p>
           </div>
