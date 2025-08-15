@@ -21,6 +21,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: 'Missing required fields: token, gameId, content' });
   }
 
+  const sanitized = String(content).trim().substring(0, 5000); // they really should not be this long
+  if (sanitized.length === 0) {
+    return res.status(400).json({ message: 'Content empty?' });
+  }
+
   try {
     const userRecord = await findUserByToken(token);
     if (!userRecord) {
@@ -38,12 +43,21 @@ export default async function handler(req, res) {
     // Create a new Post and link to the Game
     const postId = generateAlphanumericId(16);
     const fields = {
-      Content: String(content),
+      Content: sanitized,
       Game: [gameId],
       PostID: postId,
     };
+
     if (typeof playLink === 'string' && playLink.trim().length > 0) {
-      fields.PlayLink = playLink.trim();
+      const trimmed = playLink.trim().substring(0, 500);
+      try {
+        const url = new URL(trimmed);
+        if (url.protocol === 'https:') {
+          fields.PlayLink = trimmed;
+        }
+      } catch {
+        // wonky
+      }
     }
     const payload = { records: [{ fields }] };
     const created = await airtableRequest(encodeURIComponent(AIRTABLE_POSTS_TABLE), {
