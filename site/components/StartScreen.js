@@ -553,6 +553,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           border-radius: 12px;
           padding: 10px;
           width: inherit;
+          cursor: pointer;
         }
 
         .email-input button:hover {
