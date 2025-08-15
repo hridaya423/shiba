@@ -50,7 +50,11 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
   }, []);
 
   const onRequest = async () => {
-    if (!requestOtp) return;
+    console.log("onRequest called, email:", email, "requestOtp:", !!requestOtp);
+    if (!requestOtp) {
+      console.log("requestOtp not available");
+      return;
+    }
     setLoading(true);
     setMessage("");
     const result = await requestOtp(email);
@@ -146,7 +150,9 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="orpheus@hackclub.com"
                   onKeyDown={(e) => {
+                    console.log("Key pressed:", e.key);
                     if (e.key === "Enter") {
+                      console.log("Enter key pressed, calling onRequest");
                       onRequest();
                     }
                   }}
@@ -165,7 +171,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
                   type="text"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  placeholder="Enter 6-digit code"
+                  placeholder="Enter 6-digit code (email)"
                   inputMode="numeric"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -411,7 +417,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
                     type="text"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Enter 6-digit code"
+                    placeholder="Enter 6-digit code (email)"
                     inputMode="numeric"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
