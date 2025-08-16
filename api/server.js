@@ -224,6 +224,12 @@ async function validateGodotZip(tmpZipPath) {
 				return;
 			}
 
+			// Skip macOS metadata files (they start with ._)
+			if (entryPath.includes('/._') || entryPath.startsWith('._')) {
+				entry.autodrain();
+				return;
+			}
+
 			files.push(entryPath);
 			
 			// Check for required files
