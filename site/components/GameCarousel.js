@@ -106,25 +106,48 @@ export default function GameCarousel({ games, onSelect, playSound, playClip, set
           <div style={{ display: "flex", alignItems: "center" }}>
             {games.map((game, idx) => {
               const isActive = idx === selectedIndex;
+              // Handle clicking any card: if active open game, otherwise scroll toward it (choose direction) and play appropriate sound
+              const handleClick = () => {
+                if (!embla) return;
+                const current = embla.selectedScrollSnap();
+                if (idx === current) {
+                  // Open the active game
+                  try { stopAll?.(); } catch (_) {}
+                  setAppOpen?.(game.name);
+                  return;
+                }
+                const total = games.length;
+                // Compute forward (next) distance and backward (prev) distance in circular list
+                const forward = (idx - current + total) % total; // steps if moving next
+                const backward = (current - idx + total) % total; // steps if moving prev
+                // Choose direction based on shorter distance; tie -> treat as forward
+                if (forward <= backward) {
+                  playSound?.("next.mp3");
+                } else {
+                  playSound?.("prev.mp3");
+                }
+                embla.scrollTo(idx);
+              };
               return (
                 <div
                   key={game.name}
                   style={{ flex: "0 0 33.3333%", display: "flex", justifyContent: "center", alignItems: "center", padding: "2vw" }}
                 >
                   <div
-                    role={isActive ? "button" : "presentation"}
-                    tabIndex={isActive ? 0 : -1}
-                    aria-label={isActive ? `Open ${game.name}` : undefined}
-                    aria-disabled={!isActive}
-                    onClick={isActive ? () => { try { stopAll?.(); } catch (_) {} setAppOpen?.(game.name); } : undefined}
-                    onKeyDown={isActive ? (e) => {
-                      if (e.key === "Enter") {
+                    role="button"
+                    tabIndex={0}
+                    aria-label={isActive ? `Open ${game.name}` : `Select ${game.name}`}
+                    aria-pressed={isActive}
+                    onClick={handleClick}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        try { stopAll?.(); } catch (_) {}
-                        setAppOpen?.(game.name);
+                        handleClick();
                       }
-                    } : undefined}
-                    style={{ width: "100%", cursor: isActive ? "pointer" : "default", pointerEvents: isActive ? "auto" : "none" }}
+                      if (e.key === "ArrowRight" && idx !== selectedIndex) { e.preventDefault(); playSound?.("next.mp3"); embla?.scrollTo(idx); }
+                      if (e.key === "ArrowLeft" && idx !== selectedIndex) { e.preventDefault(); playSound?.("prev.mp3"); embla?.scrollTo(idx); }
+                    }}
+                    style={{ width: "100%", cursor: "pointer" }}
                   >
                     <GameCard game={game} style={getCardStyle(idx)} isFocused={isActive} />
                   </div>
