@@ -446,7 +446,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
               )}
             </div>
 
-            <p className="top-text english">jam starts in ?d ?h ?m ?s</p>
+            <p className="top-text english" suppressHydrationWarning>{jamCountdownText || 'jam timeline loading...'}</p>
           </div>
 
           <div className="faq">
@@ -481,7 +481,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             </details>
           </div>
         </div>
-  <p className="top-text english" suppressHydrationWarning>{jamCountdownText || 'jam timeline loading...'}</p>
+  
       </div>
 
       <style jsx>{`
