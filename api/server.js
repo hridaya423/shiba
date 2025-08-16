@@ -199,6 +199,122 @@ const UPLOADS_DIR = path.join(__dirname, 'uploads');
 try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch {}
 const upload = multer({ dest: UPLOADS_DIR });
 
+// Validate zip file structure for Godot HTML5 export
+async function validateGodotZip(tmpZipPath) {
+	return new Promise((resolve, reject) => {
+		const stream = fs.createReadStream(tmpZipPath).pipe(unzipper.Parse());
+		const files = [];
+		let hasIndexHtml = false;
+		let hasWasm = false;
+		let hasJs = false;
+		let hasPck = false;
+		let hasMacOSXFolder = false;
+		let rootLevelFiles = [];
+		let indexHtmlInSubfolder = false;
+		let indexHtmlPath = '';
+
+		stream.on('entry', (entry) => {
+			const entryPath = sanitizeZipEntryPath(entry.path);
+			if (!entryPath) {
+				entry.autodrain();
+				return;
+			}
+			if (entry.type === 'Directory') {
+				entry.autodrain();
+				return;
+			}
+
+			files.push(entryPath);
+			
+			// Check for required files
+			if (entryPath.endsWith('index.html')) {
+				hasIndexHtml = true;
+				indexHtmlPath = entryPath;
+				// Check if index.html is in a subfolder
+				if (entryPath.includes('/')) {
+					indexHtmlInSubfolder = true;
+				}
+			}
+			if (entryPath.endsWith('.wasm')) hasWasm = true;
+			if (entryPath.endsWith('.js')) hasJs = true;
+			if (entryPath.endsWith('.pck')) hasPck = true;
+			
+			// Check folder structure
+			const parts = entryPath.split('/');
+			if (parts.length === 1) {
+				rootLevelFiles.push(entryPath);
+			} else if (parts.length >= 2) {
+				const topFolder = parts[0];
+				if (topFolder === '__MACOSX') {
+					hasMacOSXFolder = true;
+				}
+			}
+			
+			entry.autodrain();
+		});
+
+		stream.on('error', reject);
+		stream.on('close', () => {
+			// Validation logic
+			const errors = [];
+			const warnings = [];
+
+			// Check for required files
+			if (!hasIndexHtml) {
+				errors.push('Missing index.html file');
+			} else if (indexHtmlInSubfolder) {
+				errors.push(`index.html is inside a subfolder (${indexHtmlPath}). It should be directly in the root of the zip file.`);
+			}
+			if (!hasWasm) {
+				errors.push('Missing .wasm file (WebAssembly binary)');
+			}
+			if (!hasJs) {
+				errors.push('Missing .js file (JavaScript runtime)');
+			}
+			if (!hasPck) {
+				warnings.push('Missing .pck file (game data) - this might be normal for small games');
+			}
+
+			// Check for common issues
+			if (hasMacOSXFolder) {
+				warnings.push('Found __MACOSX folder - this is normal for Mac exports');
+			}
+
+			// Provide helpful guidance
+			if (errors.length > 0) {
+				const guidance = `
+❌ Invalid Godot HTML5 Export Format
+
+Your zip file has an incorrect structure.
+
+REQUIRED STRUCTURE:
+• index.html must be directly in the root of the zip file (not inside a folder)
+• .wasm file (WebAssembly binary)
+• .js file (JavaScript runtime)
+
+HOW TO FIX:
+1. In Godot, go to Project → Export
+2. Select "Web" platform
+3. Click "Export Project" 
+4. Choose "Export as HTML5" 
+5. Make sure "Export Mode" is set to "Export all resources"
+6. Export and upload the resulting .zip file
+
+IMPORTANT: The index.html file must be directly in the zip root, not inside a subfolder.
+
+CURRENT ISSUES:
+${errors.map(e => `• ${e}`).join('\n')}
+
+${warnings.length > 0 ? `WARNINGS:\n${warnings.map(w => `• ${w}`).join('\n')}` : ''}
+				`.trim();
+				reject(new Error(guidance));
+			} else {
+				resolve({ files, warnings });
+			}
+		});
+	});
+}
+
 async function extractAndUploadZip(tmpZipPath, gameId) {
 	const prefix = `${GAMES_PREFIX}/${gameId}/`;
 	const stream = fs.createReadStream(tmpZipPath).pipe(unzipper.Parse());
@@ -254,16 +370,43 @@ app.post(['/api/uploadGame', '/uploadGame'], upload.single('file'), async (req, 
 	if (!req.file) {
 		return res.status(400).json({ error: 'Missing file field "file" (zip)' });
 	}
+	
+	// Check file extension
+	if (!req.file.originalname.toLowerCase().endsWith('.zip')) {
+		return res.status(400).json({ 
+			error: 'Invalid file format',
+			details: 'Please upload a .zip file containing your Godot HTML5 export.',
+			guidance: 'In Godot, go to Project → Export → Web → Export Project → Export as HTML5'
+		});
+	}
+	
 	const providedGameId = (req.body.gameId || '').trim();
 	const gameId = providedGameId || `game-${Date.now()}`;
 	const tmpPath = req.file.path;
 
 	try {
+		// Validate the zip structure first
+		await validateGodotZip(tmpPath);
+		
+		// If validation passes, proceed with upload
 		await extractAndUploadZip(tmpPath, gameId);
 		res.json({ ok: true, gameId, playUrl: `/play/${encodeURIComponent(gameId)}` });
 	} catch (err) {
 		console.error('[api] Upload failed', err);
-		res.status(500).json({ error: 'Upload failed', details: String(err?.message || err) });
+		
+		// Check if this is a validation error with guidance
+		if (err.message && err.message.includes('❌ Invalid Godot HTML5 Export Format')) {
+			res.status(400).json({ 
+				error: 'Invalid Godot export format',
+				details: err.message,
+				validationError: true
+			});
+		} else {
+			res.status(500).json({ 
+				error: 'Upload failed', 
+				details: String(err?.message || err) 
+			});
+		}
 	} finally {
 		fs.unlink(tmpPath, () => {});
 	}
@@ -277,10 +420,34 @@ app.post(['/api/uploadGame', '/uploadGame'], upload.single('file'), async (req, 
 // - /play/:gameId/<path> -> serves that asset
 // Supports Range requests for audio/video.
 
+// Helper function to serve the main game entry point
+async function serveGameEntryPoint(gameId, req, res) {
+	// index.html should be directly in the game folder root
+	const indexHtmlPath = `${GAMES_PREFIX}/${gameId}/index.html`;
+	
+	try {
+		if (R2_ENABLED) {
+			await s3.send(new GetObjectCommand({ Bucket: R2_BUCKET, Key: indexHtmlPath }));
+			return streamR2ObjectToResponse(indexHtmlPath, req, res);
+		} else {
+			const filePath = path.join(LOCAL_STORAGE_DIR, indexHtmlPath);
+			await fs.promises.access(filePath);
+			return streamLocalFileToResponse(indexHtmlPath, req, res);
+		}
+	} catch (err) {
+		// index.html not found
+		return res.status(404).json({ error: 'Not found' });
+	}
+}
+
 app.get('/play/:gameId', async (req, res) => {
 	const gameId = req.params.gameId;
-	const key = `${GAMES_PREFIX}/${gameId}/index.html`;
-	return R2_ENABLED ? streamR2ObjectToResponse(key, req, res) : streamLocalFileToResponse(key, req, res);
+	return serveGameEntryPoint(gameId, req, res);
+});
+
+app.get('/play/:gameId/', async (req, res) => {
+	const gameId = req.params.gameId;
+	return serveGameEntryPoint(gameId, req, res);
 });
 
 app.get('/play/:gameId/*', async (req, res) => {
