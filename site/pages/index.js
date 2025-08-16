@@ -12,28 +12,31 @@ export default function Home() {
     {
       name: "My Games",
       description: "Create, update, and ship your games",
-      image: "MyGames.png",
+      backgroundImage: "MyGames.png",
       bgColor: "rgba(255, 214, 224, 1)",
       gameClipAudio: "MyGames.mp3",
     },
     {
       name: "Global Games",
       description: "View global activity & playtest games",
-      image: "Play.png",
+      backgroundImage: "PlayBottom.png",
+      topImage: "PlayTop.png",
       bgColor: "rgba(214, 245, 255, 1)",
       gameClipAudio: "Global.mp3",
     },
     {
       name: "Shop",
       description: "Purchase items from the shop.",
-      image: "Shop.png",
+      backgroundImage: "ShopBottom.png",
+      topImage: "ShopTop.png",
       bgColor: "rgba(214, 255, 214, 1)",
       gameClipAudio: "Shop.mp3",
     },
     {
       name: "Help",
       description: "Learn how to use Shiba.",
-      image: "Help.png",
+      backgroundImage: "HelpBottom.png",
+      topImage: "HelpTop.png",
       bgColor: "rgba(255, 245, 214, 1)",
       gameClipAudio: "Help.mp3",
     },
@@ -185,7 +188,7 @@ export default function Home() {
             <TopBar
               backgroundColor={games[selectedGame].bgColor}
               title={games[selectedGame].name}
-              image={games[selectedGame].image}
+              image={games[selectedGame].backgroundImage}
               onBack={() => setAppOpen("Home")}
             />
           )}

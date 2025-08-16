@@ -1,9 +1,45 @@
 import { useEffect, useState } from "react";
 
-export default function GameCard({ game, style }) {
+
+
+export default function GameCard({ game, style, isFocused = false }) {
   const [imageFailed, setImageFailed] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [frameLoaded, setFrameLoaded] = useState(false);
+  const [topImageLoaded, setTopImageLoaded] = useState(false);
+  const [currentRotation, setCurrentRotation] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  // Handle focus changes and rotation tracking
+  useEffect(() => {
+    if (isFocused) {
+      if (!isSpinning) {
+        setIsSpinning(true);
+        setCurrentRotation(0);
+      }
+    } else {
+      if (isSpinning) {
+        setIsSpinning(false);
+      }
+    }
+  }, [isFocused, isSpinning]);
+
+  // Track rotation while spinning
+  useEffect(() => {
+    if (!isSpinning) return;
+    
+    let startTime = Date.now();
+    const updateRotation = () => {
+      if (!isSpinning) return;
+      const elapsed = Date.now() - startTime;
+      const rotation = (elapsed / 15000) * 360; // 15 seconds = 360 degrees
+      setCurrentRotation(rotation % 360);
+      requestAnimationFrame(updateRotation);
+    };
+    
+    const animationId = requestAnimationFrame(updateRotation);
+    return () => cancelAnimationFrame(animationId);
+  }, [isSpinning]);
   const baseStyle = {
     display: "flex",
     justifyContent: "center",
@@ -42,17 +78,22 @@ export default function GameCard({ game, style }) {
     try {
       const img = new Image();
       img.decoding = "async";
-      img.src = `/${game.image}`;
+      img.src = `/${game.backgroundImage}`;
       const frame = new Image();
       frame.decoding = "async";
       frame.src = "./Frame.svg";
+      if (game.topImage) {
+        const topImg = new Image();
+        topImg.decoding = "async";
+        topImg.src = `/${game.topImage}`;
+      }
     } catch (_) {}
-  }, [game?.image]);
+  }, [game?.backgroundImage, game?.topImage]);
   return (
     <div style={{ ...baseStyle, ...style, position: "relative" }}>
       {!imageFailed ? (
         <img
-          src={`/${game.image}`}
+          src={`/${game.backgroundImage}`}
           alt={game.name}
           style={{ width: "85%", height: "85%", objectFit: "cover", opacity: imgLoaded && frameLoaded ? 1 : 0, transition: "opacity 200ms ease" }}
           onLoad={() => setImgLoaded(true)}
@@ -62,6 +103,30 @@ export default function GameCard({ game, style }) {
         />
       ) : (
         <p style={{ textAlign: "center", zIndex: 1 }}>{game.name}</p>
+      )}
+      {game.topImage && (
+        <img
+          src={`/${game.topImage}`}
+          alt=""
+          aria-hidden
+          style={{ 
+            position: "absolute", 
+            top: "50%", 
+            left: "50%", 
+            transform: `translate(-50%, -50%) rotate(${isSpinning ? currentRotation : 0}deg)`, 
+            width: "80%", 
+            height: "auto", 
+            maxHeight: "80%", 
+            objectFit: "contain", 
+            pointerEvents: "none", 
+            zIndex: 3, 
+            opacity: topImageLoaded ? 1 : 0, 
+            transition: `opacity 200ms ease, transform ${isSpinning ? '0ms linear' : '600ms ease-out'}`, 
+          }}
+          onLoad={() => setTopImageLoaded(true)}
+          loading="eager"
+          decoding="async"
+        />
       )}
       <img
         src="./Frame.svg"

@@ -126,7 +126,7 @@ export default function GameCarousel({ games, onSelect, playSound, playClip, set
                     } : undefined}
                     style={{ width: "100%", cursor: isActive ? "pointer" : "default", pointerEvents: isActive ? "auto" : "none" }}
                   >
-                    <GameCard game={game} style={getCardStyle(idx)} />
+                    <GameCard game={game} style={getCardStyle(idx)} isFocused={isActive} />
                   </div>
                 </div>
               );
