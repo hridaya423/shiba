@@ -513,6 +513,21 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
   const [uploadAuthToken, setUploadAuthToken] = useState(process.env.NEXT_PUBLIC_UPLOAD_AUTH_TOKEN || "NeverTrustTheLiving#446");
   const [userProfile, setUserProfile] = useState(null);
 
+  // Refs for file inputs
+  const buildFileInputRef = useRef(null);
+  const momentsFileInputRef = useRef(null);
+  
+  // Key to force re-render of file inputs when needed
+  const [fileInputKey, setFileInputKey] = useState(0);
+
+  // Function to clear file inputs
+  const clearFileInputs = () => {
+    if (buildFileInputRef.current) buildFileInputRef.current.value = '';
+    if (momentsFileInputRef.current) momentsFileInputRef.current.value = '';
+    // Force re-render of file inputs
+    setFileInputKey(prev => prev + 1);
+  };
+
   useEffect(() => {
     setName(game?.name || "");
     setDescription(game?.description || "");
@@ -523,6 +538,10 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
     setSelectedProjectsCsv(game?.HackatimeProjects || "");
     setPostContent("");
     setPostMessage("");
+    // Clear file inputs when switching games
+    setBuildFile(null);
+    setPostFiles([]);
+    clearFileInputs();
   }, [game?.id]);
 
   useEffect(() => {
@@ -887,6 +906,9 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
         <p style={{ fontSize: 12, opacity: 0.7 }}>Every 3–4 hours: post a Shiba Moment. Add a short note of what you added and a screenshot/GIF/video.</p>
         <br/>
         <p  style={{ fontSize: 12, opacity: 0.7 }}>Every ~10 hours: ship a new demo. We’ll try it, award play tickets based on your time, and send it to other hack clubbers in the community to playtest.</p>
+        <p style={{ fontSize: 11, opacity: 0.6, fontStyle: 'italic', marginTop: 8, marginBottom: 8 }}>
+          <strong>Demo Upload Tip:</strong> Upload a ZIP file containing your game. There must be an index.html file in the ZIP. Or upload a .html file that contains your entire game.
+        </p>
         <div style={{ marginTop: 16 }}>
               <div
                 className={`moments-composer${isDragActive ? ' drag-active' : ''}`}
@@ -963,33 +985,62 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
               {postType === 'ship' ? (
                 <>
                   <input
-                    id="build-file-input"
+                    key={`build-file-${fileInputKey}`}
+                    ref={buildFileInputRef}
                     type="file"
                     accept=".zip"
                     style={{ display: 'none' }}
                     onChange={(e) => {
                       const file = (e.target.files && e.target.files[0]) || null;
+                      console.log('Build file selected:', file?.name);
+                      
+                      // Validate file extension
+                      if (file && !file.name.toLowerCase().endsWith('.zip')) {
+                        alert('❌ Invalid file format!\n\nPlease select a .zip file from your Godot HTML5 export.\n\nIn Godot: Project → Export → Web → Export Project → Export as HTML5');
+                        e.target.value = '';
+                        setBuildFile(null);
+                        return;
+                      }
+                      
                       setBuildFile(file);
                     }}
                   />
                   <button
                     type="button"
                     className="moments-attach-btn"
-                    onClick={() => document.getElementById('build-file-input')?.click()}
+                    onClick={() => {
+                      console.log('Build file button clicked, ref exists:', !!buildFileInputRef.current);
+                      buildFileInputRef.current?.click();
+                    }}
+                    title="Upload a .zip file from Godot HTML5 export (Project → Export → Web → Export as HTML5)"
                   >
-                    {buildFile ? `Selected: ${buildFile.name}` : 'Upload Godot Web Build'}
+                    {buildFile ? `Selected: ${buildFile.name}` : 'Upload Godot Web Build (.zip)'}
                   </button>
                   <input type="hidden" value={uploadAuthToken} readOnly />
                 </>
               ) : (
                 <>
                   <input
-                    id="moments-file-input"
+                    key={`moments-file-${fileInputKey}`}
+                    ref={momentsFileInputRef}
                     type="file"
                     accept="image/*,video/*,audio/*,.mp3,.mp4,.gif,.mov,.wav,.ogg,.m4a,.aac"
                     style={{ display: 'none' }}
                     onChange={(e) => {
                       const f = (e.target.files && e.target.files[0]) || null;
+                      console.log('Moments file selected:', f?.name);
+                      
+                      // Validate file type for moments
+                      if (f) {
+                        const validTypes = ['image/', 'video/', 'audio/'];
+                        const isValidType = validTypes.some(type => f.type.startsWith(type));
+                        if (!isValidType) {
+                          alert('❌ Invalid file type!\n\nPlease select an image, video, or audio file for your Shiba Moment.');
+                          e.target.value = '';
+                          return;
+                        }
+                      }
+                      
                       setPostFiles(f ? [f] : []);
                       e.target.value = '';
                     }}
@@ -997,7 +1048,10 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
                   <button
                     type="button"
                     className="moments-attach-btn"
-                    onClick={() => document.getElementById('moments-file-input')?.click()}
+                    onClick={() => {
+                      console.log('Moments file button clicked, ref exists:', !!momentsFileInputRef.current);
+                      momentsFileInputRef.current?.click();
+                    }}
                   >
                     {postFiles.length ? `Selected: ${postFiles[0].name}` : 'Upload Screenshots'}
                   </button>
@@ -1010,7 +1064,12 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
                   type="button"
                   className={`moment-type-option${postType === 'moment' ? ' active' : ''}`}
                   aria-selected={postType === 'moment'}
-                  onClick={() => setPostType('moment')}
+                  onClick={() => {
+                    setPostType('moment');
+                    setBuildFile(null);
+                    setPostFiles([]);
+                    clearFileInputs();
+                  }}
                 >
                   Devlog
                 </button>
@@ -1018,7 +1077,12 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
                   type="button"
                   className={`moment-type-option${postType === 'ship' ? ' active' : ''}`}
                   aria-selected={postType === 'ship'}
-                  onClick={() => setPostType('ship')}
+                  onClick={() => {
+                    setPostType('ship');
+                    setBuildFile(null);
+                    setPostFiles([]);
+                    clearFileInputs();
+                  }}
                 >
                   Demo
                 </button>
@@ -1037,6 +1101,10 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
                 alert('You must finish filling out your profile before you can upload your demo. See your profile on the top left corner of the main Shiba Homescreen');
                 return;
               }
+              if (!game?.GitHubURL || game.GitHubURL.trim() === '') {
+                alert('You must update your game to have a GitHub Repository to upload your demo. All games in Shiba must be open-sourced.');
+                return;
+              }
               if (!buildFile || !uploadAuthToken) {
                 alert('Zip your godot web build and add it here with a msg of what you added!');
                 return;
@@ -1051,7 +1119,12 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
                 const apiBase = process.env.NEXT_PUBLIC_API_BASE || '';
                 const uploadResp = await uploadGameUtil({ file: buildFile, name: game?.name || 'game', token: uploadAuthToken, apiBase });
                 if (!uploadResp.ok) {
-                  setPostMessage(`Upload failed: ${uploadResp.error || 'Unknown error'}`);
+                  if (uploadResp.validationError && uploadResp.details) {
+                    // Show detailed validation error with guidance
+                    alert(`Upload Failed: ${uploadResp.error}\n\n${uploadResp.details}`);
+                  } else {
+                    setPostMessage(`Upload failed: ${uploadResp.error || 'Unknown error'}`);
+                  }
                   setIsPosting(false);
                   return;
                 }
@@ -1086,6 +1159,25 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
                 setPostFiles([]);
                 setPostMessage('Posted!');
                 setTimeout(() => setPostMessage("") , 2000);
+                
+                // If this was a Demo post, sync with YSWSDB
+                if (postType === 'ship') {
+                  try {
+                    await fetch('/api/SyncUserWithYSWSDB', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ 
+                        token, 
+                        gameId: game.id,
+                        githubUrl: game.GitHubURL 
+                      }),
+                    });
+                  } catch (syncError) {
+                    console.error('Failed to sync with YSWSDB:', syncError);
+                    // Don't fail the post if sync fails
+                  }
+                }
+                
                 // Update parent state with the new post for this game
                 const newPost = {
                   id: data.post?.id || undefined,
@@ -1098,11 +1190,19 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
                 onUpdated?.({ id: game.id, posts: [newPost, ...(Array.isArray(game.posts) ? game.posts : [])] });
               } else {
                 setPostMessage(data?.message || 'Failed to post');
+                // Clear file inputs on failure
+                setBuildFile(null);
+                setPostFiles([]);
+                clearFileInputs();
               }
             } catch (e) {
               // eslint-disable-next-line no-console
               console.error(e);
               setPostMessage('Failed to post');
+              // Clear file inputs on error
+              setBuildFile(null);
+              setPostFiles([]);
+              clearFileInputs();
             } finally {
               setIsPosting(false);
             }

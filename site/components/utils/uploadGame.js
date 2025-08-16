@@ -45,6 +45,15 @@ export async function uploadGame({ file, name, token, apiBase }) {
     let data = null;
     try { data = JSON.parse(text); } catch {}
     if (!res.ok) {
+      // Handle validation errors with detailed guidance
+      if (data && data.validationError && data.details) {
+        return { 
+          ok: false, 
+          error: data.error || 'Validation failed',
+          details: data.details,
+          validationError: true
+        };
+      }
       return { ok: false, error: (data && data.error) || text };
     }
     const out = data || {};
