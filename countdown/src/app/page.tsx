@@ -46,7 +46,7 @@ export default function CountdownPage() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
       
-      <img src="/image.png" style={{width: "301px"}} />
+      <img src="/image.png" style={{width: "300px"}} />
       <div className="text-white text-9xl font-mono">
         {timeLeft.days}:{timeLeft.hours.toString().padStart(2, '0')}:{timeLeft.minutes.toString().padStart(2, '0')}:{timeLeft.seconds.toString().padStart(2, '0')}
       </div>
