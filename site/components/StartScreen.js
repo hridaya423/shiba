@@ -117,11 +117,11 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             minHeight: "100vh",
             top: "0",
             zIndex: 2,
-            padding: "10vw",
+            padding: "40px 8vw 8vw",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "flex-start",
           }}
         >
           <p className="top-text japanese black-outline">
@@ -132,8 +132,8 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           </p>
           <img
             src="/landing/shibaarcade_logo.png"
+            className="logo"
             style={{
-              width: "60%",
               zIndex: 2,
             }}
           />
@@ -492,6 +492,11 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           font-size: 1.2em;
         }
 
+        /* Desktop / default logo width */
+        .opening-info .logo {
+          width: 60%;
+        }
+
         .opening-info {
           display: flex;
           flex-flow: column;
@@ -524,7 +529,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
       aspect-ratio: 16/9;
       border-radius: 32px;
       border: 3px solid var(--yellow);
-      margin-top: -35px;
+  margin-top: -35px; /* overridden on mobile for better spacing */
       }
 
       .sparkle {
@@ -960,8 +965,16 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
 
         @media (max-width: 600px) {
           .opening-info {
-            padding: 10px;
+            padding: 24px 4px 40px;
             min-height: 100vh;
+            gap: 24px;
+          }
+
+          .opening-info .logo {
+            width: 95%;
+            max-width: 500px;
+            margin-top: 10px;
+            margin-bottom: 4px;
           }
 
           .top-text.japanese {
@@ -975,15 +988,29 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           }
 
           .opening-video {
-            width: 90%;
-            margin-top: -20px;
+            width: 100%;
+            max-width: 640px;
+            margin-top: 0; /* remove negative space squeeze */
+            margin-bottom: 8px;
           }
 
           .email-input {
-            width: 85%;
-            padding: 12px;
+            width: 100%; /* full bleed across the safe area */
+            padding: 8px 10px; /* tighter side padding for more input width */
             flex-direction: column;
             gap: 10px;
+            margin-top: 4px;
+            font-size: 1em; /* slightly smaller than desktop default */
+          }
+
+          .email-input input {
+            font-size: 0.95em; /* reduce font size to fit longer emails */
+            letter-spacing: 0.25px;
+          }
+
+          .email-input button {
+            font-size: 0.9em;
+            padding: 10px 12px;
           }
 
           .email-input input {
