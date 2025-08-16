@@ -114,7 +114,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
         <div
           className="opening-info"
           style={{
-            maxHeight: "100vh",
+            minHeight: "100vh",
             top: "0",
             zIndex: 2,
             padding: "10vw",
@@ -498,7 +498,10 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           align-items: center;
           justify-content: center;
           width: 100%;
-          minheight: 100vh;
+          /* Corrected property name (was minheight) and allow growth beyond initial viewport */
+          min-height: 100vh;
+          /* Ensure scaling children (e.g., hover transforms) aren't clipped */
+          overflow: visible;
           padding: 20px;
         }
 
