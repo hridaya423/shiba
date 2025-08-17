@@ -12,7 +12,8 @@ export default function Home() {
     {
       name: "My Games",
       description: "Create, update, and ship your games",
-      backgroundImage: "MyGames.png",
+      backgroundImage: "GamesBottom.png",
+      topImage: "GamesTop.png",
       bgColor: "rgba(255, 214, 224, 1)",
       gameClipAudio: "MyGames.mp3",
     },
