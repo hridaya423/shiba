@@ -950,6 +950,41 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
                 opacity: postType === 'ship' && !isProfileComplete ? 0.5 : 1,
                 cursor: postType === 'ship' && !isProfileComplete ? 'not-allowed' : 'text'
               }}
+              onPaste={async (e) => {
+                // Only handle image paste for moments, not ships
+                if (postType !== 'moment') return;
+                
+                const items = Array.from(e.clipboardData.items);
+                const imageItem = items.find(item => item.type.startsWith('image/'));
+                
+                if (imageItem) {
+                  e.preventDefault(); // Prevent default paste behavior for images
+                  
+                  const file = imageItem.getAsFile();
+                  if (file) {
+                    // Check file size (5MB limit)
+                    if (file.size > 5 * 1024 * 1024) {
+                      alert('Pasted image is too large. Please use an image under 5MB.');
+                      return;
+                    }
+                    
+                    // Add the pasted image to postFiles
+                    setPostFiles(prev => {
+                      const byKey = new Map();
+                      const addAll = (arr) => {
+                        for (const f of arr) {
+                          const key = `${f.name}|${f.size}|${f.lastModified}`;
+                          if (!byKey.has(key)) byKey.set(key, f);
+                        }
+                      };
+                      addAll(prev || []);
+                      addAll([file]);
+                      return Array.from(byKey.values());
+                    });
+                  }
+                }
+                // For non-image items, let the default paste behavior happen
+              }}
             />
             {/* Previews */}
             {Array.isArray(postFiles) && postFiles.length > 0 && (
