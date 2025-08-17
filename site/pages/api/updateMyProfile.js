@@ -137,6 +137,10 @@ function buildAirtableFieldsFromProfile(p) {
       const c = p.address.city.trim().replace(/[<>&"']/g, '').substring(0, 50);
       if (c.length > 0) out['city'] = c;
     }
+    if (typeof p.address.state === 'string') {
+      const c = p.address.state.trim().replace(/[<>&"']/g, '').substring(0, 50);
+      if (c.length > 0) out['state'] = c;
+    }
     if (typeof p.address.zipcode === 'string') {
       const c = p.address.zipcode.trim().replace(/[^A-Za-z0-9\s-]/g, '').substring(0, 20);
       if (c.length > 0) out['zipcode'] = c;
@@ -161,6 +165,7 @@ function normalizeProfileFields(f) {
       street1: typeof f['street address'] === 'string' ? f['street address'] : '',
       street2: typeof f['street address #2'] === 'string' ? f['street address #2'] : '',
       city: typeof f['city'] === 'string' ? f['city'] : '',
+      state: typeof f['state'] === 'string' ? f['state'] : '',
       zipcode: typeof f['zipcode'] === 'string' ? f['zipcode'] : '',
       country: typeof f['country'] === 'string' ? f['country'] : '',
     },

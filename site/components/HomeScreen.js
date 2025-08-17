@@ -433,6 +433,7 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
   const [street1, setStreet1] = useState("");
   const [street2, setStreet2] = useState("");
   const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [zipcode, setZipcode] = useState("");
   const [country, setCountry] = useState("");
   const [saving, setSaving] = useState(false);
@@ -473,6 +474,7 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
     setStreet1((p.address && p.address.street1) || "");
     setStreet2((p.address && p.address.street2) || "");
     setCity((p.address && p.address.city) || "");
+    setState((p.address && p.address.state) || "");
     setZipcode((p.address && p.address.zipcode) || "");
     setCountry((p.address && p.address.country) || "");
     setSaving(false);
@@ -487,6 +489,7 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
     const initialStreet1 = (p.address && p.address.street1) || "";
     const initialStreet2 = (p.address && p.address.street2) || "";
     const initialCity = (p.address && p.address.city) || "";
+    const initialState = (p.address && p.address.state) || "";
     const initialZipcode = (p.address && p.address.zipcode) || "";
     const initialCountry = (p.address && p.address.country) || "";
 
@@ -498,10 +501,11 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
       street1 !== initialStreet1 ||
       street2 !== initialStreet2 ||
       city !== initialCity ||
+      state !== initialState ||
       zipcode !== initialZipcode ||
       country !== initialCountry
     );
-  }, [githubUsername, firstName, lastName, birthday, street1, street2, city, zipcode, country, initialProfile]);
+  }, [githubUsername, firstName, lastName, birthday, street1, street2, city, state, zipcode, country, initialProfile]);
 
   const handleCloseAttempt = () => {
     if (hasChanges) {
@@ -708,7 +712,7 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 12, opacity: 0.7 }}>Address</span>
-              {(!street1 || !city || !zipcode || !country) && (
+              {(!street1 || !city || !state || !zipcode || !country) && (
                 <span style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}>(missing required field)</span>
               )}
             </div>
@@ -742,13 +746,22 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
                 style={{ width: 140, padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
               />
             </div>
-            <input
-              type="text"
-              placeholder="Country"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
-            />
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="text"
+                placeholder="State / Province"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                style={{ flex: 1, padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
+              />
+              <input
+                type="text"
+                placeholder="Country"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                style={{ flex: 1, padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
+              />
+            </div>
           </div>
         </div>
 
@@ -764,7 +777,7 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
                     firstName,
                     lastName,
                     birthday,
-                    address: { street1, street2, city, zipcode, country },
+                    address: { street1, street2, city, state, zipcode, country },
                   };
                   const res = await fetch('/api/updateMyProfile', {
                     method: 'POST',

@@ -79,6 +79,7 @@ function normalizeProfileFields(f) {
       street1: typeof f['street address'] === 'string' ? f['street address'] : '',
       street2: typeof f['street address #2'] === 'string' ? f['street address #2'] : '',
       city: typeof f['city'] === 'string' ? f['city'] : '',
+      state: typeof f['state'] === 'string' ? f['state'] : '',
       zipcode: typeof f['zipcode'] === 'string' ? f['zipcode'] : '',
       country: typeof f['country'] === 'string' ? f['country'] : '',
     },

@@ -663,6 +663,7 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
       !userProfile.slackId && 'slackId',
       !userProfile.address?.street1 && 'street1',
       !userProfile.address?.city && 'city',
+      !userProfile.address?.state && 'state',
       !userProfile.address?.zipcode && 'zipcode',
       !userProfile.address?.country && 'country'
     ].filter(Boolean);
@@ -1169,7 +1170,8 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
                       body: JSON.stringify({ 
                         token, 
                         gameId: game.id,
-                        githubUrl: game.GitHubURL 
+                        githubUrl: game.GitHubURL,
+                        playLink: playLink
                       }),
                     });
                   } catch (syncError) {
@@ -1208,7 +1210,7 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
             }
           }}
               >
-                {isPosting ? 'Posting…' : overTotalLimit ? 'Screenshots exceed 5MB' : 'Post'}
+                {isPosting ? (postType === 'ship' ? 'Shipping…' : 'Posting…') : overTotalLimit ? 'Screenshots exceed 5MB' : (postType === 'ship' ? 'Ship' : 'Post')}
               </button>
             </div>
           </div>
