@@ -16,6 +16,7 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
   const normalizedWidth = typeof width === "number" ? `${width}` : width;
   const [started, setStarted] = useState(false);
   const [animating, setAnimating] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const iframeRef = useRef(null);
 
   if (!gameId) {
@@ -33,6 +34,16 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
           console.log('Error attempting to enable fullscreen:', err);
         });
       }
+    }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy link:', err);
     }
   };
 
@@ -206,6 +217,12 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
               0% { transform: rotateY(0deg) scale(1); }
               100% { transform: rotateY(720deg) scale(8); }
             }
+            @keyframes fadeInOut {
+              0% { opacity: 0; transform: translateY(-10px); }
+              20% { opacity: 1; transform: translateY(0); }
+              80% { opacity: 1; transform: translateY(0); }
+              100% { opacity: 0; transform: translateY(-10px); }
+            }
           `}</style>
         </button>
       )}
@@ -218,39 +235,97 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "1px solid #ddd", borderRadius: 8 }}
             allow="autoplay; fullscreen"
           />
-          <button
-            onClick={handleFullScreen}
-            style={{
-              position: "absolute",
-              top: "8px",
-              right: "8px",
-              width: `${getButtonSize()}px`,
-              height: `${getButtonSize()}px`,
-              background: "rgba(0, 0, 0, 0.6)",
-              border: "1px solid rgba(255, 255, 255, 0.3)",
-              borderRadius: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "white",
-              fontSize: `${Math.max(12, getButtonSize() * 0.4)}px`,
-              backdropFilter: "blur(4px)",
-              transition: "all 0.2s ease",
-              zIndex: 10,
-            }}
-
-            title="Toggle fullscreen"
-          >
-            <svg
-              width="60%"
-              height="60%"
-              viewBox="0 0 24 24"
-              fill="currentColor"
+          <div style={{
+            position: "absolute",
+            top: "8px",
+            right: "8px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            zIndex: 10,
+          }}>
+            <button
+              onClick={handleCopyLink}
+              style={{
+                width: linkCopied ? `${getButtonSize() * 4.5}px` : `${getButtonSize()}px`,
+                height: `${getButtonSize()}px`,
+                background: linkCopied ? "rgba(34, 197, 94, 0.8)" : "rgba(0, 0, 0, 0.6)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                borderRadius: "4px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontSize: `${Math.max(12, getButtonSize() * 0.4)}px`,
+                backdropFilter: "blur(4px)",
+                transition: "all 0.3s ease",
+                position: "relative",
+                gap: "6px",
+                padding: "0 8px",
+                overflow: "hidden",
+                boxSizing: "border-box",
+              }}
+              title="Copy game link"
             >
-              <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-            </svg>
-          </button>
+              <svg
+                width="60%"
+                height="60%"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                style={{
+                  width: `${getButtonSize() * 0.5}px`,
+                  height: `${getButtonSize() * 0.5}px`,
+                  flexShrink: 0,
+                }}
+              >
+                <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+              </svg>
+              {linkCopied && (
+                <span style={{
+                  fontSize: "9px",
+                  fontWeight: "bold",
+                  opacity: 1,
+                  transition: "opacity 0.3s ease",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  lineHeight: 1,
+                  display: "flex",
+                  alignItems: "center",
+                }}>
+                  copied to clipboard
+                </span>
+              )}
+            </button>
+            <button
+              onClick={handleFullScreen}
+              style={{
+                width: `${getButtonSize()}px`,
+                height: `${getButtonSize()}px`,
+                background: "rgba(0, 0, 0, 0.6)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                borderRadius: "4px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontSize: `${Math.max(12, getButtonSize() * 0.4)}px`,
+                backdropFilter: "blur(4px)",
+                transition: "all 0.2s ease",
+              }}
+              title="Toggle fullscreen"
+            >
+              <svg
+                width="60%"
+                height="60%"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+              </svg>
+            </button>
+          </div>
         </>
       )}
     </div>
