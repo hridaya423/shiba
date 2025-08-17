@@ -141,22 +141,55 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
             padding: 16,
             boxSizing: "border-box",
             textAlign: "center",
+            overflow: "hidden",
           }}
         >
+          {thumbnailUrl && (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundImage: `url(${thumbnailUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                filter: "blur(12px) brightness(0.3)",
+                transform: "scale(1.1)",
+                zIndex: 0,
+              }}
+            />
+          )}
           <div
-            className={`cd${animating ? " animating" : ""}`}
-            aria-hidden
-            style={thumbnailUrl ? {
-              backgroundImage: `url(${thumbnailUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            } : undefined}
+            style={{
+              position: "relative",
+              zIndex: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+              height: "100%",
+            }}
           >
-            <div className="cd-overlay" />
+            <div
+              className={`cd${animating ? " animating" : ""}`}
+              aria-hidden
+              style={thumbnailUrl ? {
+                backgroundImage: `url(${thumbnailUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              } : undefined}
+            >
+              <div className="cd-overlay" />
+            </div>
+            <p style={{ margin: 0, fontWeight: 800, opacity: animating ? 0 : 1, transition: "opacity 150ms ease-out" }}>
+              {`Tap to start ${gameName ? gameName : "game"}`}
+            </p>
           </div>
-          <p style={{ margin: 0, fontWeight: 800, opacity: animating ? 0 : 1, transition: "opacity 150ms ease-out" }}>
-            {`Tap to start ${gameName ? gameName : "game"}`}
-          </p>
           <style jsx>{`
             .cd {
               position: relative;
@@ -169,6 +202,10 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
               transform-style: preserve-3d;
               will-change: transform;
               animation: spinY 6s linear infinite;
+              box-shadow: 
+                0 0 15px rgba(255, 255, 255, 0.15),
+                0 0 30px rgba(255, 255, 255, 0.1),
+                inset 0 0 10px rgba(255, 255, 255, 0.05);
             }
             .cd.animating {
               animation: spinZoom 1500ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
