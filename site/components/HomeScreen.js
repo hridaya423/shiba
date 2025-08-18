@@ -3,6 +3,7 @@ import AppHead from "@/components/AppHead";
 import GameCarousel from "@/components/GameCarousel";
 import GameDetails from "@/components/GameDetails";
 import useAudioManager from "@/components/useAudioManager";
+import OnboardingModal from "@/components/OnboardingModal";
 
 // Cookie utility functions
 const getCookie = (name) => {
@@ -882,6 +883,8 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
   );
 }
 
+
+
 export default function HomeScreen({ games, setAppOpen, selectedGame, setSelectedGame, SlackId, token, profile, setProfile, autoOpenProfile }) {
 
 
@@ -891,6 +894,8 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isEventsOpen, setIsEventsOpen] = useState(false);
   const [hasOpenedEventsNotification, setHasOpenedEventsNotification] = useState(false);
+  const [hasOnboarded, setHasOnboarded] = useState(true);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   // Preload SFX and game clip audios for instant playback
   const sfxFiles = ["next.mp3", "prev.mp3", "shiba-bark.mp3"];
@@ -961,6 +966,16 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
       setIsProfileOpen(true);
     }
   }, [autoOpenProfile]);
+
+  // Check onboarding status when profile is loaded
+  useEffect(() => {
+    if (profile && profile.hasOnboarded === false) {
+      setHasOnboarded(false);
+      setIsOnboardingOpen(true);
+    } else if (profile) {
+      setHasOnboarded(true);
+    }
+  }, [profile]);
 
   return (
     <>
@@ -1199,6 +1214,15 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
         isOpen={isEventsOpen}
         onClose={() => setIsEventsOpen(false)}
         token={token}
+      />
+      <OnboardingModal
+        isOpen={isOnboardingOpen}
+        token={token}
+        onCompleted={(updatedProfile) => {
+          setProfile?.(updatedProfile);
+          setHasOnboarded(true);
+          setIsOnboardingOpen(false);
+        }}
       />
     </>
   );

@@ -24,14 +24,27 @@ export default async function handler(req, res) {
       return res.status(401).json({ message: 'Invalid token' });
     }
 
-    const f = user.fields || {};
-    console.log('Airtable fields received:', JSON.stringify(f, null, 2));
+    // Update the user's hasOnboarded field to true
+    const updateRes = await airtableRequest(`${encodeURIComponent(AIRTABLE_USERS_TABLE)}/${user.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        fields: {
+          'hasOnboarded': true
+        }
+      })
+    });
+
+    if (!updateRes || !updateRes.id) {
+      return res.status(500).json({ message: 'Failed to update onboarding status' });
+    }
+
+    // Return the updated profile
+    const f = updateRes.fields || {};
     const profile = normalizeProfileFields(f);
-    console.log('Normalized profile:', JSON.stringify(profile, null, 2));
     return res.status(200).json({ ok: true, profile });
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.error('getMyProfile error:', e);
+    console.error('CompleteOnboarding error:', e);
     return res.status(500).json({ message: 'An unexpected error occurred.' });
   }
 }
@@ -70,14 +83,6 @@ async function findUserByToken(token) {
 }
 
 function normalizeProfileFields(f) {
-  // Check for hasOnboarded field - if it doesn't exist, default to false to trigger onboarding
-  let hasOnboarded = false; // default to false to trigger onboarding
-  if (f['hasOnboarded'] !== undefined) {
-    hasOnboarded = Boolean(f['hasOnboarded']);
-  }
-  
-  console.log('hasOnboarded field value:', f['hasOnboarded'], 'normalized to:', hasOnboarded);
-  
   return {
     email: typeof f.Email === 'string' ? f.Email : '',
     githubUsername: typeof f['github username'] === 'string' ? f['github username'] : '',
@@ -85,7 +90,7 @@ function normalizeProfileFields(f) {
     lastName: typeof f['Last Name'] === 'string' ? f['Last Name'] : '',
     birthday: typeof f['birthday'] === 'string' ? f['birthday'] : '',
     slackId: typeof f['slack id'] === 'string' ? f['slack id'] : '',
-    hasOnboarded: hasOnboarded,
+    hasOnboarded: typeof f['hasOnboarded'] === 'boolean' ? f['hasOnboarded'] : true,
     address: {
       street1: typeof f['street address'] === 'string' ? f['street address'] : '',
       street2: typeof f['street address #2'] === 'string' ? f['street address #2'] : '',
@@ -96,5 +101,3 @@ function normalizeProfileFields(f) {
     },
   };
 }
-
-
