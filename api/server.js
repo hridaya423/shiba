@@ -384,7 +384,7 @@ app.post(['/api/uploadGame', '/uploadGame'], upload.single('file'), async (req, 
 			details: 'Please upload a .zip file containing your Godot HTML5 export.',
 			guidance: 'In Godot, go to Project → Export → Web → Export Project → Export as HTML5'
 		});
-	}
+	} 
 	
 	const providedGameId = (req.body.gameId || '').trim();
 	const gameId = providedGameId || `game-${Date.now()}`;
