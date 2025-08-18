@@ -130,7 +130,6 @@ body {
   margin: 0;
 }
 
-/* Ensure form controls inherit GT Maru globally */
 input, textarea, select, button {
   font-family: 'GT Maru', Arial, Helvetica, sans-serif;
 }
