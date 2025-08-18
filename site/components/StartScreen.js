@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { MovingBackground } from "./HomeScreen";
 import { formatJamCountdown } from "./jamConfig";
 import { FiLogIn } from "react-icons/fi";
+import { useSearchParams } from "next/navigation";
 
 export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
   const [email, setEmail] = useState("");
@@ -24,6 +25,39 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
   }, []);
+
+  const searchParams = useSearchParams();
+  const code = searchParams.get("code");
+
+  useEffect(() => {
+    if (code) {
+      console.log("Authorization code:", code);
+      // Make a request to /api/newLogin with the code to get the token
+      const fetchToken = async () => {
+        try {
+          const res = await fetch("/api/slackLogin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
+          const data = await res.json();
+          if (res.ok && data?.token) {
+            setToken(data.token);
+            // Set the token in localstorage too
+            localStorage.setItem("token", data.token);
+          } else {
+            console.error(
+              "Failed to get token:",
+              data.message || "Unknown error",
+            );
+          }
+        } catch (error) {
+          console.error("Error fetching token:", error);
+        }
+      };
+      fetchToken();
+    }
+  }, [code]);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -108,6 +142,13 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             padding: "10px",
           }}
           className="slack-logo"
+          onClick={() => {
+            window.open(
+              "https://slack.com/oauth/v2/authorize?client_id=2210535565.9361842154099&user_scope=users:read,users:read.email&redirect_uri=" +
+                process.env.NEXT_PUBLIC_SLACK_REDIRECT_URI,
+              "_blank",
+            );
+          }}
         >
           <FiLogIn
             size={24}
