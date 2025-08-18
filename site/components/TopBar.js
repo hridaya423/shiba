@@ -1,4 +1,24 @@
+import { useEffect } from "react";
+
 export default function TopBar({ backgroundColor, title, image, onBack }) {
+  // Event listener to return on escape key press
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        if (onBack) {
+          onBack();
+        } else {
+          window.history.back();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onBack]);
+
   return (
     <div
       style={{
@@ -37,7 +57,18 @@ export default function TopBar({ backgroundColor, title, image, onBack }) {
       >
         <img src="back.svg" alt="Back" width={20} height={20} />
       </button>
-      <p style={{ display: "flex", opacity: 0.9, fontWeight: 600, alignItems: "center", justifyContent: "center", margin: 0 }}>{title}</p>
+      <p
+        style={{
+          display: "flex",
+          opacity: 0.9,
+          fontWeight: 600,
+          alignItems: "center",
+          justifyContent: "center",
+          margin: 0,
+        }}
+      >
+        {title}
+      </p>
       <div
         style={{
           width: 36,
@@ -56,5 +87,3 @@ export default function TopBar({ backgroundColor, title, image, onBack }) {
     </div>
   );
 }
-
-

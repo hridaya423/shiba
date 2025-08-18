@@ -51,29 +51,33 @@ export default function useAudioManager(fileNames = []) {
     }
   }, []);
 
-  const playExclusive = useCallback((name) => {
-    stopAll();
-    play(name);
-  }, [play, stopAll]);
+  const playExclusive = useCallback(
+    (name) => {
+      stopAll();
+      play(name);
+    },
+    [play, stopAll],
+  );
 
   // Play background "clip" track, stopping only the previous clip, not SFX
-  const playClip = useCallback((name) => {
-    if (!name) return;
-    const previousName = currentClipRef.current;
-    if (previousName && audioMapRef.current.has(previousName)) {
-      const prevAudio = audioMapRef.current.get(previousName);
-      try {
-        prevAudio.pause();
-        prevAudio.currentTime = 0;
-      } catch (_) {
-        // ignore
+  const playClip = useCallback(
+    (name) => {
+      if (!name) return;
+      const previousName = currentClipRef.current;
+      if (previousName && audioMapRef.current.has(previousName)) {
+        const prevAudio = audioMapRef.current.get(previousName);
+        try {
+          prevAudio.pause();
+          prevAudio.currentTime = 0;
+        } catch (_) {
+          // ignore
+        }
       }
-    }
-    currentClipRef.current = name;
-    play(name);
-  }, [play]);
+      currentClipRef.current = name;
+      play(name);
+    },
+    [play],
+  );
 
   return { play, playExclusive, playClip, stopAll };
 }
-
-
