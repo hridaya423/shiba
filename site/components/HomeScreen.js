@@ -1041,7 +1041,7 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
     play: playSound,
     playClip,
     stopAll,
-  } = useAudioManager([...sfxFiles, ...clipFiles]);
+  } = useAudioManager([...sfxFiles, ...clipFiles, "zeldaSong.mp3"]);
 
   // Check if user has opened events notification
   useEffect(() => {
@@ -1259,6 +1259,9 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
             setAppOpen={setAppOpen}
             stopAll={stopAll}
             selectedIndex={selectedGame}
+            isProfileOpen={isProfileOpen}
+            isEventsOpen={isEventsOpen}
+            isOnboardingOpen={isOnboardingOpen}
           />
           <GameDetails game={games[selectedGame]} />
         </div>
@@ -1398,6 +1401,9 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
       <OnboardingModal
         isOpen={isOnboardingOpen}
         token={token}
+        playSound={playSound}
+        playClip={playClip}
+        stopAll={stopAll}
         onCompleted={(updatedProfile) => {
           setProfile?.(updatedProfile);
           setHasOnboarded(true);

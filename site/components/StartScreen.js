@@ -177,7 +177,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           backgroundImage: `
             radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.2) 100%),
             linear-gradient(to bottom, transparent, black),
-            url('/landing/background.png')
+            url('/landing/background.gif')
           `,
           filter: "saturate(1.2)",
           backgroundSize: "contain",
@@ -249,7 +249,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
                   disabled={loading}
                   className="signup-button"
                 >
-                  join the jam
+                  {loading ? "Sending..." : "join the jam"}
                 </button>
               </>
             ) : (
@@ -513,7 +513,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
                     disabled={loading}
                     className="signup-button"
                   >
-                    join the jam
+                    {loading ? "Sending..." : "join the jam"}
                   </button>
                 </>
               ) : (
@@ -560,7 +560,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
               <summary>how long will shiba run for?</summary>
               <p>
                 shiba starts on august 22 and ends on october 20. then, we'll
-                build an arcade in tokyo from november 1-7th.
+                build an arcade in tokyo from november 5-12th.
               </p>
             </details>
 

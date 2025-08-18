@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function OnboardingModal({ isOpen, token, onCompleted }) {
+export default function OnboardingModal({ isOpen, token, onCompleted, playSound, playClip, stopAll }) {
   const [shouldRender, setShouldRender] = useState(Boolean(isOpen));
   const [isExiting, setIsExiting] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -124,6 +124,72 @@ export default function OnboardingModal({ isOpen, token, onCompleted }) {
     }
   };
 
+  // Play background music when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      // Stop any existing audio and play the Zelda song
+      try { stopAll?.(); } catch (_) {}
+      playClip?.("zeldaSong.mp3");
+    }
+  }, [isOpen, playClip, stopAll]);
+
+  // Handle Enter key for navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        
+        // Handle different stages
+        switch (onboardingStage) {
+          case 0: // Get Started
+            playSound?.("next.mp3");
+            setOnboardingStage(1);
+            break;
+          case 1: // Continue to Slack
+            playSound?.("next.mp3");
+            setOnboardingStage(2);
+            break;
+          case 3: // Continue after Slack
+            playSound?.("next.mp3");
+            setOnboardingStage(4);
+            break;
+          case 4: // Continue to Hackatime
+            playSound?.("next.mp3");
+            setOnboardingStage(5);
+            break;
+          case 5: // Continue to Extension
+            playSound?.("next.mp3");
+            setOnboardingStage(6);
+            break;
+          case 6: // Continue to Create Game
+            playSound?.("next.mp3");
+            setOnboardingStage(7);
+            break;
+          case 7: // Create Game
+            if (gameName.trim() && !creatingGame) {
+              handleCreateGame();
+            }
+            break;
+          case 8: // Post Devlog
+            if (devlogContent.trim() && !isPostingDevlog) {
+              handlePostDevlog();
+            }
+            break;
+          case 9: // Complete Onboarding
+            if (!completingOnboarding) {
+              handleCompleteOnboarding();
+            }
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onboardingStage, gameName, devlogContent, creatingGame, isPostingDevlog, completingOnboarding, playSound, token, createdGameId, onCompleted]);
+
   if (!shouldRender) return null;
 
   return (
@@ -176,7 +242,10 @@ export default function OnboardingModal({ isOpen, token, onCompleted }) {
           }}>
             {/* Back Button */}
             <button
-              onClick={() => setOnboardingStage(onboardingStage - 1)}
+              onClick={() => {
+                playSound?.("prev.mp3");
+                setOnboardingStage(onboardingStage - 1);
+              }}
               style={{
                 appearance: "none",
                 border: "1px solid rgba(0,0,0,0.12)",
@@ -325,6 +394,7 @@ export default function OnboardingModal({ isOpen, token, onCompleted }) {
           >
               <button
                 onClick={() => {
+                  playSound?.("next.mp3");
                   setOnboardingStage(1);
                 }}
                 style={{
@@ -433,7 +503,10 @@ export default function OnboardingModal({ isOpen, token, onCompleted }) {
             
             <div style={{ marginTop: "16px", display: "flex", justifyContent: "center" }}>
               <button
-                onClick={() => setOnboardingStage(2)}
+                onClick={() => {
+                  playSound?.("next.mp3");
+                  setOnboardingStage(2);
+                }}
                 style={{
                   appearance: "none",
                   border: "2px solid black",
@@ -543,8 +616,8 @@ export default function OnboardingModal({ isOpen, token, onCompleted }) {
               style={{
                 appearance: 'none',
                 border: '2px solid black',
-                background: 'linear-gradient(180deg, #ff8ec3 0%, #ff6fa5 100%)',
-                color: 'black',
+                background: '#4A154B',
+                color: 'white',
                 borderRadius: '8px',
                 padding: '12px 24px',
                 cursor: 'pointer',
@@ -553,10 +626,10 @@ export default function OnboardingModal({ isOpen, token, onCompleted }) {
                 transition: 'background-color 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.target.style.background = '#ff7eb3';
+                e.target.style.background = '#5a1a5b';
               }}
               onMouseLeave={(e) => {
-                e.target.style.background = 'linear-gradient(180deg, #ff8ec3 0%, #ff6fa5 100%)';
+                e.target.style.background = '#4A154B';
               }}
             >
               Login with Slack
@@ -590,7 +663,10 @@ export default function OnboardingModal({ isOpen, token, onCompleted }) {
             
             <div style={{ marginTop: "24px", display: "flex", justifyContent: "center" }}>
               <button
-                onClick={() => setOnboardingStage(4)}
+                onClick={() => {
+                  playSound?.("next.mp3");
+                  setOnboardingStage(4);
+                }}
                 style={{
                   appearance: "none",
                   border: "2px solid black",
@@ -683,7 +759,10 @@ export default function OnboardingModal({ isOpen, token, onCompleted }) {
                 Download Godot
               </button>
               <button
-                onClick={() => setOnboardingStage(5)}
+                onClick={() => {
+                  playSound?.("next.mp3");
+                  setOnboardingStage(5);
+                }}
                 style={{
                   appearance: "none",
                   border: "2px solid black",
@@ -782,7 +861,10 @@ export default function OnboardingModal({ isOpen, token, onCompleted }) {
                 Take me to Hackatime
               </button>
               <button
-                onClick={() => setOnboardingStage(6)}
+                onClick={() => {
+                  playSound?.("next.mp3");
+                  setOnboardingStage(6);
+                }}
                 style={{
                   appearance: "none",
                   border: "2px solid black",
@@ -915,7 +997,10 @@ export default function OnboardingModal({ isOpen, token, onCompleted }) {
                   Setup Guide
                 </button>
                 <button
-                  onClick={() => setOnboardingStage(7)}
+                  onClick={() => {
+                  playSound?.("next.mp3");
+                  setOnboardingStage(7);
+                }}
                   style={{
                     appearance: "none",
                     border: "2px solid black",

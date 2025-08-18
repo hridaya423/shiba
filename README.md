@@ -13,7 +13,7 @@ Shiba is a game development program by Hack Club for teenagers to create games a
 - **Duration**: 2 months of game development
 - **Platform**: Godot game engine
 
-### Phase 2: Tokyo Arcade Building (November 1-7)
+### Phase 2: Tokyo Arcade Building (November 5-12)
 - **Location**: Tokyo, Japan
 - **Goal**: Build a physical arcade featuring the games created during Phase 1
 - **Experience**: In-person collaboration and arcade construction
