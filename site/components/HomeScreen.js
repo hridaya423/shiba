@@ -6,17 +6,17 @@ import useAudioManager from "@/components/useAudioManager";
 
 // Cookie utility functions
 const getCookie = (name) => {
-  if (typeof document === 'undefined') return null;
+  if (typeof document === "undefined") return null;
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
+  if (parts.length === 2) return parts.pop().split(";").shift();
   return null;
 };
 
 const setCookie = (name, value, days = 365) => {
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
   const expires = new Date();
-  expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
   document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
 };
 
@@ -62,7 +62,10 @@ export function MovingBackground() {
         const rowsCount = grid.rows || 0;
         const scrollDistance = rowsCount * (ICON_SIZE + GAP);
         const direction = colIndex % 2 === 0 ? "bgScrollUp" : "bgScrollDown";
-        const durationSeconds = Math.max(1, scrollDistance / SPEED_PX_PER_SECOND);
+        const durationSeconds = Math.max(
+          1,
+          scrollDistance / SPEED_PX_PER_SECOND,
+        );
         return (
           <div
             key={colIndex}
@@ -104,7 +107,8 @@ export function MovingBackground() {
                       willChange: "transform",
                       animationName: "pulseScale",
                       animationDuration: "2.4s",
-                      animationTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+                      animationTimingFunction:
+                        "cubic-bezier(0.34, 1.56, 0.64, 1)",
                       animationIterationCount: "infinite",
                       animationDelay: `-${(colIndex * 0.15 + rowIndex * 0.1).toFixed(2)}s`,
                     }}
@@ -127,7 +131,8 @@ export function MovingBackground() {
                       willChange: "transform",
                       animationName: "pulseScale",
                       animationDuration: "2.4s",
-                      animationTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+                      animationTimingFunction:
+                        "cubic-bezier(0.34, 1.56, 0.64, 1)",
                       animationIterationCount: "infinite",
                       animationDelay: `-${(colIndex * 0.15 + rowIndex * 0.1 + 1.2).toFixed(2)}s`,
                     }}
@@ -140,19 +145,37 @@ export function MovingBackground() {
       })}
       <style jsx>{`
         @keyframes bgScrollUp {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(calc(-1 * var(--scrollDistance))); }
+          0% {
+            transform: translateY(0);
+          }
+          100% {
+            transform: translateY(calc(-1 * var(--scrollDistance)));
+          }
         }
         @keyframes bgScrollDown {
-          0% { transform: translateY(calc(-1 * var(--scrollDistance))); }
-          100% { transform: translateY(0); }
+          0% {
+            transform: translateY(calc(-1 * var(--scrollDistance)));
+          }
+          100% {
+            transform: translateY(0);
+          }
         }
         @keyframes pulseScale {
-          0% { transform: scale(0.5); }
-          40% { transform: scale(1.05); }
-          55% { transform: scale(0.95); }
-          70% { transform: scale(1.02); }
-          100% { transform: scale(0.5); }
+          0% {
+            transform: scale(0.5);
+          }
+          40% {
+            transform: scale(1.05);
+          }
+          55% {
+            transform: scale(0.95);
+          }
+          70% {
+            transform: scale(1.02);
+          }
+          100% {
+            transform: scale(0.5);
+          }
         }
       `}</style>
     </div>
@@ -195,12 +218,12 @@ function EventsModal({ isOpen, onClose, token }) {
   // Fetch user's RSVPs when modal opens
   useEffect(() => {
     if (!isOpen || !token) return;
-    
+
     const fetchRSVPs = async () => {
       try {
-        const res = await fetch('/api/GetRSVPs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/GetRSVPs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
         });
         const data = await res.json().catch(() => ({}));
@@ -208,35 +231,39 @@ function EventsModal({ isOpen, onClose, token }) {
           setUserRSVPs(data.rsvps || []);
         }
       } catch (error) {
-        console.error('Failed to fetch RSVPs:', error);
+        console.error("Failed to fetch RSVPs:", error);
       }
     };
-    
+
     fetchRSVPs();
   }, [isOpen, token]);
 
-  const hasRSVPedForShibaDirect = userRSVPs.some(rsvp => rsvp.event === 'Shiba-Direct');
+  const hasRSVPedForShibaDirect = userRSVPs.some(
+    (rsvp) => rsvp.event === "Shiba-Direct",
+  );
 
   const handleRSVP = async () => {
     if (!token || isRSVPing) return;
-    
+
     setIsRSVPing(true);
     setRsvpMessage("");
-    
+
     try {
-      const res = await fetch('/api/CreateRSVP', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, event: 'Shiba-Direct' }),
+      const res = await fetch("/api/CreateRSVP", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, event: "Shiba-Direct" }),
       });
       const data = await res.json().catch(() => ({}));
-      
+
       if (res.ok && data?.ok) {
-        setRsvpMessage('RSVP successful! You\'ll receive an email 30 minutes before the event.');
+        setRsvpMessage(
+          "RSVP successful! You'll receive an email 30 minutes before the event.",
+        );
         // Refresh RSVPs
-        const rsvpRes = await fetch('/api/GetRSVPs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const rsvpRes = await fetch("/api/GetRSVPs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
         });
         const rsvpData = await rsvpRes.json().catch(() => ({}));
@@ -244,13 +271,13 @@ function EventsModal({ isOpen, onClose, token }) {
           setUserRSVPs(rsvpData.rsvps || []);
         }
       } else if (res.status === 409) {
-        setRsvpMessage('You\'ve already RSVPed for this event!');
+        setRsvpMessage("You've already RSVPed for this event!");
       } else {
-        setRsvpMessage(data?.message || 'Failed to RSVP');
+        setRsvpMessage(data?.message || "Failed to RSVP");
       }
     } catch (error) {
-      console.error('RSVP error:', error);
-      setRsvpMessage('Failed to RSVP');
+      console.error("RSVP error:", error);
+      setRsvpMessage("Failed to RSVP");
     } finally {
       setIsRSVPing(false);
     }
@@ -325,33 +352,60 @@ function EventsModal({ isOpen, onClose, token }) {
           </button>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", textAlign: "center" }}>
-          <div style={{
-            border: "4px solid #FF2200",
-            borderRadius: "8px",
-            background: "linear-gradient(to bottom, #ffb7b5, #ed7874)",
+        <div
+          style={{
             display: "flex",
             flexDirection: "column",
+            gap: 16,
             alignItems: "center",
-            justifyContent: "center",
             textAlign: "center",
-            gap: "8px",
-            padding: "16px",
-            width: "100%"
-          }}>
-            <img src="/landing/shiba_direct.png" style={{ width: "80%", marginBottom: "8px" }} />
-            <p style={{ margin: 0, fontSize: "14px" }}>22 august · 4:30pm – 5:30pm PST</p>
-            <p style={{ margin: 0, fontSize: "14px" }}>our kickoff event where we'll release features & many surpises</p>
+          }}
+        >
+          <div
+            style={{
+              border: "4px solid #FF2200",
+              borderRadius: "8px",
+              background: "linear-gradient(to bottom, #ffb7b5, #ed7874)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              gap: "8px",
+              padding: "16px",
+              width: "100%",
+            }}
+          >
+            <img
+              src="/landing/shiba_direct.png"
+              style={{ width: "80%", marginBottom: "8px" }}
+            />
+            <p style={{ margin: 0, fontSize: "14px" }}>
+              22 august · 4:30pm – 5:30pm PST
+            </p>
+            <p style={{ margin: 0, fontSize: "14px" }}>
+              our kickoff event where we'll release features & many surpises
+            </p>
             {hasRSVPedForShibaDirect ? (
-              <div style={{
-                background: "rgba(255, 255, 255, 0.8)",
-                border: "2px dotted #006600",
-                borderRadius: "8px",
-                padding: "12px",
-                margin: "8px 0"
-              }}>
-                <p style={{ margin: 0, fontSize: "14px", fontWeight: "bold", color: "#006600" }}>
-                  You're RSVPed, you'll automatically receive an email with the zoom link 30 minutes before.
+              <div
+                style={{
+                  background: "rgba(255, 255, 255, 0.8)",
+                  border: "2px dotted #006600",
+                  borderRadius: "8px",
+                  padding: "12px",
+                  margin: "8px 0",
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    color: "#006600",
+                  }}
+                >
+                  You're RSVPed, you'll automatically receive an email with the
+                  zoom link 30 minutes before.
                 </p>
               </div>
             ) : (
@@ -370,7 +424,8 @@ function EventsModal({ isOpen, onClose, token }) {
                     fontWeight: 800,
                     fontSize: "14px",
                     opacity: isRSVPing ? 0.8 : 1,
-                    transition: "opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease"
+                    transition:
+                      "opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease",
                   }}
                   onMouseEnter={(e) => {
                     if (!isRSVPing) {
@@ -390,8 +445,10 @@ function EventsModal({ isOpen, onClose, token }) {
               </>
             )}
           </div>
-          
-          <p style={{ margin: 0, fontSize: "14px", opacity: 0.7 }}>More events to be announced soon</p>
+
+          <p style={{ margin: 0, fontSize: "14px", opacity: 0.7 }}>
+            More events to be announced soon
+          </p>
         </div>
       </div>
       <style jsx>{`
@@ -399,7 +456,10 @@ function EventsModal({ isOpen, onClose, token }) {
           background-color: rgba(255, 255, 255, 0);
           backdrop-filter: blur(0px);
           -webkit-backdrop-filter: blur(0px);
-          transition: backdrop-filter 240ms ease, -webkit-backdrop-filter 240ms ease, background-color 240ms ease;
+          transition:
+            backdrop-filter 240ms ease,
+            -webkit-backdrop-filter 240ms ease,
+            background-color 240ms ease;
         }
         .modal-overlay.enter {
           background-color: rgba(255, 255, 255, 0.3);
@@ -414,16 +474,31 @@ function EventsModal({ isOpen, onClose, token }) {
         .modal-card {
           transform: translateY(6px) scale(0.98);
           opacity: 0;
-          transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 220ms ease;
+          transition:
+            transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+            opacity 220ms ease;
         }
-        .modal-card.enter { transform: translateY(0) scale(1); opacity: 1; }
-        .modal-card.exit { transform: translateY(6px) scale(0.98); opacity: 0; }
+        .modal-card.enter {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+        }
+        .modal-card.exit {
+          transform: translateY(6px) scale(0.98);
+          opacity: 0;
+        }
       `}</style>
     </div>
   );
 }
-
-function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile, token, onUpdated }) {
+function ProfileModal({
+  isOpen,
+  onClose,
+  slackProfile,
+  onLogout,
+  initialProfile,
+  token,
+  onUpdated,
+}) {
   const [shouldRender, setShouldRender] = useState(Boolean(isOpen));
   const [isExiting, setIsExiting] = useState(false);
   const [githubUsername, setGithubUsername] = useState("");
@@ -482,34 +557,37 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
 
   const hasChanges = useMemo(() => {
     const p = initialProfile || {};
-    const initialGithubUsername = p.githubUsername || "";
-    const initialFirstName = p.firstName || "";
-    const initialLastName = p.lastName || "";
-    const initialBirthday = p.birthday || "";
-    const initialStreet1 = (p.address && p.address.street1) || "";
-    const initialStreet2 = (p.address && p.address.street2) || "";
-    const initialCity = (p.address && p.address.city) || "";
-    const initialState = (p.address && p.address.state) || "";
-    const initialZipcode = (p.address && p.address.zipcode) || "";
-    const initialCountry = (p.address && p.address.country) || "";
-
     return (
-      githubUsername !== initialGithubUsername ||
-      firstName !== initialFirstName ||
-      lastName !== initialLastName ||
-      birthday !== initialBirthday ||
-      street1 !== initialStreet1 ||
-      street2 !== initialStreet2 ||
-      city !== initialCity ||
-      state !== initialState ||
-      zipcode !== initialZipcode ||
-      country !== initialCountry
+      githubUsername !== (p.githubUsername || "") ||
+      firstName !== (p.firstName || "") ||
+      lastName !== (p.lastName || "") ||
+      birthday !== (p.birthday || "") ||
+      street1 !== ((p.address && p.address.street1) || "") ||
+      street2 !== ((p.address && p.address.street2) || "") ||
+      city !== ((p.address && p.address.city) || "") ||
+      state !== ((p.address && p.address.state) || "") ||
+      zipcode !== ((p.address && p.address.zipcode) || "") ||
+      country !== ((p.address && p.address.country) || "")
     );
-  }, [githubUsername, firstName, lastName, birthday, street1, street2, city, state, zipcode, country, initialProfile]);
+  }, [
+    githubUsername,
+    firstName,
+    lastName,
+    birthday,
+    street1,
+    street2,
+    city,
+    state,
+    zipcode,
+    country,
+    initialProfile,
+  ]);
 
   const handleCloseAttempt = () => {
     if (hasChanges) {
-      const confirmed = confirm("You haven't saved your changes. Tap update to save your changes");
+      const confirmed = confirm(
+        "You haven't saved your changes. Tap update to save your changes",
+      );
       if (confirmed) {
         onClose?.();
       }
@@ -522,6 +600,15 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
 
   const displayName = slackProfile?.displayName || "";
   const image = slackProfile?.image || "";
+
+  const inputStyle = {
+    padding: 10,
+    borderRadius: 10,
+    border: "1px solid rgba(0,0,0,0.18)",
+    background: "rgba(255,255,255,0.8)",
+    outline: "none",
+    boxSizing: "border-box",
+  };
 
   return (
     <div
@@ -554,8 +641,11 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
           flexDirection: "column",
           gap: 12,
           border: "1px solid rgba(0, 0, 0, 0.12)",
+          maxHeight: "90vh",
+          overflowY: "auto",
         }}
       >
+        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -590,29 +680,50 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
           </button>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center" }}>
+        {/* Slack Connect */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+            alignItems: "center",
+            textAlign: "center",
+          }}
+        >
           {initialProfile?.slackId ? (
             <>
-              <div style={{
-                width: 88,
-                height: 88,
-                borderRadius: 12,
-                border: "1px solid rgba(0,0,0,0.18)",
-                overflow: "hidden",
-                backgroundColor: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}>
+              <div
+                style={{
+                  width: 88,
+                  height: 88,
+                  borderRadius: 12,
+                  border: "1px solid rgba(0,0,0,0.18)",
+                  overflow: "hidden",
+                  backgroundColor: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 {image ? (
-                  <img src={image} alt={displayName || "Slack Avatar"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img
+                    src={image}
+                    alt={displayName || "Slack Avatar"}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
                 ) : (
                   <div style={{ fontSize: 12, opacity: 0.6 }}>No Avatar</div>
                 )}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <span style={{ fontWeight: 700 }}>{displayName || ""}</span>
-                <span style={{ fontSize: 12, opacity: 0.7 }}>Signed in via Slack</span>
+                <span style={{ fontSize: 12, opacity: 0.7 }}>
+                  Signed in via Slack
+                </span>
               </div>
             </>
           ) : (
@@ -620,38 +731,45 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
               type="button"
               onClick={() => {
                 const base = window.location.origin;
-                const w = window.open(`${base}/api/slack/oauthStart?state=${encodeURIComponent(token || '')}` , 'slack_oauth', 'width=600,height=700');
+                const w = window.open(
+                  `${base}/api/slack/oauthStart?state=${encodeURIComponent(token || "")}`,
+                  "slack_oauth",
+                  "width=600,height=700",
+                );
                 const listener = async (evt) => {
-                  if (!evt || !evt.data || evt.data.type !== 'SLACK_CONNECTED') return;
+                  if (!evt?.data || evt.data.type !== "SLACK_CONNECTED") return;
+                  const id = String(evt.data.slackId || "");
+                  if (!id) return;
                   try {
-                    const id = String(evt.data.slackId || '');
-                    if (!id) return;
-                    // Re-fetch profile to get canonical state from server
-                    try {
-                      const res = await fetch('/api/getMyProfile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
-                      const data = await res.json().catch(() => ({}));
-                      if (res.ok && data?.ok) {
-                        onUpdated?.(data.profile);
-                      } else {
-                        onUpdated?.({ ...(initialProfile || {}), slackId: id });
-                      }
-                    } catch (_) {
+                    const res = await fetch("/api/getMyProfile", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ token }),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (res.ok && data?.ok) {
+                      onUpdated?.(data.profile);
+                    } else {
                       onUpdated?.({ ...(initialProfile || {}), slackId: id });
                     }
+                  } catch (_) {
+                    onUpdated?.({ ...(initialProfile || {}), slackId: id });
+                  }
+                  window.removeEventListener("message", listener);
+                  try {
+                    w?.close();
                   } catch (_) {}
-                  window.removeEventListener('message', listener);
-                  try { w && w.close && w.close(); } catch (_) {}
                 };
-                window.addEventListener('message', listener);
+                window.addEventListener("message", listener);
               }}
               style={{
-                appearance: 'none',
+                appearance: "none",
                 border: 0,
-                background: 'linear-gradient(180deg, #ff8ec3 0%, #ff6fa5 100%)',
-                color: '#fff',
+                background: "linear-gradient(180deg, #ff8ec3 0%, #ff6fa5 100%)",
+                color: "#fff",
                 borderRadius: 10,
-                padding: '10px 14px',
-                cursor: 'pointer',
+                padding: "10px 14px",
+                cursor: "pointer",
                 fontWeight: 800,
               }}
             >
@@ -660,11 +778,17 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
           )}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
+        {/* Inputs */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* GitHub */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 12, opacity: 0.7 }}>GitHub</span>
             {!githubUsername && (
-              <span style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}>(missing required field)</span>
+              <span
+                style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}
+              >
+                (missing required field)
+              </span>
             )}
           </div>
           <input
@@ -672,12 +796,18 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
             placeholder="GitHub Username"
             value={githubUsername}
             onChange={(e) => setGithubUsername(e.target.value)}
-            style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
+            style={{ ...inputStyle, width: "100%" }}
           />
+
+          {/* Name */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 12, opacity: 0.7 }}>Name</span>
             {(!firstName || !lastName) && (
-              <span style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}>(missing required field)</span>
+              <span
+                style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}
+              >
+                (missing required field)
+              </span>
             )}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
@@ -686,86 +816,96 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
               placeholder="First Name"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              style={{ flex: 1, padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
+              style={{ ...inputStyle, flex: 1, minWidth: 0 }}
             />
             <input
               type="text"
               placeholder="Last Name"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              style={{ flex: 1, padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
+              style={{ ...inputStyle, flex: 1, minWidth: 0 }}
             />
           </div>
+
+          {/* Birthday */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 12, opacity: 0.7 }}>Birthday</span>
             {!birthday && (
-              <span style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}>(missing required field)</span>
+              <span
+                style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}
+              >
+                (missing required field)
+              </span>
             )}
           </div>
           <input
             type="date"
             value={birthday}
             onChange={(e) => setBirthday(e.target.value)}
-            placeholder="YYYY-MM-DD"
-            style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
+            style={{ ...inputStyle, width: "100%" }}
           />
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 12, opacity: 0.7 }}>Address</span>
-              {(!street1 || !city || !state || !zipcode || !country) && (
-                <span style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}>(missing required field)</span>
-              )}
-            </div>
+
+          {/* Address */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, opacity: 0.7 }}>Address</span>
+            {(!street1 || !city || !state || !zipcode || !country) && (
+              <span
+                style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}
+              >
+                (missing required field)
+              </span>
+            )}
+          </div>
+          <input
+            type="text"
+            placeholder="Street Address"
+            value={street1}
+            onChange={(e) => setStreet1(e.target.value)}
+            style={{ ...inputStyle, width: "100%" }}
+          />
+          <input
+            type="text"
+            placeholder="Street Address #2"
+            value={street2}
+            onChange={(e) => setStreet2(e.target.value)}
+            style={{ ...inputStyle, width: "100%" }}
+          />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input
               type="text"
-              placeholder="Street Address"
-              value={street1}
-              onChange={(e) => setStreet1(e.target.value)}
-              style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
+              placeholder="City"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              style={{ ...inputStyle, flex: "1 1 40%", minWidth: 0 }}
             />
             <input
               type="text"
-              placeholder="Street Address #2"
-              value={street2}
-              onChange={(e) => setStreet2(e.target.value)}
-              style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
+              placeholder="Zipcode"
+              value={zipcode}
+              onChange={(e) => setZipcode(e.target.value)}
+              style={{ ...inputStyle, flex: "1 1 25%", minWidth: 0 }}
             />
-            <div style={{ display: "flex", gap: 8 }}>
-              <input
-                type="text"
-                placeholder="City"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                style={{ flex: 1, padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
-              />
-              <input
-                type="text"
-                placeholder="Zipcode"
-                value={zipcode}
-                onChange={(e) => setZipcode(e.target.value)}
-                style={{ width: 140, padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
-              />
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input
-                type="text"
-                placeholder="State / Province"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                style={{ flex: 1, padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
-              />
-              <input
-                type="text"
-                placeholder="Country"
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                style={{ flex: 1, padding: 10, borderRadius: 10, border: "1px solid rgba(0,0,0,0.18)", background: "rgba(255,255,255,0.8)", outline: "none" }}
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="State / Province"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              style={{ ...inputStyle, flex: "1 1 30%", minWidth: 0 }}
+            />
+            <input
+              type="text"
+              placeholder="Country"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              style={{ ...inputStyle, flex: "1 1 30%", minWidth: 0 }}
+            />
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+        {/* Buttons */}
+        <div
+          style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}
+        >
           {(hasChanges || saving) && (
             <button
               disabled={saving}
@@ -777,11 +917,18 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
                     firstName,
                     lastName,
                     birthday,
-                    address: { street1, street2, city, state, zipcode, country },
+                    address: {
+                      street1,
+                      street2,
+                      city,
+                      state,
+                      zipcode,
+                      country,
+                    },
                   };
-                  const res = await fetch('/api/updateMyProfile', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                  const res = await fetch("/api/updateMyProfile", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ token, profile: payload }),
                   });
                   const data = await res.json().catch(() => ({}));
@@ -826,15 +973,18 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
             Logout
           </button>
         </div>
-
-        
       </div>
+
+      {/* Styles */}
       <style jsx>{`
         .modal-overlay {
           background-color: rgba(255, 255, 255, 0);
           backdrop-filter: blur(0px);
           -webkit-backdrop-filter: blur(0px);
-          transition: backdrop-filter 240ms ease, -webkit-backdrop-filter 240ms ease, background-color 240ms ease;
+          transition:
+            backdrop-filter 240ms ease,
+            -webkit-backdrop-filter 240ms ease,
+            background-color 240ms ease;
         }
         .modal-overlay.enter {
           background-color: rgba(255, 255, 255, 0.3);
@@ -849,53 +999,53 @@ function ProfileModal({ isOpen, onClose, slackProfile, onLogout, initialProfile,
         .modal-card {
           transform: translateY(6px) scale(0.98);
           opacity: 0;
-          transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 220ms ease;
+          transition:
+            transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+            opacity 220ms ease;
         }
-        .modal-card.enter { transform: translateY(0) scale(1); opacity: 1; }
-        .modal-card.exit { transform: translateY(6px) scale(0.98); opacity: 0; }
-        .big-cta-btn {
-          appearance: none;
-          width: 100%;
-          padding: 14px 16px;
-          border-radius: 14px;
-          border: 0;
-          cursor: pointer;
-          color: #fff;
-          font-weight: 800;
-          font-size: 16px;
-          letter-spacing: 0.2px;
-          background: linear-gradient(180deg, #ff8ec3 0%, #ff6fa5 100%);
-          transform: translateY(0);
-          transition: transform 120ms ease, opacity 120ms ease;
+        .modal-card.enter {
+          transform: translateY(0) scale(1);
+          opacity: 1;
         }
-        .big-cta-btn:hover { transform: translateY(-1px); }
-        .big-cta-btn:active { transform: translateY(1px); }
-        .big-cta-btn:disabled {
-          opacity: 0.8;
-          cursor: not-allowed;
-          transform: none;
-          color: rgba(255,255,255,0.9);
-          background: linear-gradient(180deg, rgba(219, 37, 112, 0.45) 0%, rgba(176, 22, 89, 0.45) 100%);
+        .modal-card.exit {
+          transform: translateY(6px) scale(0.98);
+          opacity: 0;
         }
       `}</style>
     </div>
   );
 }
 
-export default function HomeScreen({ games, setAppOpen, selectedGame, setSelectedGame, SlackId, token, profile, setProfile, autoOpenProfile }) {
-
-
+export default function HomeScreen({
+  games,
+  setAppOpen,
+  selectedGame,
+  setSelectedGame,
+  SlackId,
+  token,
+  profile,
+  setProfile,
+  autoOpenProfile,
+}) {
   // selectedGame is now controlled by the parent (index.js)
   const [tokyoTime, setTokyoTime] = useState("");
-  const [slackProfile, setSlackProfile] = useState({ displayName: "", image: "" });
+  const [slackProfile, setSlackProfile] = useState({
+    displayName: "",
+    image: "",
+  });
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isEventsOpen, setIsEventsOpen] = useState(false);
-  const [hasOpenedEventsNotification, setHasOpenedEventsNotification] = useState(false);
+  const [hasOpenedEventsNotification, setHasOpenedEventsNotification] =
+    useState(false);
 
   // Preload SFX and game clip audios for instant playback
   const sfxFiles = ["next.mp3", "prev.mp3", "shiba-bark.mp3"];
   const clipFiles = games.map((g) => g.gameClipAudio).filter(Boolean);
-  const { play: playSound, playClip, stopAll } = useAudioManager([...sfxFiles, ...clipFiles]);
+  const {
+    play: playSound,
+    playClip,
+    stopAll,
+  } = useAudioManager([...sfxFiles, ...clipFiles]);
 
   // Check if user has opened events notification
   useEffect(() => {
@@ -941,10 +1091,15 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
     const fetchSlack = async () => {
       if (!SlackId) return;
       try {
-        const res = await fetch(`https://cachet.dunkirk.sh/users/${encodeURIComponent(SlackId)}`);
+        const res = await fetch(
+          `https://cachet.dunkirk.sh/users/${encodeURIComponent(SlackId)}`,
+        );
         const json = await res.json().catch(() => ({}));
         if (!cancelled && json && (json.displayName || json.image)) {
-          setSlackProfile({ displayName: json.displayName || "", image: json.image || "" });
+          setSlackProfile({
+            displayName: json.displayName || "",
+            image: json.image || "",
+          });
         }
       } catch (e) {
         // eslint-disable-next-line no-console
@@ -952,7 +1107,9 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
       }
     };
     fetchSlack();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [SlackId]);
 
   // Auto-open profile modal if requested
@@ -965,48 +1122,63 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
   return (
     <>
       <AppHead title="Shiba" />
-      <main style={{ position: "relative", backgroundColor: games[selectedGame].bgColor, transition: "background-color 0.5s ease-in-out", minHeight: "100vh" }}>
+      <main
+        style={{
+          position: "relative",
+          backgroundColor: games[selectedGame].bgColor,
+          transition: "background-color 0.5s ease-in-out",
+          minHeight: "100vh",
+        }}
+      >
         <MovingBackground />
-        <div style={{
-          position: "absolute",
-          top: 16,
-          left: 64,
-          width: "calc(100% - 128px)",
-          borderRadius: 16,
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: "rgba(255, 255, 255, 0.51)",
-          backdropFilter: "saturate(180%) blur(14px)",
-          WebkitBackdropFilter: "saturate(180%) blur(4px)",
-          border: "1px solid rgba(255, 255, 255, 0.35)",
-          boxShadow: "inset 0 1px 1.5px rgba(255, 255, 255, 0.6), inset 0 -8px 16px rgba(255, 255, 255, 0.6)",
-          borderBottom: "0px solid rgba(0, 0, 0, 0)",
-          justifyContent: "space-between",
-          padding: 16,
-          paddingLeft: 24,
-          paddingRight: 24
-        }}>
-          <div onClick={() => setIsProfileOpen(true)} style={{
+        <div
+          style={{
+            position: "absolute",
+            top: 16,
+            left: 64,
+            width: "calc(100% - 128px)",
+            borderRadius: 16,
             display: "flex",
-            height: 32,
-            width: 32,
-            aspectRatio: 1,
-            backgroundColor: "white",
-            border: "1px solid rgba(0, 0, 0, 0.3)",
-            overflow: "visible",
+            flexDirection: "row",
             alignItems: "center",
-            borderRadius: 8,
-            justifyContent: "center",
-            cursor: "pointer",
-            position: "relative"
-          }}>
-            <div style={{
-              width: "100%",
-              height: "100%",
+            backgroundColor: "rgba(255, 255, 255, 0.51)",
+            backdropFilter: "saturate(180%) blur(14px)",
+            WebkitBackdropFilter: "saturate(180%) blur(4px)",
+            border: "1px solid rgba(255, 255, 255, 0.35)",
+            boxShadow:
+              "inset 0 1px 1.5px rgba(255, 255, 255, 0.6), inset 0 -8px 16px rgba(255, 255, 255, 0.6)",
+            borderBottom: "0px solid rgba(0, 0, 0, 0)",
+            justifyContent: "space-between",
+            padding: 16,
+            paddingLeft: 24,
+            paddingRight: 24,
+          }}
+        >
+          <div
+            onClick={() => setIsProfileOpen(true)}
+            style={{
+              display: "flex",
+              height: 32,
+              width: 32,
+              aspectRatio: 1,
+              backgroundColor: "white",
+              border: "1px solid rgba(0, 0, 0, 0.3)",
+              overflow: "visible",
+              alignItems: "center",
               borderRadius: 8,
-              overflow: "hidden"
-            }}>
+              justifyContent: "center",
+              cursor: "pointer",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: 8,
+                overflow: "hidden",
+              }}
+            >
               {slackProfile.image ? (
                 <img
                   src={slackProfile.image}
@@ -1017,51 +1189,63 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
             </div>
             {(() => {
               if (!profile) return null;
-              
+
               const missingFields = [
-                !profile.firstName && 'firstName',
-                !profile.lastName && 'lastName',
-                !profile.email && 'email',
-                !profile.githubUsername && 'githubUsername',
-                !profile.birthday && 'birthday',
-                !profile.slackId && 'slackId',
-                !profile.address?.street1 && 'street1',
-                !profile.address?.city && 'city',
-                !profile.address?.zipcode && 'zipcode',
-                !profile.address?.country && 'country'
+                !profile.firstName && "firstName",
+                !profile.lastName && "lastName",
+                !profile.email && "email",
+                !profile.githubUsername && "githubUsername",
+                !profile.birthday && "birthday",
+                !profile.slackId && "slackId",
+                !profile.address?.street1 && "street1",
+                !profile.address?.city && "city",
+                !profile.address?.zipcode && "zipcode",
+                !profile.address?.country && "country",
               ].filter(Boolean);
-              
+
               const missingCount = missingFields.length;
-              
+
               if (missingCount === 0) return null;
-              
+
               return (
-                <div style={{
-                  position: "absolute",
-                  top: -2,
-                  right: -2,
-                  width: 16,
-                  height: 16,
-                  backgroundColor: "#FF0000",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontSize: "10px",
-                  fontWeight: "bold",
-                  border: "1px solid white",
-                  pointerEvents: "none",
-                }}>
-                  {missingCount > 9 ? '9+' : missingCount}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -2,
+                    right: -2,
+                    width: 16,
+                    height: 16,
+                    backgroundColor: "#FF0000",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "white",
+                    fontSize: "10px",
+                    fontWeight: "bold",
+                    border: "1px solid white",
+                    pointerEvents: "none",
+                  }}
+                >
+                  {missingCount > 9 ? "9+" : missingCount}
                 </div>
               );
             })()}
           </div>
-          <p style={{ fontFamily: "GT Maru", fontWeight: "bold" }}>Shiba Arcade</p>
+          <p style={{ fontFamily: "GT Maru", fontWeight: "bold" }}>
+            Shiba Arcade
+          </p>
           <p style={{ margin: 0 }}>{tokyoTime}</p>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: "100vh", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            height: "100vh",
+            justifyContent: "center",
+          }}
+        >
           <GameCarousel
             games={games}
             onSelect={setSelectedGame}
@@ -1072,27 +1256,31 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
           />
           <GameDetails game={games[selectedGame]} />
         </div>
-        <div style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          width: "100%",
-          display: "flex",
-          backgroundColor: "rgba(255, 255, 255, 0.35)",
-          alignItems: "center",
-          backdropFilter: "saturate(180%) blur(14px)",
-          WebkitBackdropFilter: "saturate(180%) blur(14px)",
-          border: "1px solid #fff",
-          boxShadow: "none",
-          justifyContent: "space-between",
-          paddingLeft: 16,
-          paddingRight: 16,
-          paddingTop: 32,
-          paddingBottom: 32,
-          WebkitClipPath: "polygon(0 0, 88px 0, 88px 64px, calc(100% - 88px) 64px, calc(100% - 88px) 0, 100% 0, 100% 100%, 0 100%)",
-          clipPath: "polygon(0 0, 88px 0, 88px 64px, calc(100% - 88px) 64px, calc(100% - 88px) 0, 100% 0, 100% 100%, 0 100%)",
-        }}>
-          <div 
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "100%",
+            display: "flex",
+            backgroundColor: "rgba(255, 255, 255, 0.35)",
+            alignItems: "center",
+            backdropFilter: "saturate(180%) blur(14px)",
+            WebkitBackdropFilter: "saturate(180%) blur(14px)",
+            border: "1px solid #fff",
+            boxShadow: "none",
+            justifyContent: "space-between",
+            paddingLeft: 16,
+            paddingRight: 16,
+            paddingTop: 32,
+            paddingBottom: 32,
+            WebkitClipPath:
+              "polygon(0 0, 88px 0, 88px 64px, calc(100% - 88px) 64px, calc(100% - 88px) 0, 100% 0, 100% 100%, 0 100%)",
+            clipPath:
+              "polygon(0 0, 88px 0, 88px 64px, calc(100% - 88px) 64px, calc(100% - 88px) 0, 100% 0, 100% 100%, 0 100%)",
+          }}
+        >
+          <div
             onClick={() => setIsEventsOpen(true)}
             style={{
               display: "flex",
@@ -1109,7 +1297,7 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
               justifyContent: "center",
               cursor: "pointer",
               transition: "background-color 0.2s ease",
-              position: "relative"
+              position: "relative",
             }}
             onMouseEnter={(e) => {
               e.target.style.backgroundColor = "rgba(255, 255, 255, 0.7)";
@@ -1125,42 +1313,45 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
                 width: "100%",
                 opacity: 0.85,
                 height: "100%",
-                objectFit: "contain"
+                objectFit: "contain",
               }}
             />
             {!hasOpenedEventsNotification && (
-              <div style={{
-                position: "absolute",
-                top: -4,
-                right: -4,
-                width: 20,
-                height: 20,
-                backgroundColor: "#FF0000",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                fontSize: "12px",
-                fontWeight: "bold",
-                border: "2px solid white",
-                pointerEvents: "none",
-              }}>
+              <div
+                style={{
+                  position: "absolute",
+                  top: -4,
+                  right: -4,
+                  width: 20,
+                  height: 20,
+                  backgroundColor: "#FF0000",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  border: "2px solid white",
+                  pointerEvents: "none",
+                }}
+              >
                 1
               </div>
             )}
           </div>
-          <div style={{
-            display: "flex",
-            height: 64,
-            width: "100%",
-            marginLeft: 24,
-            marginRight: 24,
-            borderRadius: "0px 0px 16px 16px",
-            marginTop: -33,
-            backgroundColor: "transparent",
-          }}>
-          </div>
+          <div
+            style={{
+              display: "flex",
+              height: 64,
+              width: "100%",
+              marginLeft: 24,
+              marginRight: 24,
+              borderRadius: "0px 0px 16px 16px",
+              marginTop: -33,
+              backgroundColor: "transparent",
+            }}
+          ></div>
           <div
             onClick={() => playSound("shiba-bark.mp3")}
             style={{
@@ -1174,11 +1365,9 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
               backgroundRepeat: "no-repeat",
               aspectRatio: 1,
               border: "1px solid rgba(0, 0, 0, 0.1)",
-              borderRadius: 4
+              borderRadius: 4,
             }}
-          >
-          </div>
-
+          ></div>
         </div>
       </main>
       <ProfileModal
@@ -1203,5 +1392,3 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
     </>
   );
 }
-
-
