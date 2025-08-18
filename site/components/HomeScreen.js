@@ -722,9 +722,9 @@ function ProfileModal({
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <span style={{ fontWeight: 700 }}>{displayName || ""}</span>
-                <span style={{ fontSize: 12, opacity: 0.7 }}>
+                {/* <span style={{ fontSize: 12, opacity: 0.7 }}>
                   Signed in via Slack
-                </span>
+                </span> */}
               </div>
             </>
           ) : (
