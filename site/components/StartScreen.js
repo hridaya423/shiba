@@ -48,7 +48,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           } else {
             console.error(
               "Failed to get token:",
-              data.message || "Unknown error",
+              data.message || "Unknown error"
             );
           }
         } catch (error) {
@@ -145,7 +145,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           onClick={() => {
             window.open(
               "https://slack.com/oauth/v2/authorize?client_id=2210535565.9361842154099&user_scope=users:read,users:read.email&redirect_uri=https://shiba.hackclub.dev/",
-              "_blank",
+              "_blank"
             );
           }}
         >
@@ -177,7 +177,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           backgroundImage: `
             radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.2) 100%),
             linear-gradient(to bottom, transparent, black),
-            url('/landing/background.png')
+            url('/landing/background.gif')
           `,
           filter: "saturate(1.2)",
           backgroundSize: "contain",
@@ -647,11 +647,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
         }
 
         .black-outline {
-          text-shadow:
-            -1px 0 0 #000,
-            1px 0 0 #000,
-            0 -1px 0 #000,
-            0 1px 0 #000;
+          text-shadow: -1px 0 0 #000, 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000;
         }
 
         .email-input {
@@ -702,8 +698,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
         }
 
         .signup-button {
-          transition:
-            background-color 0.1s ease-in-out,
+          transition: background-color 0.1s ease-in-out,
             transform 0.1s ease-in-out;
         }
 
@@ -872,15 +867,9 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           position: relative;
           z-index: 10;
 
-          text-shadow:
-            -3.5px 0 0 #000,
-            3.5px 0 0 #000,
-            0 -3.5px 0 #000,
-            0 3.5px 0 #000,
-            -3.5px -3.5px 0 #000,
-            3.5px -3.5px 0 #000,
-            -3.5px 3.5px 0 #000,
-            3.5px 3.5px 0 #000;
+          text-shadow: -3.5px 0 0 #000, 3.5px 0 0 #000, 0 -3.5px 0 #000,
+            0 3.5px 0 #000, -3.5px -3.5px 0 #000, 3.5px -3.5px 0 #000,
+            -3.5px 3.5px 0 #000, 3.5px 3.5px 0 #000;
         }
 
         .jumpy img {
@@ -1006,9 +995,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           z-index: 2;
           transform: translate(-50%, -50%);
           display: none;
-          transition:
-            left 0.2s ease-out,
-            top 0.2s ease-out;
+          transition: left 0.2s ease-out, top 0.2s ease-out;
         }
 
         .faq {
