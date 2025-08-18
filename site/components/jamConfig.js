@@ -1,17 +1,12 @@
 // Central configuration for jam timing.
-// Edit the defaults below or set environment variables:
-//   NEXT_PUBLIC_JAM_START, NEXT_PUBLIC_JAM_END (ISO strings)
-// All calculation is done on client. Times should include timezone/offset or be Z.
+// Edit the default below or set env var:
+//   NEXT_PUBLIC_JAM_START (ISO string with offset or Z)
+// All calculation is done on client.
 
-const JAM_START_DEFAULT = '2025-08-22T00:00:00-07:00';
-const JAM_END_DEFAULT   = '2025-10-20T23:59:59-07:00';
+// Monday Aug 18 2025 4:30 PM Pacific (DST offset -07:00)
+const JAM_START_DEFAULT = '2025-08-18T16:30:00-07:00';
 
-export const JAM_START_DATE = new Date(
-  process.env.NEXT_PUBLIC_JAM_START || JAM_START_DEFAULT
-);
-export const JAM_END_DATE = new Date(
-  process.env.NEXT_PUBLIC_JAM_END || JAM_END_DEFAULT
-);
+export const JAM_START_DATE = new Date(process.env.NEXT_PUBLIC_JAM_START || JAM_START_DEFAULT);
 
 export function getRemainingUntil(date) {
   const now = Date.now();
@@ -28,16 +23,12 @@ export function getRemainingUntil(date) {
 
 export function formatJamCountdown() {
   const now = Date.now();
-  if (isNaN(JAM_START_DATE.getTime()) || isNaN(JAM_END_DATE.getTime())) {
+  if (isNaN(JAM_START_DATE.getTime())) {
     return 'jam schedule tbd';
   }
   if (now < JAM_START_DATE.getTime()) {
     const r = getRemainingUntil(JAM_START_DATE);
     return `jam starts in ${r.days}d ${r.hours}h ${r.minutes}m ${String(r.seconds).padStart(2,'0')}s`;
   }
-  if (now < JAM_END_DATE.getTime()) {
-    const r = getRemainingUntil(JAM_END_DATE);
-    return `jam ends in ${r.days}d ${r.hours}h ${r.minutes}m ${String(r.seconds).padStart(2,'0')}s`;
-  }
-  return 'jam is over!';
+  return 'Jam has started';
 }
