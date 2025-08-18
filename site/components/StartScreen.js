@@ -122,8 +122,21 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
     const result = await verifyOtp(email, otp);
     if (result?.ok && result?.token) {
       setToken?.(result.token);
+      alert("Verification successful! Welcome to Shiba Arcade!");
     } else {
-      setMessage(result?.message || "Invalid code.");
+      // If verification fails, automatically request a new OTP
+      alert("Verification failed. A new code has been sent to your email.");
+      setOtp(""); // Clear the OTP input
+      if (requestOtp) {
+        const newOtpResult = await requestOtp(email);
+        if (newOtpResult?.ok) {
+          setMessage("New code sent. Check your email.");
+        } else {
+          setMessage("Failed to send new code. Please try again.");
+        }
+      } else {
+        setMessage("Verification failed. Please request a new code.");
+      }
     }
     setLoading(false);
   };
@@ -269,7 +282,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
                   maxLength={6}
                 />
                 <button onClick={onVerify} disabled={loading}>
-                  verify
+                  {loading ? "verifying..." : "verify"}
                 </button>
               </>
             )}
@@ -533,7 +546,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
                     maxLength={6}
                   />
                   <button onClick={onVerify} disabled={loading}>
-                    verify
+                    {loading ? "Verifying..." : "verify"}
                   </button>
                 </>
               )}
