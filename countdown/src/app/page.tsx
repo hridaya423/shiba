@@ -1,54 +1,55 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import { DateTime } from "luxon";
 
 export default function CountdownPage() {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
-    seconds: 0
+    seconds: 0,
   });
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const now = new Date();
-      const target = new Date();
-      
-      // Set target to next Monday at 4:30 PM PST
-      const daysUntilMonday = (8 - now.getDay()) % 7; // 0 = Sunday, 1 = Monday, etc.
-      target.setDate(now.getDate() + daysUntilMonday);
-      target.setHours(16, 30, 0, 0); // 4:30 PM
-      
-      // If it's already past Monday 4:30 PM, target next Monday
-      if (now.getDay() === 1 && now.getHours() >= 16 && now.getMinutes() >= 30) {
-        target.setDate(target.getDate() + 7);
+      const now = DateTime.now();
+      let target = now.setZone("America/Los_Angeles").set({
+        weekday: 1,
+        hour: 16,
+        minute: 30,
+        second: 0,
+        millisecond: 0,
+      });
+
+      if (now > target) {
+        target = target.plus({ weeks: 1 });
       }
-      
-      const difference = target.getTime() - now.getTime();
-      
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-        
-        setTimeLeft({ days, hours, minutes, seconds });
-      }
+
+      const diff = target
+        .diff(now, ["days", "hours", "minutes", "seconds"])
+        .toObject();
+
+      setTimeLeft({
+        days: Math.floor(diff.days),
+        hours: Math.floor(diff.hours),
+        minutes: Math.floor(diff.minutes),
+        seconds: Math.floor(diff.seconds),
+      });
     };
 
     calculateTimeLeft();
     const timer = setInterval(calculateTimeLeft, 1000);
-
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      
-      <img src="/image.png" style={{width: "300px"}} />
-      <div className="text-white text-9xl font-mono">
-        {timeLeft.days}:{timeLeft.hours.toString().padStart(2, '0')}:{timeLeft.minutes.toString().padStart(2, '0')}:{timeLeft.seconds.toString().padStart(2, '0')}
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center">
+      <img src="/image.png" style={{ width: "300px" }} />
+      <div className="text-white text-9xl font-mono mt-6">
+        {timeLeft.days}:{timeLeft.hours.toString().padStart(2, "0")}:
+        {timeLeft.minutes.toString().padStart(2, "0")}:
+        {timeLeft.seconds.toString().padStart(2, "0")}
       </div>
     </div>
   );
