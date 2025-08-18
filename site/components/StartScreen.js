@@ -144,8 +144,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           className="slack-logo"
           onClick={() => {
             window.open(
-              "https://slack.com/oauth/v2/authorize?client_id=2210535565.9361842154099&user_scope=users:read,users:read.email&redirect_uri=" +
-                process.env.NEXT_PUBLIC_SLACK_REDIRECT_URI,
+              "https://slack.com/oauth/v2/authorize?client_id=2210535565.9361842154099&user_scope=users:read,users:read.email&redirect_uri=https://shiba.hackclub.dev/",
               "_blank",
             );
           }}
