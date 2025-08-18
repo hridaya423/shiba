@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import GameCard from "@/components/GameCard";
 
-export default function GameCarousel({ games, onSelect, playSound, playClip, setAppOpen, stopAll, selectedIndex: controlledIndex }) {
+export default function GameCarousel({ games, onSelect, playSound, playClip, setAppOpen, stopAll, selectedIndex: controlledIndex, isProfileOpen, isEventsOpen, isOnboardingOpen }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const numGames = games?.length ?? 0;
 
@@ -16,6 +16,11 @@ export default function GameCarousel({ games, onSelect, playSound, playClip, set
 
   const handleKeyDown = useCallback(
     (event) => {
+      // Don't handle keyboard events if any modal is open
+      if (isProfileOpen || isEventsOpen || isOnboardingOpen) {
+        return;
+      }
+
       if (event.key === "ArrowRight") {
         event.preventDefault();
         playSound?.("next.mp3");
@@ -34,7 +39,7 @@ export default function GameCarousel({ games, onSelect, playSound, playClip, set
         }
       }
     },
-    [embla, playSound, setAppOpen, games, selectedIndex]
+    [embla, playSound, setAppOpen, games, selectedIndex, isProfileOpen, isEventsOpen, isOnboardingOpen]
   );
 
   useEffect(() => {
@@ -67,6 +72,14 @@ export default function GameCarousel({ games, onSelect, playSound, playClip, set
       embla.off("select", onSelectInternal);
     };
   }, [embla, onSelect, games, playClip]);
+
+  // Pause music when any modal is open
+  useEffect(() => {
+    if (isProfileOpen || isEventsOpen || isOnboardingOpen) {
+      // Pause any currently playing audio when modals open
+      try { stopAll?.(); } catch (_) {}
+    }
+  }, [isProfileOpen, isEventsOpen, isOnboardingOpen, stopAll]);
 
   const leftNeighborIndex = (selectedIndex - 1 + numGames) % numGames;
   const rightNeighborIndex = (selectedIndex + 1) % numGames;
