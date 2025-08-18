@@ -9,11 +9,15 @@ const LOOPS_TRANSACTIONAL_KEY = process.env.LOOPS_TRANSACTIONAL_KEY;
 const LOOPS_TRANSACTIONAL_TEMPLATE_ID = process.env.LOOPS_TRANSACTIONAL_TEMPLATE_ID; // required to send
 const LOOPS_API_BASE = 'https://app.loops.so/api/v1';
 
+// Removed debug-only configuration checker
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
+
+  // Proceed without debug-only Loops configuration check
 
   const { email } = req.body || {};
 
@@ -51,11 +55,14 @@ export default async function handler(req, res) {
     // Update user's token
     await updateUserToken(userRecord.id, token);
 
-    // Fire-and-forget transactional email via Loops (do not block success)
-    sendOtpEmailViaLoops(normalizedEmail, otp).catch((err) => {
-      // eslint-disable-next-line no-console
+    // Send transactional email via Loops with better error handling
+    try {
+      await sendOtpEmailViaLoops(normalizedEmail, otp);
+    } catch (err) {
+      // Log error but don't fail the entire request
       console.error('sendOtpEmailViaLoops error:', err);
-    });
+      // You might want to add fallback email sending here or alert monitoring
+    }
 
     return res.status(200).json({ message: 'OTP generated and sent.' });
   } catch (error) {
@@ -203,9 +210,16 @@ async function createOtpRecord({ email, otp, token }) {
 
 
 async function sendOtpEmailViaLoops(email, otp) {
+  // Check configuration and log if missing
   if (!LOOPS_TRANSACTIONAL_KEY || !LOOPS_TRANSACTIONAL_TEMPLATE_ID) {
+    console.error('Loops email configuration missing:', {
+      hasKey: !!LOOPS_TRANSACTIONAL_KEY,
+      hasTemplateId: !!LOOPS_TRANSACTIONAL_TEMPLATE_ID,
+      email
+    });
     return; // Not configured; skip sending
   }
+
   const url = `${LOOPS_API_BASE}/transactional`;
   const payload = {
     transactionalId: LOOPS_TRANSACTIONAL_TEMPLATE_ID,
@@ -213,21 +227,55 @@ async function sendOtpEmailViaLoops(email, otp) {
     // Include multiple common variable names to avoid template mismatch
     dataVariables: { otp, OTP: otp, code: otp },
   };
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${LOOPS_TRANSACTIONAL_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const errMsg = data?.error || `status ${res.status}`;
-    throw new Error(`Loops transactional send failed: ${errMsg}`);
-  }
-  if (data && data.success === false) {
-    throw new Error(`Loops transactional send failed: ${data?.error || 'unknown error'}`);
+
+  try {
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${LOOPS_TRANSACTIONAL_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseError) {
+      console.error('Failed to parse Loops response:', parseError);
+      data = {};
+    }
+
+    if (!res.ok) {
+      const errMsg = data?.error || `status ${res.status}`;
+      throw new Error(`Loops transactional send failed: ${errMsg} (status: ${res.status})`);
+    }
+
+    if (data && data.success === false) {
+      throw new Error(`Loops transactional send failed: ${data?.error || 'unknown error'}`);
+    }
+
+    // Log successful send for debugging
+    console.log('OTP email sent successfully via Loops:', { email, otp: '***' });
+
+  } catch (error) {
+    // Enhanced error logging with context
+    console.error('sendOtpEmailViaLoops failed:', {
+      error: error.message,
+      email,
+      hasKey: !!LOOPS_TRANSACTIONAL_KEY,
+      hasTemplateId: !!LOOPS_TRANSACTIONAL_TEMPLATE_ID,
+      url,
+      payload: { ...payload, otp: '***' }
+    });
+    throw error; // Re-throw to be caught by caller
   }
 }
 
