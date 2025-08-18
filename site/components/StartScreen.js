@@ -249,7 +249,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
                   disabled={loading}
                   className="signup-button"
                 >
-                  join the jam
+                  {loading ? "Sending..." : "join the jam"}
                 </button>
               </>
             ) : (
@@ -513,7 +513,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
                     disabled={loading}
                     className="signup-button"
                   >
-                    join the jam
+                    {loading ? "Sending..." : "join the jam"}
                   </button>
                 </>
               ) : (
