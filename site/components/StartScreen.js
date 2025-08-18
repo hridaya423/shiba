@@ -214,7 +214,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
 
           <iframe
             className="opening-video"
-            src="https://www.youtube.com/embed/Mapfcs9jziA?si=LCaM9upjckpTPWiZ"
+            src="https://www.youtube.com/embed/MdnJ_neHE7Q?si=nHBkEvAzlmyh_01_"
             title="YouTube video player"
             frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -538,15 +538,12 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
               )}
             </div>
 
-            <p className="top-text english" suppressHydrationWarning>
-              {jamCountdownText || "jam timeline loading..."}
-            </p>
           </div>
 
           <div className="faq">
             <div className="shiba-direct">
               <img src="/landing/shiba_direct.png" />
-              <p>22 august · ?pm–?pm PST</p>
+              <p>22 august · 4pm–5pm pacific time (7-8pm eastern)</p>
               <p>get LIVE shiba news and the latest information.</p>
               <p>sign up to rsvp.</p>
             </div>
@@ -559,7 +556,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             <details>
               <summary>how long will shiba run for?</summary>
               <p>
-                shiba starts on august 22 and ends on october 20. then, we'll
+                shiba starts on august 18 and ends on october 20. then, we'll
                 build an arcade in tokyo from november 5-12th.
               </p>
             </details>
