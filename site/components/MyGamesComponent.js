@@ -496,7 +496,9 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
   const [availableProjects, setAvailableProjects] = useState([]);
   const [selectedProjectsCsv, setSelectedProjectsCsv] = useState(game?.HackatimeProjects || "");
   const [showProjectPicker, setShowProjectPicker] = useState(false);
+  const [projectSearchTerm, setProjectSearchTerm] = useState("");
   const projectPickerContainerRef = useRef(null);
+  const projectSearchInputRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [postContent, setPostContent] = useState("");
   const [isPosting, setIsPosting] = useState(false);
@@ -538,6 +540,7 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
     setSelectedProjectsCsv(game?.HackatimeProjects || "");
     setPostContent("");
     setPostMessage("");
+    setProjectSearchTerm("");
     // Clear file inputs when switching games
     setBuildFile(null);
     setPostFiles([]);
@@ -811,15 +814,23 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
           />
           {/* Hackatime projects input with inline dropdown multi-select */}
           <div ref={projectPickerContainerRef} style={{ position: 'relative', flex: 1 }}>
-            <input
-              className="nice-input"
-              type="text"
-              value={selectedProjectsCsv}
-              readOnly
-              placeholder="Hackatime Projects"
-              style={{ width: '100%', paddingRight: 36 }}
-              onClick={() => setShowProjectPicker((s) => !s)}
-            />
+                          <input
+                className="nice-input"
+                type="text"
+                value={selectedProjectsCsv}
+                readOnly
+                placeholder="Hackatime Projects"
+                style={{ width: '100%', paddingRight: 36 }}
+                onClick={() => {
+                  setShowProjectPicker((s) => !s);
+                  // Auto-focus the search input when opening the dropdown
+                  setTimeout(() => {
+                    if (projectSearchInputRef.current) {
+                      projectSearchInputRef.current.focus();
+                    }
+                  }, 0);
+                }}
+              />
             {showProjectPicker && (
               <div
                 style={{
@@ -837,51 +848,84 @@ function DetailView({ game, onBack, token, onUpdated, SlackId, onOpenProfile }) 
                   boxShadow: '0 4px 12px rgba(0,0,0,0.28)'
                 }}
               >
-                {availableProjects.length === 0 && (
-                  <div style={{ opacity: 0.6 }}>No projects found</div>
-                )}
-                {availableProjects.map((name, index) => {
-                  const current = Array.from(new Set(selectedProjectsCsv.split(',').map((s) => s.trim()).filter(Boolean)));
-                  const checked = current.includes(name);
-                  return (
-                    <div
-                      key={name}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '6px 8px',
-                        cursor: 'pointer',
-                        borderTop: index === 0 ? 'none' : '1px solid #eee',
-                      }}
-                      onClick={(e) => {
-                        // make entire row toggle
-                        const set = new Set(current);
-                        if (checked) set.delete(name); else set.add(name);
-                        setSelectedProjectsCsv(Array.from(set).join(', '));
-                      }}
-                      role="checkbox"
-                      aria-checked={checked}
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === ' ' || e.key === 'Enter') {
-                          e.preventDefault();
+                {/* Search input */}
+                <input
+                  ref={projectSearchInputRef}
+                  type="text"
+                  placeholder="Search projects..."
+                  value={projectSearchTerm}
+                  onChange={(e) => setProjectSearchTerm(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    marginBottom: '8px',
+                    boxSizing: 'border-box'
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                
+                {/* Filtered projects */}
+                {(() => {
+                  const filteredProjects = availableProjects
+                    .filter(name => name !== "Other") // Hide "Other" from the list
+                    .filter(name =>
+                      name.toLowerCase().includes(projectSearchTerm.toLowerCase())
+                    );
+                  
+                  if (filteredProjects.length === 0) {
+                    return (
+                      <div style={{ opacity: 0.6, padding: '8px', textAlign: 'center' }}>
+                        {availableProjects.length === 0 ? 'No projects found' : 'No projects match your search'}
+                      </div>
+                    );
+                  }
+                  
+                  return filteredProjects.map((name, index) => {
+                    const current = Array.from(new Set(selectedProjectsCsv.split(',').map((s) => s.trim()).filter(Boolean)));
+                    const checked = current.includes(name);
+                    return (
+                      <div
+                        key={name}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          padding: '6px 8px',
+                          cursor: 'pointer',
+                          borderTop: index === 0 ? 'none' : '1px solid #eee',
+                        }}
+                        onClick={(e) => {
+                          // make entire row toggle
                           const set = new Set(current);
                           if (checked) set.delete(name); else set.add(name);
                           setSelectedProjectsCsv(Array.from(set).join(', '));
-                        }
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        readOnly
-                        style={{ pointerEvents: 'none' }}
-                      />
-                      <span style={{ fontSize: 12, color: '#333' }}>{name}</span>
-                    </div>
-                  );
-                })}
+                        }}
+                        role="checkbox"
+                        aria-checked={checked}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === ' ' || e.key === 'Enter') {
+                            e.preventDefault();
+                            const set = new Set(current);
+                            if (checked) set.delete(name); else set.add(name);
+                            setSelectedProjectsCsv(Array.from(set).join(', '));
+                          }
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          readOnly
+                          style={{ pointerEvents: 'none' }}
+                        />
+                        <span style={{ fontSize: 12, color: '#333' }}>{name}</span>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             )}
           </div>
