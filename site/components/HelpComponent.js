@@ -30,7 +30,7 @@ export default function HelpComponent() {
        answer: (
          <div style={{ marginTop: "16px", lineHeight: "1.6" }}>
            <p style={{ marginBottom: "16px" }}>
-             Shiba Arcade is a game development jam where teenagers create games in Godot Engine, get feedback from other players, and earn SSS currency. The best creators can win a trip to Tokyo to build a real arcade from November 1-7th!
+             Shiba Arcade is a game development jam where teenagers create games in Godot Engine, get feedback from other players, and earn SSS currency. The best creators can win a trip to Tokyo to build a real arcade from November 5-12th!
            </p>
            <div style={{ 
              display: "flex", 
@@ -58,7 +58,7 @@ export default function HelpComponent() {
        question: "How much does it cost?",
        answer: (
          <p style={{ marginTop: "16px", lineHeight: "1.6" }}>
-           The event is totally free to participate in! We provide flight stipends of up to $750 for those outside of Asia and $250 for those within Asia for those who get enough SSS to get their ticket to build the Shiba Arcade in Japan. Housing, food, etc. is covered for your time in Japan from November 1-7th.
+           The event is totally free to participate in! We provide flight stipends of up to $750 for those outside of Asia and $250 for those within Asia for those who get enough SSS to get their ticket to build the Shiba Arcade in Japan. Housing, food, etc. is covered for your time in Japan from November 5-12th.
          </p>
        ),
        backgroundColor: "#E8F5E8",
@@ -108,7 +108,7 @@ export default function HelpComponent() {
       question: "How do I qualify for the Tokyo trip?",
       answer: (
         <p style={{ marginTop: "16px", lineHeight: "1.6" }}>
-          To qualify for the Tokyo trip, you need to earn enough SSS by creating a great game that receives high ratings from other players. The SSS you earn can be used to purchase a ticket to Tokyo, where you'll help build the arcade from November 1-7th.
+          To qualify for the Tokyo trip, you need to earn enough SSS by creating a great game that receives high ratings from other players. The SSS you earn can be used to purchase a ticket to Tokyo, where you'll help build the arcade from November 5-12th.
         </p>
       ),
       backgroundColor: "#FFE5F0",

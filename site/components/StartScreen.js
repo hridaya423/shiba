@@ -560,7 +560,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
               <summary>how long will shiba run for?</summary>
               <p>
                 shiba starts on august 22 and ends on october 20. then, we'll
-                build an arcade in tokyo from november 1-7th.
+                build an arcade in tokyo from november 5-12th.
               </p>
             </details>
 
