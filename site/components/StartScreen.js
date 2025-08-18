@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MovingBackground } from "./HomeScreen";
-import { formatJamCountdown } from './jamConfig';
+import { formatJamCountdown } from "./jamConfig";
+import { FiLogIn } from "react-icons/fi";
 
 export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
   const [email, setEmail] = useState("");
@@ -12,7 +13,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
   const circleRef = useRef(null);
   const emailInputRef = useRef(null);
   // Start with empty string to avoid SSR/client mismatch, populate after mount.
-  const [jamCountdownText, setJamCountdownText] = useState('');
+  const [jamCountdownText, setJamCountdownText] = useState("");
   const mountedRef = useRef(false);
 
   // Live dual-phase countdown update after mount only (prevents hydration mismatch)
@@ -95,6 +96,39 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
 
   return (
     <div className="start-screen">
+      <div style={{ position: "absolute", top: 0, right: 0, zIndex: 100 }}>
+        <div
+          style={{
+            margin: "20px",
+            borderRadius: "8px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "10px",
+          }}
+          className="slack-logo"
+        >
+          <FiLogIn
+            size={24}
+            style={{
+              color: "white",
+              marginRight: "8px",
+            }}
+          ></FiLogIn>
+          <p
+            style={{
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "1.2em",
+              fontStyle: "italic",
+              margin: 0,
+            }}
+          >
+            Login
+          </p>
+        </div>
+      </div>
       <div
         className="opening"
         style={{
@@ -211,32 +245,47 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             <div className="info-screen-overlay"></div>
           </div>
 
-          <img src="/landing/sparkle.png" className="sparkle" style={{
-            top: "-40%",
-            animationDelay: "0s",
-          }}/>
+          <img
+            src="/landing/sparkle.png"
+            className="sparkle"
+            style={{
+              top: "-40%",
+              animationDelay: "0s",
+            }}
+          />
 
-          <img src="/landing/sparkle.png" className="sparkle" style={{
-            top: "-50%",
-            left: "10%",
-            width: "8%",
-            animationDelay: "0.3s",
-          }}/>
+          <img
+            src="/landing/sparkle.png"
+            className="sparkle"
+            style={{
+              top: "-50%",
+              left: "10%",
+              width: "8%",
+              animationDelay: "0.3s",
+            }}
+          />
 
+          <img
+            src="/landing/sparkle.png"
+            className="sparkle"
+            style={{
+              top: "-50%",
+              right: "0%",
+              width: "9%",
+              animationDelay: "0.5s",
+            }}
+          />
 
-          <img src="/landing/sparkle.png" className="sparkle" style={{
-            top: "-50%",
-            right: "0%",
-            width: "9%",
-            animationDelay: "0.5s",
-          }}/>
-
-          <img src="/landing/sparkle.png" className="sparkle" style={{
-            top: "-30%",
-            right: "8%",
-            width: "6%",
-            animationDelay: "0.8s",
-          }}/>
+          <img
+            src="/landing/sparkle.png"
+            className="sparkle"
+            style={{
+              top: "-30%",
+              right: "8%",
+              width: "6%",
+              animationDelay: "0.8s",
+            }}
+          />
 
           <div className="content">
             <div className="firetext online">
@@ -285,47 +334,49 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
               style={{
                 top: "180px",
                 left: "4%",
-              }}> 
-                <p>debug clicker (armand, 17)</p>
-                <img src="/landing/game_debugclicker.png" />
-              </a>
-
-            </div>
-
-
-              
-     
+              }}
+            >
+              <p>debug clicker (armand, 17)</p>
+              <img src="/landing/game_debugclicker.png" />
+            </a>
+          </div>
         </div>
 
-       
-
         <div className="taiko-divider">
-        <img src="/landing/sparkle.png" className="sparkle" style={{
-            top: "25%",
-            left: "3%",
-            width: "8%",
-            animationDelay: "0.2s",
+          <img
+            src="/landing/sparkle.png"
+            className="sparkle"
+            style={{
+              top: "25%",
+              left: "3%",
+              width: "8%",
+              animationDelay: "0.2s",
+            }}
+          />
 
-          }}/>
+          <img
+            src="/landing/sparkle.png"
+            className="sparkle"
+            style={{
+              top: "50%",
+              left: "1%",
+              width: "6%",
+              animationDelay: "0.7s",
+            }}
+          />
 
-        <img src="/landing/sparkle.png" className="sparkle" style={{
-            top: "50%",
-            left: "1%",
-            width: "6%",
-            animationDelay: "0.7s",
-          }}/>
+          <img
+            src="/landing/sparkle.png"
+            className="sparkle"
+            style={{
+              top: "50%",
+              right: "1%",
+              width: "6%",
+              animationDelay: "0.3s",
+            }}
+          />
 
-<img src="/landing/sparkle.png" className="sparkle" style={{
-            top: "50%",
-            right: "1%",
-            width: "6%",
-            animationDelay: "0.3s",
-          }}/>
-
-          
-
-
-        <img  src="/landing/taiko_divider.png"></img>
+          <img src="/landing/taiko_divider.png"></img>
           <div className="jumpy">
             <div
               className="jumpy-item"
@@ -387,8 +438,9 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             </h1>
             <p>
               use SSS you earned to win a ticket to japan. fly to tokyo and
-              build an arcade with us, food covered, hotel covered, & flight stipends available. put your game into the
-              arcade and let the public try it!
+              build an arcade with us, food covered, hotel covered, & flight
+              stipends available. put your game into the arcade and let the
+              public try it!
             </p>
           </div>
         </div>
@@ -446,7 +498,9 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
               )}
             </div>
 
-            <p className="top-text english" suppressHydrationWarning>{jamCountdownText || 'jam timeline loading...'}</p>
+            <p className="top-text english" suppressHydrationWarning>
+              {jamCountdownText || "jam timeline loading..."}
+            </p>
           </div>
 
           <div className="faq">
@@ -481,7 +535,6 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             </details>
           </div>
         </div>
-  
       </div>
 
       <style jsx>{`
@@ -510,6 +563,11 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           padding: 20px;
         }
 
+        .slack-logo {
+          background: linear-gradient(to bottom, #2b2b2b, #4c2e19);
+          border: 3px solid var(--yellow);
+        }
+
         .top-text {
           color: white;
           font-weight: bold;
@@ -524,30 +582,29 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           font-style: italic;
         }
 
-      .opening-video {
-      width: 65%;
-      aspect-ratio: 16/9;
-      border-radius: 32px;
-      border: 3px solid var(--yellow);
-  margin-top: -35px; /* overridden on mobile for better spacing */
-      }
-
-      .sparkle {
-      z-index: 10;
-      width: 10%;
-      position: absolute;
-      animation: sparkle-hover 1s infinite alternate ease-in-out;
-      }
-
-      @keyframes sparkle-hover {
-        0% {
-          transform: translateY(0);
+        .opening-video {
+          width: 65%;
+          aspect-ratio: 16/9;
+          border-radius: 32px;
+          border: 3px solid var(--yellow);
+          margin-top: -35px; /* overridden on mobile for better spacing */
         }
-        100% {
-          transform: translateY(-15px);
-        }
-      }
 
+        .sparkle {
+          z-index: 10;
+          width: 10%;
+          position: absolute;
+          animation: sparkle-hover 1s infinite alternate ease-in-out;
+        }
+
+        @keyframes sparkle-hover {
+          0% {
+            transform: translateY(0);
+          }
+          100% {
+            transform: translateY(-15px);
+          }
+        }
 
         .black-outline {
           text-shadow:
@@ -1057,26 +1114,25 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             padding-bottom: 120px;
           }
 
+          .game-item {
+            position: relative;
+            width: 30%;
+            top: auto;
+            left: auto;
+            top: 0 !important;
+            left: 0 !important;
+          }
 
-        .game-item {
-          position: relative;
-          width: 30%;
-          top: auto;
-          left: auto;
-          top: 0 !important;
-          left: 0 !important;
-        }
+          .game-item p {
+            font-size: 0.8em;
+            padding: 0;
+          }
 
-        .game-item p {
-        font-size: 0.8em;
-        padding: 0;
-        }
-        
-        .taiko-divider > img {
-        width: 200%;
-        margin-top: -50%;
-        margin-bottom: -25%;
-        }
+          .taiko-divider > img {
+            width: 200%;
+            margin-top: -50%;
+            margin-bottom: -25%;
+          }
 
           .game-item {
             position: relative;
