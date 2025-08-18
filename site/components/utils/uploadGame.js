@@ -13,7 +13,11 @@ const HARDCODED_UPLOAD_TOKEN = "NeverTrustTheLiving#446";
 export async function uploadGame({ file, name, token, apiBase }) {
   if (!file) return { ok: false, error: "Missing file" };
   if (!name) return { ok: false, error: "Missing name" };
-  const effectiveToken = token || HARDCODED_UPLOAD_TOKEN;
+
+  // load token from localstorage
+
+  let effectiveToken = localStorage.getItem("token");
+
   if (!effectiveToken) return { ok: false, error: "Missing token" };
 
   const base = apiBase || process.env.NEXT_PUBLIC_API_BASE || "";
@@ -43,15 +47,17 @@ export async function uploadGame({ file, name, token, apiBase }) {
     });
     const text = await res.text();
     let data = null;
-    try { data = JSON.parse(text); } catch {}
+    try {
+      data = JSON.parse(text);
+    } catch {}
     if (!res.ok) {
       // Handle validation errors with detailed guidance
       if (data && data.validationError && data.details) {
-        return { 
-          ok: false, 
-          error: data.error || 'Validation failed',
+        return {
+          ok: false,
+          error: data.error || "Validation failed",
           details: data.details,
-          validationError: true
+          validationError: true,
         };
       }
       return { ok: false, error: (data && data.error) || text };
@@ -75,5 +81,3 @@ function slugify(str) {
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
-
-
