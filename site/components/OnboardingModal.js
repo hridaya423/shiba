@@ -1016,6 +1016,32 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
                 <p style={{ margin: "0", fontStyle: "italic" }}>
                   By proceeding, you acknowledge full understanding of these terms and accept all consequences of violation.
                 </p>
+                
+                <div style={{ 
+                  marginTop: "20px", 
+                  padding: "16px", 
+                  backgroundColor: "#e9ecef", 
+                  border: "1px solid #dee2e6", 
+                  borderRadius: "6px",
+                  borderLeft: "4px solid #007bff"
+                }}>
+                  <p style={{ 
+                    margin: "0 0 8px 0", 
+                    fontWeight: "bold", 
+                    fontSize: "14px",
+                    color: "#495057"
+                  }}>
+                    TL;DR:
+                  </p>
+                  <p style={{ 
+                    margin: "0", 
+                    fontSize: "14px", 
+                    lineHeight: "1.4",
+                    color: "#495057"
+                  }}>
+                    Don't cheat the time tracking system. No bots, no fake key presses, no UI manipulation. If you do, you'll be banned from Hackatime and Shiba permanently.
+                  </p>
+                </div>
               </div>
             </div>
             
