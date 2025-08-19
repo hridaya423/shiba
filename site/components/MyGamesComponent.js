@@ -683,6 +683,7 @@ function DetailView({
   useEffect(() => {
     // Fetch Hackatime projects via server proxy to avoid CORS
     const fetchProjects = async () => {
+      console.log('Fetching projects for SlackId:', SlackId);
       if (!SlackId) return;
       try {
         const res = await fetch(
@@ -691,6 +692,8 @@ function DetailView({
         const json = await res.json().catch(() => ({}));
         const names = Array.isArray(json?.projects) ? json.projects : [];
         const projectsWithTimeData = Array.isArray(json?.projectsWithTime) ? json.projectsWithTime : [];
+        console.log('Hackatime API response:', json);
+        console.log('Projects with time:', projectsWithTimeData);
         setAvailableProjects(names);
         setProjectsWithTime(projectsWithTimeData);
       } catch (e) {
@@ -1136,6 +1139,7 @@ function DetailView({
                     const checked = current.includes(name);
                     const projectTime = projectsWithTime.find(p => p.name === name)?.time || 0;
                     const timeDisplay = formatTime(projectTime);
+                    console.log(`Project: ${name}, Time: ${projectTime}, Display: ${timeDisplay}`);
                     return (
                       <div
                         key={name}
