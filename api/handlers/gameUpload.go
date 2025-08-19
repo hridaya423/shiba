@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 
 	"shiba-api/structs"
 	"shiba-api/sync"
@@ -16,27 +17,22 @@ import (
 	"github.com/google/uuid"
 )
 
-// validateZipFilePath ensures the file path is safe and doesn't contain path traversal
 func validateZipFilePath(filePath, destDir string) bool {
-	// Clean the path to resolve any .. or . components
 	cleanPath := filepath.Clean(filePath)
-	
-	// Check if the cleaned path starts with the destination directory
+
 	absDestDir, err := filepath.Abs(destDir)
 	if err != nil {
 		return false
 	}
-	
+
 	absFilePath, err := filepath.Abs(filepath.Join(destDir, cleanPath))
 	if err != nil {
 		return false
 	}
-	
-	// Ensure the file path is within the destination directory
+
 	return strings.HasPrefix(absFilePath, absDestDir+string(os.PathSeparator))
 }
 
-// isAllowedFileType checks if the file type is allowed
 func isAllowedFileType(fileName string) bool {
 	ext := strings.ToLower(filepath.Ext(fileName))
 	allowedExts := map[string]bool{
@@ -49,6 +45,18 @@ func isAllowedFileType(fileName string) bool {
 		".ico": true, ".manifest": true,
 	}
 	return allowedExts[ext] || ext == ""
+}
+
+func sanitizeForAirtableFormula(input string) string {
+	input = strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, input)
+	input = strings.ReplaceAll(input, `\`, `\\`)
+	input = strings.ReplaceAll(input, `"`, `\"`)
+	return input
 }
 
 func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
@@ -66,13 +74,16 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 		// check if the auth bearer is a valid user token in airtable
 
 		authHeader := r.Header.Get("Authorization")
+
 		if authHeader == "" {
 			http.Error(w, "Authorization header is missing", http.StatusUnauthorized)
 			return
 		}
 
+		sanitizedHeader := sanitizeForAirtableFormula(authHeader)
+
 		var records, err = srv.AirtableBaseTable.GetRecords().WithFilterFormula(
-			`{token} = "`+authHeader+`"`,
+			`{token} = "`+sanitizedHeader+`"`,
 		).MaxRecords(1).ReturnFields("Email", "user_id").Do()
 
 		if err != nil {
@@ -133,19 +144,19 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 			if strings.HasPrefix(f.Name, "__MACOSX/") {
 				continue
 			}
-			
+
 			// Validate file path for path traversal
 			if !validateZipFilePath(f.Name, destDir) {
 				http.Error(w, "Invalid file path in zip: "+f.Name, http.StatusBadRequest)
 				return
 			}
-			
+
 			// Check if file type is allowed
 			if !isAllowedFileType(f.Name) {
 				http.Error(w, "File type not allowed: "+f.Name, http.StatusBadRequest)
 				return
 			}
-			
+
 			fpath := filepath.Join(destDir, f.Name)
 
 			if f.FileInfo().IsDir() {
