@@ -40,7 +40,7 @@ export default function HelpComponent() {
              <iframe 
                width="560" 
                height="315" 
-               src="https://www.youtube.com/embed/Mapfcs9jziA?si=AUDbmmMsrFdPaY6b" 
+               src="https://www.youtube.com/embed/MdnJ_neHE7Q?si=nIfh4vvYxhBMYyGI" 
                title="YouTube video player" 
                frameBorder="0" 
                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
