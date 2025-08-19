@@ -30,6 +30,22 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
   const code = searchParams.get("code");
   const sentby = searchParams.get("sentby");
 
+  // Track referral code visits
+  useEffect(() => {
+    if (sentby && sentby.trim() !== '') {
+      // Track referral code visit with Plausible
+      if (window.plausible) {
+        window.plausible('Referral Code Visit', {
+          props: {
+            referralCode: sentby.trim(),
+            source: 'url-parameter'
+          }
+        });
+      }
+      console.log(`User visited with referral code: ${sentby.trim()}`);
+    }
+  }, [sentby]);
+
   useEffect(() => {
     if (code) {
       console.log("Authorization code:", code);

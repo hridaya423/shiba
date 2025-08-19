@@ -1002,6 +1002,17 @@ function ProfileModal({
                   if (initialProfile?.referralCode) {
                     const baseUrl = window.location.origin;
                     const referralUrl = `${baseUrl}?sentby=${initialProfile.referralCode}`;
+                    
+                    // Track referral code copy with Plausible
+                    if (window.plausible) {
+                      window.plausible('Referral Code Copied', {
+                        props: {
+                          referralCode: initialProfile.referralCode,
+                          location: 'profile-modal'
+                        }
+                      });
+                    }
+                    
                     navigator.clipboard.writeText(referralUrl).then(() => {
                       // Show a brief success message
                       const originalText = document.querySelector('.referral-copy-text')?.textContent;

@@ -84,6 +84,9 @@ export default async function handler(req, res) {
             try {
               await createReferralRecord(userRecord.id, sentby.trim());
               console.log(`Successfully created referral record for new user with referral code: ${sentby}`);
+              
+              // Track successful referral usage
+              console.log(`Referral code ${sentby.trim()} was successfully used by new user ${userRecord.id}`);
             } catch (referralError) {
               console.error('Failed to create referral record:', referralError);
               // Don't fail the entire login process if referral tracking fails
