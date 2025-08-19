@@ -1472,7 +1472,7 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
               }}
             >
               <img
-                src={isMuted ? "/sound-off.svg" : "/sound-on.svg"}
+                src={isMuted ? "/SoundOff.svg" : "/SoundOn.svg"}
                 alt={isMuted ? "Unmute" : "Mute"}
                 style={{
                   width: 18,
