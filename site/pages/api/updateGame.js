@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { isValidUrl } from './utils/security.js';
-=======
-import { escapeFormulaString, isValidUrl } from "./utils/security.js";
->>>>>>> 9cd4854ed183d8ff199d645dce532cc2192d0eb0
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || "appg245A41MWc6Rej";
@@ -36,19 +32,10 @@ export default async function handler(req, res) {
       .json({ message: "Missing required fields: token, gameId" });
   }
 
-<<<<<<< HEAD
   // Validate gameId format (should be a valid Airtable record ID)
   const airtableRecordIdRegex = /^rec[a-zA-Z0-9]{14}$/;
   if (!airtableRecordIdRegex.test(gameId)) {
     return res.status(400).json({ message: 'Invalid game ID format' });
-=======
-  // if you didn't vibecode this, it would've worked in the first place
-  const airtableRecIdRegex = /^rec[0-9A-Za-z]{14}$/;
-  if (!airtableRecIdRegex.test(gameId)) {
-    return res
-      .status(400)
-      .json({ message: "Invalid game ID format" });
->>>>>>> 9cd4854ed183d8ff199d645dce532cc2192d0eb0
   }
 
   try {
