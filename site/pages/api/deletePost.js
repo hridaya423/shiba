@@ -1,5 +1,7 @@
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
+const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
+const AIRTABLE_GAMES_TABLE = process.env.AIRTABLE_GAMES_TABLE || 'Games';
 const AIRTABLE_POSTS_TABLE = process.env.AIRTABLE_POSTS_TABLE || 'Posts';
 const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
 
@@ -23,6 +25,38 @@ export default async function handler(req, res) {
     const userRecord = await findUserByToken(token);
     if (!userRecord) {
       return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    // Fetch the post to get the associated game
+    const post = await airtableRequest(`${encodeURIComponent(AIRTABLE_POSTS_TABLE)}/${encodeURIComponent(postId)}`, {
+      method: 'GET',
+    });
+    
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Get the game ID from the post
+    const gameIds = normalizeLinkedIds(post?.fields?.Game);
+    if (!gameIds || gameIds.length === 0) {
+      return res.status(400).json({ message: 'Post is not associated with any game' });
+    }
+
+    const gameId = gameIds[0];
+
+    // Fetch the game to verify ownership
+    const game = await airtableRequest(`${encodeURIComponent(AIRTABLE_GAMES_TABLE)}/${encodeURIComponent(gameId)}`, {
+      method: 'GET',
+    });
+    
+    if (!game) {
+      return res.status(404).json({ message: 'Associated game not found' });
+    }
+
+    const ownerIds = normalizeLinkedIds(game?.fields?.Owner);
+    const isOwner = ownerIds.includes(userRecord.id);
+    if (!isOwner) {
+      return res.status(403).json({ message: 'Forbidden: not the owner of this game' });
     }
 
     // Delete the post record
@@ -86,4 +120,15 @@ async function findUserByToken(token) {
   }
   
   return null;
+}
+
+function normalizeLinkedIds(value) {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return [];
+    if (typeof value[0] === 'string') return value;
+    if (typeof value[0] === 'object' && value[0] && typeof value[0].id === 'string') {
+      return value.map((v) => v.id);
+    }
+  }
+  return [];
 }

@@ -40,6 +40,13 @@ export default async function handler(req, res) {
       return res.status(404).json({ message: 'Game not found' });
     }
 
+    // Verify ownership of the game
+    const ownerIds = normalizeLinkedIds(gameRecord?.fields?.Owner);
+    const isOwner = ownerIds.includes(userRecord.id);
+    if (!isOwner) {
+      return res.status(403).json({ message: 'Forbidden: not the owner of this game' });
+    }
+
     // Prepare the fields for both tables
     const fields = {
       'Code URL': githubUrl.trim(),
@@ -239,4 +246,15 @@ async function findActiveRecordByGameId(gameId) {
     console.error('Error finding active record by game ID:', error);
     return null;
   }
+}
+
+function normalizeLinkedIds(value) {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return [];
+    if (typeof value[0] === 'string') return value;
+    if (typeof value[0] === 'object' && value[0] && typeof value[0].id === 'string') {
+      return value.map((v) => v.id);
+    }
+  }
+  return [];
 }
