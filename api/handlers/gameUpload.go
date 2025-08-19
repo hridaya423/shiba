@@ -72,7 +72,9 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 		}
 
 		// check if the auth bearer is a valid user token in airtable
+		// TEMPORARILY DISABLED - Airtable auth check commented out
 
+		/*
 		authHeader := r.Header.Get("Authorization")
 
 		if authHeader == "" {
@@ -117,6 +119,7 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 			return
 		}
+		*/
 
 		file, _, err := r.FormFile("file")
 		if err != nil {
@@ -215,7 +218,7 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 
 		}
 
-		log.Printf("User with email %s sucessfully uploaded a new game snapshot!", records.Records[0].Fields["Email"])
+		log.Printf("User successfully uploaded a new game snapshot!")
 
 		go func(folder string, srv *structs.Server) {
 			if err := sync.UploadFolder(folder, *srv); err != nil {
