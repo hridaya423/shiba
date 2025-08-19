@@ -242,8 +242,14 @@ function EventsModal({ isOpen, onClose, token }) {
   const hasRSVPedForShibaDirect = userRSVPs.some(
     (rsvp) => rsvp.event === "Shiba-Direct",
   );
+  const hasRSVPedForShibaWorkshop = userRSVPs.some(
+    (rsvp) => rsvp.event === "Shiba-Workshop",
+  );
+  const hasRSVPedForClickerWorkshop = userRSVPs.some(
+    (rsvp) => rsvp.event === "Shiba-Clicker-Workshop",
+  );
 
-  const handleRSVP = async () => {
+  const handleRSVP = async (eventName) => {
     if (!token || isRSVPing) return;
 
     setIsRSVPing(true);
@@ -253,7 +259,7 @@ function EventsModal({ isOpen, onClose, token }) {
       const res = await fetch("/api/CreateRSVP", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, event: "Shiba-Direct" }),
+        body: JSON.stringify({ token, event: eventName }),
       });
       const data = await res.json().catch(() => ({}));
 
@@ -313,6 +319,7 @@ function EventsModal({ isOpen, onClose, token }) {
           minWidth: 320,
           maxWidth: 420,
           width: "90%",
+          maxHeight: "90vh",
           display: "flex",
           flexDirection: "column",
           gap: 12,
@@ -360,6 +367,10 @@ function EventsModal({ isOpen, onClose, token }) {
             gap: 16,
             alignItems: "center",
             textAlign: "center",
+            overflowY: "auto",
+            flex: 1,
+            paddingRight: 8,
+            paddingBottom: 4,
           }}
         >
           <div
@@ -412,7 +423,7 @@ function EventsModal({ isOpen, onClose, token }) {
             ) : (
               <>
                 <button
-                  onClick={handleRSVP}
+                  onClick={() => handleRSVP("Shiba-Direct")}
                   disabled={isRSVPing}
                   style={{
                     appearance: "none",
@@ -447,7 +458,173 @@ function EventsModal({ isOpen, onClose, token }) {
             )}
           </div>
 
-          <p style={{ margin: 0, fontSize: "14px", opacity: 0.7 }}>
+          <div
+            style={{
+              border: "4px solid #4A90E2",
+              borderRadius: "8px",
+              background: "linear-gradient(to bottom, #b8d4f0, #9bc2e6)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              gap: "8px",
+              padding: "16px",
+              width: "100%",
+            }}
+          >
+            <p style={{ margin: 0, fontSize: "16px", fontWeight: "bold" }}>
+              Shiba Workshop: Setting up Godot and Hackatime
+            </p>
+            <p style={{ margin: 0, fontSize: "14px" }}>
+              19 august · 11am–12pm PT
+            </p>
+            <p style={{ margin: 0, fontSize: "14px" }}>
+              learn to set up godot and hackatime so you can start programming!
+            </p>
+            {hasRSVPedForShibaWorkshop ? (
+              <div
+                style={{
+                  background: "rgba(255, 255, 255, 0.8)",
+                  border: "2px dotted #006600",
+                  borderRadius: "8px",
+                  padding: "12px",
+                  margin: "8px 0",
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    color: "#006600",
+                  }}
+                >
+                  You're RSVPed! We'll remind you to join the Slack huddle.
+                </p>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleRSVP("Shiba-Workshop")}
+                  disabled={isRSVPing}
+                  style={{
+                    appearance: "none",
+                    border: "2px solid #4A90E2",
+                    background: "#ffffff",
+                    color: "#4A90E2",
+                    borderRadius: 10,
+                    padding: "10px 14px",
+                    cursor: isRSVPing ? "not-allowed" : "pointer",
+                    fontWeight: 800,
+                    fontSize: "14px",
+                    opacity: isRSVPing ? 0.8 : 1,
+                    transition:
+                      "opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isRSVPing) {
+                      e.target.style.background = "#4A90E2";
+                      e.target.style.color = "#ffffff";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isRSVPing) {
+                      e.target.style.background = "#ffffff";
+                      e.target.style.color = "#4A90E2";
+                    }
+                  }}
+                >
+                  {isRSVPing ? "RSVPing..." : "RSVP"}
+                </button>
+              </>
+            )}
+          </div>
+
+          <div
+            style={{
+              border: "4px solid #8B5CF6",
+              borderRadius: "8px",
+              background: "linear-gradient(to bottom, #d8c7f8, #c4b5fd)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              gap: "8px",
+              padding: "16px",
+              width: "100%",
+            }}
+          >
+            <p style={{ margin: 0, fontSize: "16px", fontWeight: "bold" }}>
+              Shiba Workshop: Let's Make a Clicker Game!
+            </p>
+            <p style={{ margin: 0, fontSize: "14px" }}>
+              19 august · 3pm–4pm PT
+            </p>
+            <p style={{ margin: 0, fontSize: "14px" }}>
+              let's make a godot clicker game together to learn the basics of godot!
+            </p>
+            {hasRSVPedForClickerWorkshop ? (
+              <div
+                style={{
+                  background: "rgba(255, 255, 255, 0.8)",
+                  border: "2px dotted #006600",
+                  borderRadius: "8px",
+                  padding: "12px",
+                  margin: "8px 0",
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    color: "#006600",
+                  }}
+                >
+                  You're RSVPed! We'll remind you to join the Slack huddle.
+                </p>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleRSVP("Shiba-Clicker-Workshop")}
+                  disabled={isRSVPing}
+                  style={{
+                    appearance: "none",
+                    border: "2px solid #8B5CF6",
+                    background: "#ffffff",
+                    color: "#8B5CF6",
+                    borderRadius: 10,
+                    padding: "10px 14px",
+                    cursor: isRSVPing ? "not-allowed" : "pointer",
+                    fontWeight: 800,
+                    fontSize: "14px",
+                    opacity: isRSVPing ? 0.8 : 1,
+                    transition:
+                      "opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isRSVPing) {
+                      e.target.style.background = "#8B5CF6";
+                      e.target.style.color = "#ffffff";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isRSVPing) {
+                      e.target.style.background = "#ffffff";
+                      e.target.style.color = "#8B5CF6";
+                    }
+                  }}
+                >
+                  {isRSVPing ? "RSVPing..." : "RSVP"}
+                </button>
+              </>
+            )}
+          </div>
+
+          <p style={{ margin: 0, fontSize: "14px", opacity: 0.7, marginTop: 8 }}>
             More events to be announced soon
           </p>
         </div>
