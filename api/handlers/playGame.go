@@ -4,30 +4,12 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
-	"regexp"
 	"shiba-api/structs"
 
 	"github.com/go-chi/chi/v5"
 )
 
-// UUID regex pattern for validation
-var uuidRegex = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
-// validateGameId ensures the gameId is a valid UUID and doesn't contain path traversal
-func validateGameId(gameId string) bool {
-	if gameId == "" {
-		return false
-	}
-	// Check if it's a valid UUID
-	if !uuidRegex.MatchString(gameId) {
-		return false
-	}
-	// Check for path traversal attempts
-	if filepath.Clean(gameId) != gameId {
-		return false
-	}
-	return true
-}
 
 // validateAssetPath ensures the asset path is safe and doesn't contain path traversal
 func validateAssetPath(assetPath string) bool {
@@ -49,10 +31,6 @@ func validateAssetPath(assetPath string) bool {
 func MainGamePlayHandler(srv *structs.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gameId := chi.URLParam(r, "gameId")
-		if !validateGameId(gameId) {
-			http.Error(w, "Invalid game ID", http.StatusBadRequest)
-			return
-		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
@@ -67,10 +45,6 @@ func MainGamePlayHandler(srv *structs.Server) http.HandlerFunc {
 func AssetsPlayHandler(srv *structs.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gameId := chi.URLParam(r, "gameId")
-		if !validateGameId(gameId) {
-			http.Error(w, "Invalid game ID", http.StatusBadRequest)
-			return
-		}
 
 		assetPath := chi.URLParam(r, "*")
 		if assetPath == "" {
