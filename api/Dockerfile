@@ -15,5 +15,4 @@ COPY --from=builder /src/server /server
 RUN chown appuser:appgroup /server
 EXPOSE 3001
 USER appuser
-HEALTHCHECK CMD curl -f http://localhost:3001/health || exit 1
 CMD ["/server"]
