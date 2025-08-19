@@ -34,18 +34,8 @@ func validateZipFilePath(filePath, destDir string) bool {
 }
 
 func isAllowedFileType(fileName string) bool {
-	ext := strings.ToLower(filepath.Ext(fileName))
-	allowedExts := map[string]bool{
-		".html": true, ".htm": true, ".js": true, ".css": true,
-		".png": true, ".jpg": true, ".jpeg": true, ".gif": true, ".svg": true,
-		".mp3": true, ".wav": true, ".ogg": true,
-		".mp4": true, ".webm": true,
-		".json": true, ".xml": true, ".txt": true,
-		".woff": true, ".woff2": true, ".ttf": true, ".eot": true,
-		".ico": true, ".manifest": true,
-		".cfg": true, // Godot export presets
-	}
-	return allowedExts[ext] || ext == ""
+	// Allow everything - no file type restrictions
+	return true
 }
 
 func sanitizeForAirtableFormula(input string) string {
