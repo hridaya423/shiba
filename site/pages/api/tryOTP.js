@@ -96,8 +96,8 @@ async function airtableRequest(path, options = {}) {
 }
 
 async function findUserByEmail(email) {
-  const emailEscaped = escapeFormulaString(email);
-  const formula = `LOWER(SUBSTITUTE({Email}, " ", "")) = "${emailEscaped}"`;
+  // For email searches, use simple exact match without complex escaping
+  const formula = `{Email} = "${email}"`;
   const params = new URLSearchParams({
     filterByFormula: formula,
     pageSize: '1',
@@ -111,9 +111,8 @@ async function findUserByEmail(email) {
 }
 
 async function getMostRecentOtpForEmail(email, minutesWindow = 5) {
-  const emailEscaped = escapeFormulaString(email);
   const params = new URLSearchParams();
-  params.set('filterByFormula', `AND(LOWER(SUBSTITUTE({Email}, " ", "")) = "${emailEscaped}", IS_AFTER(CREATED_TIME(), DATEADD(NOW(), -${minutesWindow}, 'minutes')))`);
+  params.set('filterByFormula', `AND({Email} = "${email}", IS_AFTER(CREATED_TIME(), DATEADD(NOW(), -${minutesWindow}, 'minutes')))`);
   params.set('pageSize', '1');
   params.set('sort[0][field]', 'Created At');
   params.set('sort[0][direction]', 'desc');

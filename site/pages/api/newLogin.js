@@ -307,7 +307,7 @@ async function hasRecentOtpForEmail(email, secondsWindow) {
 }
 
 async function getMostRecentOtpRecordForEmail(email) {
-  const emailEscaped = escapeFormulaString(email);
+  const emailEscaped = email;
   const params = new URLSearchParams();
   params.set('filterByFormula', `LOWER(SUBSTITUTE({Email}, " ", "")) = "${emailEscaped}"`);
   params.set('pageSize', '1');
