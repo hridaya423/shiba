@@ -1,3 +1,5 @@
+import { escapeFormulaString } from './utils/security.js';
+
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
@@ -25,19 +27,13 @@ export default async function handler(req, res) {
     }
 
     const f = user.fields || {};
-    console.log('Airtable fields received:', JSON.stringify(f, null, 2));
     const profile = normalizeProfileFields(f);
-    console.log('Normalized profile:', JSON.stringify(profile, null, 2));
     return res.status(200).json({ ok: true, profile });
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error('getMyProfile error:', e);
     return res.status(500).json({ message: 'An unexpected error occurred.' });
   }
-}
-
-function escapeFormulaString(value) {
-  return String(value).replace(/"/g, '\\"');
 }
 
 async function airtableRequest(path, options = {}) {
@@ -75,8 +71,6 @@ function normalizeProfileFields(f) {
   if (f['hasOnboarded'] !== undefined) {
     hasOnboarded = Boolean(f['hasOnboarded']);
   }
-  
-  console.log('hasOnboarded field value:', f['hasOnboarded'], 'normalized to:', hasOnboarded);
   
   return {
     email: typeof f.Email === 'string' ? f.Email : '',

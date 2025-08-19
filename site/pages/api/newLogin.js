@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import { escapeFormulaString, isValidEmail } from './utils/security.js';
+import { checkRateLimit } from './utils/rateLimit.js';
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = 'appg245A41MWc6Rej';
@@ -30,6 +32,12 @@ export default async function handler(req, res) {
   }
 
   const normalizedEmail = normalizeEmail(email);
+  
+  // Rate limiting by email address
+  const rateLimitKey = `login:${normalizedEmail}`;
+  if (!checkRateLimit(rateLimitKey, 5, 60000)) { // 5 requests per minute
+    return res.status(429).json({ message: 'Too many login attempts. Please try again later.' });
+  }
 
   try {
     // Ensure user exists (create if new)
@@ -95,8 +103,32 @@ function normalizeEmail(input) {
 }
 
 function escapeFormulaString(value) {
-  // Use double quotes in formula and escape any embedded double quotes
-  return String(value).replace(/"/g, '\\"');
+  // More comprehensive escaping for Airtable formulas
+  return String(value)
+    .replace(/"/g, '\\"')  // Escape double quotes
+    .replace(/\{/g, '\\{') // Escape opening braces
+    .replace(/\}/g, '\\}') // Escape closing braces
+    .replace(/\(/g, '\\(') // Escape opening parentheses
+    .replace(/\)/g, '\\)') // Escape closing parentheses
+    .replace(/\+/g, '\\+') // Escape plus signs
+    .replace(/-/g, '\\-')  // Escape minus signs
+    .replace(/\*/g, '\\*') // Escape asterisks
+    .replace(/\//g, '\\/') // Escape forward slashes
+    .replace(/=/g, '\\=')  // Escape equals signs
+    .replace(/</g, '\\<')  // Escape less than
+    .replace(/>/g, '\\>')  // Escape greater than
+    .replace(/!/g, '\\!')  // Escape exclamation marks
+    .replace(/&/g, '\\&')  // Escape ampersands
+    .replace(/\|/g, '\\|') // Escape pipes
+    .replace(/\[/g, '\\[') // Escape square brackets
+    .replace(/\]/g, '\\]') // Escape square brackets
+    .replace(/\^/g, '\\^') // Escape caret
+    .replace(/\$/g, '\\$') // Escape dollar sign
+    .replace(/\?/g, '\\?') // Escape question mark
+    .replace(/\./g, '\\.') // Escape dots
+    .replace(/,/g, '\\,')  // Escape commas
+    .replace(/;/g, '\\;')  // Escape semicolons
+    .replace(/:/g, '\\:'); // Escape colons
 }
 
 async function airtableRequest(path, options = {}) {

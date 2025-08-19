@@ -4,6 +4,8 @@ const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
 const AIRTABLE_GAMES_TABLE = process.env.AIRTABLE_GAMES_TABLE || 'Games';
 const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
 
+import { escapeFormulaString, isValidUrl } from './utils/security.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -17,6 +19,12 @@ export default async function handler(req, res) {
   const { token, gameId, name, description, thumbnailUrl, thumbnailUpload, GitHubURL, HackatimeProjects } = req.body || {};
   if (!token || !gameId) {
     return res.status(400).json({ message: 'Missing required fields: token, gameId' });
+  }
+
+  // Validate gameId format (should be a valid UUID)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(gameId)) {
+    return res.status(400).json({ message: 'Invalid game ID format' });
   }
 
   try {
@@ -50,16 +58,14 @@ export default async function handler(req, res) {
     if (typeof GitHubURL === 'string') {
       const t = GitHubURL.trim();
       if (t.length > 0) {
-        try {
-          const url = new URL(t);
-          if (url.protocol === 'https:' && url.hostname === 'github.com') {
-            fields.GitHubURL = t;
-          }
-        } catch {
-          // wonky
+        if (isValidUrl(t, ['https:'], ['github.com'])) {
+          fields.GitHubURL = t;
+        } else {
+          return res.status(400).json({ message: 'Invalid GitHub URL' });
         }
       }
     }
+    
     if (typeof HackatimeProjects === 'string') {
       // Accept comma-separated list of names; store as a single CSV string in Airtable
       const sproj = HackatimeProjects.substring(0, 500);
@@ -71,21 +77,20 @@ export default async function handler(req, res) {
         fields['Hackatime Projects'] = parts.join(', ');
       }
     }
+    
     if (typeof thumbnailUrl === 'string' && thumbnailUrl.trim().length > 0) {
       const t = thumbnailUrl.trim().substring(0, 500);
-      try {
-        const url = new URL(t);
-        if (url.protocol === 'https:' || url.protocol === 'http:') {
-          fields.Thumbnail = [
-            {
-              url: t,
-            },
-          ];
-        }
-      } catch {
-        // wonky
+      if (isValidUrl(t, ['https:', 'http:'])) {
+        fields.Thumbnail = [
+          {
+            url: t,
+          },
+        ];
+      } else {
+        return res.status(400).json({ message: 'Invalid thumbnail URL' });
       }
     }
+    
     if (Object.keys(fields).length === 0) {
       return res.status(400).json({ message: 'Nothing to update' });
     }
@@ -99,6 +104,18 @@ export default async function handler(req, res) {
     if (thumbnailUpload && typeof thumbnailUpload === 'object') {
       const { fileBase64, contentType, filename } = thumbnailUpload || {};
       if (fileBase64 && contentType && filename) {
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(contentType)) {
+          return res.status(400).json({ message: 'Invalid file type for thumbnail' });
+        }
+        
+        // Validate file size (max 5MB)
+        const fileSize = Math.ceil((fileBase64.length * 3) / 4);
+        if (fileSize > 5 * 1024 * 1024) {
+          return res.status(400).json({ message: 'Thumbnail file too large (max 5MB)' });
+        }
+        
         const uploadResult = await airtableContentUpload({
           recordId: gameId,
           fieldName: 'Thumbnail',

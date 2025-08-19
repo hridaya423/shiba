@@ -1,3 +1,5 @@
+import { escapeFormulaString, generateSecureRandomString } from './utils/security.js';
+
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
@@ -72,17 +74,8 @@ export default async function handler(req, res) {
   }
 }
 
-function escapeFormulaString(value) {
-  return String(value).replace(/"/g, '\\"');
-}
-
 function generateRSVPId() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < 16; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  return generateSecureRandomString(16);
 }
 
 async function airtableRequest(path, options = {}) {

@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import { escapeFormulaString, isValidEmail } from './utils/security.js';
+import { checkRateLimit } from './utils/rateLimit.js';
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
@@ -22,6 +24,12 @@ export default async function handler(req, res) {
   }
 
   const normalizedEmail = normalizeEmail(email);
+  
+  // Rate limiting by email address for OTP attempts
+  const rateLimitKey = `otp:${normalizedEmail}`;
+  if (!checkRateLimit(rateLimitKey, 10, 300000)) { // 10 attempts per 5 minutes
+    return res.status(429).json({ message: 'Too many OTP attempts. Please try again later.' });
+  }
 
   try {
     // Get most recent OTP for this email within last 5 minutes
@@ -65,11 +73,8 @@ export default async function handler(req, res) {
 }
 
 function normalizeEmail(input) {
-  return String(input).toLowerCase().replace(/\s+/g, '');
-}
-
-function escapeFormulaString(value) {
-  return String(value).replace(/"/g, '\\"');
+  const normalized = String(input).toLowerCase().replace(/\s+/g, '');
+  return isValidEmail(normalized) ? normalized : '';
 }
 
 async function airtableRequest(path, options = {}) {

@@ -1,3 +1,5 @@
+import { escapeFormulaString } from './utils/security.js';
+
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
@@ -30,8 +32,8 @@ export default async function handler(req, res) {
         {
           fields: {
             Owner: [userRecord.id],
-            Name: String(name),
-            Description: typeof description === 'string' ? description : '',
+            Name: String(name).substring(0, 100), // Limit name length
+            Description: typeof description === 'string' ? description.substring(0, 1000) : '',
           },
         },
       ],
@@ -53,10 +55,6 @@ export default async function handler(req, res) {
     console.error('CreateNewGame error:', error);
     return res.status(500).json({ message: 'An unexpected error occurred.' });
   }
-}
-
-function escapeFormulaString(value) {
-  return String(value).replace(/"/g, '\\"');
 }
 
 async function airtableRequest(path, options = {}) {

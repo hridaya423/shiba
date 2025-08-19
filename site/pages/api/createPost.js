@@ -1,3 +1,5 @@
+import { escapeFormulaString, generateSecureRandomString } from './utils/security.js';
+
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
@@ -190,12 +192,7 @@ async function airtableContentUpload({ recordId, fieldName, fileBase64, contentT
 }
 
 function generateAlphanumericId(length) {
-  let result = '';
-  for (let i = 0; i < length; i += 1) {
-    const idx = Math.floor(Math.random() * ALPHANUMERIC.length);
-    result += ALPHANUMERIC[idx];
-  }
-  return result;
+  return generateSecureRandomString(length);
 }
 
 

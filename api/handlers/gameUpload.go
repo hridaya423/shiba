@@ -16,6 +16,41 @@ import (
 	"github.com/google/uuid"
 )
 
+// validateZipFilePath ensures the file path is safe and doesn't contain path traversal
+func validateZipFilePath(filePath, destDir string) bool {
+	// Clean the path to resolve any .. or . components
+	cleanPath := filepath.Clean(filePath)
+	
+	// Check if the cleaned path starts with the destination directory
+	absDestDir, err := filepath.Abs(destDir)
+	if err != nil {
+		return false
+	}
+	
+	absFilePath, err := filepath.Abs(filepath.Join(destDir, cleanPath))
+	if err != nil {
+		return false
+	}
+	
+	// Ensure the file path is within the destination directory
+	return strings.HasPrefix(absFilePath, absDestDir+string(os.PathSeparator))
+}
+
+// isAllowedFileType checks if the file type is allowed
+func isAllowedFileType(fileName string) bool {
+	ext := strings.ToLower(filepath.Ext(fileName))
+	allowedExts := map[string]bool{
+		".html": true, ".htm": true, ".js": true, ".css": true,
+		".png": true, ".jpg": true, ".jpeg": true, ".gif": true, ".svg": true,
+		".mp3": true, ".wav": true, ".ogg": true,
+		".mp4": true, ".webm": true,
+		".json": true, ".xml": true, ".txt": true,
+		".woff": true, ".woff2": true, ".ttf": true, ".eot": true,
+		".ico": true, ".manifest": true,
+	}
+	return allowedExts[ext] || ext == ""
+}
+
 func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -98,11 +133,20 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 			if strings.HasPrefix(f.Name, "__MACOSX/") {
 				continue
 			}
-			fpath := filepath.Join(destDir, f.Name)
-			if !strings.HasPrefix(fpath, filepath.Clean(destDir)+string(os.PathSeparator)) {
+			
+			// Validate file path for path traversal
+			if !validateZipFilePath(f.Name, destDir) {
 				http.Error(w, "Invalid file path in zip: "+f.Name, http.StatusBadRequest)
 				return
 			}
+			
+			// Check if file type is allowed
+			if !isAllowedFileType(f.Name) {
+				http.Error(w, "File type not allowed: "+f.Name, http.StatusBadRequest)
+				return
+			}
+			
+			fpath := filepath.Join(destDir, f.Name)
 
 			if f.FileInfo().IsDir() {
 				os.MkdirAll(fpath, f.Mode())

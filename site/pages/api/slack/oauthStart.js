@@ -1,6 +1,6 @@
 const CLIENT_ID = process.env.SLACK_CLIENT_ID || '';
 const REDIRECT_BASE = process.env.NEXT_PUBLIC_BASE_URL || '';
-const VERCEL_AUTOMATION_BYPASS_SECRET = 'shibalifeshibalifeshibalifeshiba';
+const VERCEL_AUTOMATION_BYPASS_SECRET = process.env.VERCEL_AUTOMATION_BYPASS_SECRET || '';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
