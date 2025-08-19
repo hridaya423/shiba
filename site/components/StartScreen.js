@@ -28,6 +28,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
 
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
+  const sentby = searchParams.get("sentby");
 
   useEffect(() => {
     if (code) {
@@ -105,7 +106,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
     }
     setLoading(true);
     setMessage("");
-    const result = await requestOtp(email);
+    const result = await requestOtp(email, sentby);
     if (result?.ok) {
       setStage("otp");
       setMessage("Code sent. Check your email.");

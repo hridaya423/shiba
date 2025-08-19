@@ -958,24 +958,104 @@ function ProfileModal({
 
         {/* Inputs */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {/* GitHub */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 12, opacity: 0.7 }}>GitHub</span>
-            {!githubUsername && (
-              <span
-                style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}
+          {/* GitHub and Referral Code */}
+          <div style={{ display: "flex", gap: 8 }}>
+            {/* GitHub */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.7 }}>GitHub</span>
+                {!githubUsername && (
+                  <span
+                    style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}
+                  >
+                    (missing required field)
+                  </span>
+                )}
+              </div>
+              <input
+                type="text"
+                placeholder="GitHub Username"
+                value={githubUsername}
+                onChange={(e) => setGithubUsername(e.target.value)}
+                style={{ ...inputStyle, width: "100%" }}
+              />
+            </div>
+
+            {/* Referral Code */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.7 }}>Referral Code</span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(0,0,0,0.18)",
+                  background: "rgba(255,255,255,0.8)",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s ease",
+                }}
+                onClick={() => {
+                  if (initialProfile?.referralCode) {
+                    const baseUrl = window.location.origin;
+                    const referralUrl = `${baseUrl}?sentby=${initialProfile.referralCode}`;
+                    navigator.clipboard.writeText(referralUrl).then(() => {
+                      // Show a brief success message
+                      const originalText = document.querySelector('.referral-copy-text')?.textContent;
+                      const copyText = document.querySelector('.referral-copy-text');
+                      if (copyText) {
+                        copyText.textContent = 'Copied!';
+                        setTimeout(() => {
+                          copyText.textContent = originalText || initialProfile.referralCode;
+                        }, 1000);
+                      }
+                    }).catch(err => {
+                      console.error('Failed to copy: ', err);
+                    });
+                  }
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "rgba(255,255,255,0.95)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "rgba(255,255,255,0.8)";
+                }}
               >
-                (missing required field)
-              </span>
-            )}
+                <span 
+                  className="referral-copy-text"
+                  style={{ 
+                    flex: 1, 
+                    fontSize: "14px",
+                    color: initialProfile?.referralCode ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.4)",
+                    fontFamily: "monospace",
+                    fontWeight: "600"
+                  }}
+                >
+                  {initialProfile?.referralCode || "No referral code"}
+                </span>
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  style={{ 
+                    color: "rgba(0,0,0,0.6)",
+                    flexShrink: 0
+                  }}
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </div>
+            </div>
           </div>
-          <input
-            type="text"
-            placeholder="GitHub Username"
-            value={githubUsername}
-            onChange={(e) => setGithubUsername(e.target.value)}
-            style={{ ...inputStyle, width: "100%" }}
-          />
 
           {/* Name */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1034,48 +1114,58 @@ function ProfileModal({
               </span>
             )}
           </div>
-          <input
-            type="text"
-            placeholder="Street Address"
-            value={street1}
-            onChange={(e) => setStreet1(e.target.value)}
-            style={{ ...inputStyle, width: "100%" }}
-          />
-          <input
-            type="text"
-            placeholder="Street Address #2"
-            value={street2}
-            onChange={(e) => setStreet2(e.target.value)}
-            style={{ ...inputStyle, width: "100%" }}
-          />
+          
+          {/* Street Addresses - Side by side */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input
+              type="text"
+              placeholder="Street Address"
+              value={street1}
+              onChange={(e) => setStreet1(e.target.value)}
+              style={{ ...inputStyle, flex: 1, minWidth: "calc(50% - 4px)" }}
+            />
+            <input
+              type="text"
+              placeholder="Street Address #2"
+              value={street2}
+              onChange={(e) => setStreet2(e.target.value)}
+              style={{ ...inputStyle, flex: 1, minWidth: "calc(50% - 4px)" }}
+            />
+          </div>
+          
+          {/* City and Zipcode - Side by side */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input
               type="text"
               placeholder="City"
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              style={{ ...inputStyle, flex: "1 1 40%", minWidth: 0 }}
+              style={{ ...inputStyle, flex: 2, minWidth: "calc(60% - 4px)" }}
             />
             <input
               type="text"
               placeholder="Zipcode"
               value={zipcode}
               onChange={(e) => setZipcode(e.target.value)}
-              style={{ ...inputStyle, flex: "1 1 25%", minWidth: 0 }}
+              style={{ ...inputStyle, flex: 1, minWidth: "calc(40% - 4px)" }}
             />
+          </div>
+          
+          {/* State and Country - Side by side */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input
               type="text"
               placeholder="State / Province"
               value={state}
               onChange={(e) => setState(e.target.value)}
-              style={{ ...inputStyle, flex: "1 1 30%", minWidth: 0 }}
+              style={{ ...inputStyle, flex: 1, minWidth: "calc(50% - 4px)" }}
             />
             <input
               type="text"
               placeholder="Country"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              style={{ ...inputStyle, flex: "1 1 30%", minWidth: 0 }}
+              style={{ ...inputStyle, flex: 1, minWidth: "calc(50% - 4px)" }}
             />
           </div>
         </div>
