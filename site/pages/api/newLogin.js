@@ -102,34 +102,7 @@ function normalizeEmail(input) {
   return String(input).toLowerCase().replace(/\s+/g, '');
 }
 
-function escapeFormulaString(value) {
-  // More comprehensive escaping for Airtable formulas
-  return String(value)
-    .replace(/"/g, '\\"')  // Escape double quotes
-    .replace(/\{/g, '\\{') // Escape opening braces
-    .replace(/\}/g, '\\}') // Escape closing braces
-    .replace(/\(/g, '\\(') // Escape opening parentheses
-    .replace(/\)/g, '\\)') // Escape closing parentheses
-    .replace(/\+/g, '\\+') // Escape plus signs
-    .replace(/-/g, '\\-')  // Escape minus signs
-    .replace(/\*/g, '\\*') // Escape asterisks
-    .replace(/\//g, '\\/') // Escape forward slashes
-    .replace(/=/g, '\\=')  // Escape equals signs
-    .replace(/</g, '\\<')  // Escape less than
-    .replace(/>/g, '\\>')  // Escape greater than
-    .replace(/!/g, '\\!')  // Escape exclamation marks
-    .replace(/&/g, '\\&')  // Escape ampersands
-    .replace(/\|/g, '\\|') // Escape pipes
-    .replace(/\[/g, '\\[') // Escape square brackets
-    .replace(/\]/g, '\\]') // Escape square brackets
-    .replace(/\^/g, '\\^') // Escape caret
-    .replace(/\$/g, '\\$') // Escape dollar sign
-    .replace(/\?/g, '\\?') // Escape question mark
-    .replace(/\./g, '\\.') // Escape dots
-    .replace(/,/g, '\\,')  // Escape commas
-    .replace(/;/g, '\\;')  // Escape semicolons
-    .replace(/:/g, '\\:'); // Escape colons
-}
+
 
 async function airtableRequest(path, options = {}) {
   const url = `${AIRTABLE_API_BASE}/${AIRTABLE_BASE_ID}/${path}`;

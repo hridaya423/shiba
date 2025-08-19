@@ -1,10 +1,10 @@
+import { escapeFormulaString, isValidUrl } from './utils/security.js';
+
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
 const AIRTABLE_GAMES_TABLE = process.env.AIRTABLE_GAMES_TABLE || 'Games';
 const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
-
-import { escapeFormulaString, isValidUrl } from './utils/security.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -172,10 +172,6 @@ export const config = {
     },
   },
 };
-
-function escapeFormulaString(value) {
-  return String(value).replace(/"/g, '\\"');
-}
 
 async function airtableRequest(path, options = {}) {
   const url = `${AIRTABLE_API_BASE}/${AIRTABLE_BASE_ID}/${path}`;

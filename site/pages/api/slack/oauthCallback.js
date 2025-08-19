@@ -1,3 +1,5 @@
+import { escapeFormulaString } from '../utils/security.js';
+
 const CLIENT_ID = process.env.SLACK_CLIENT_ID || '';
 const CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET || '';
 const REDIRECT_BASE = process.env.NEXT_PUBLIC_BASE_URL || '';
@@ -63,10 +65,6 @@ export default async function handler(req, res) {
   } catch (e) {
     return res.status(500).send('OAuth error');
   }
-}
-
-function escapeFormulaString(value) {
-  return String(value).replace(/"/g, '\\"');
 }
 
 async function airtableRequest(path, options = {}) {

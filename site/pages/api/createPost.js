@@ -126,9 +126,7 @@ export const config = {
   },
 };
 
-function escapeFormulaString(value) {
-  return String(value).replace(/"/g, '\\"');
-}
+
 
 async function airtableRequest(path, options = {}) {
   const url = `${AIRTABLE_API_BASE}/${AIRTABLE_BASE_ID}/${path}`;

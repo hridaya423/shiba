@@ -584,56 +584,84 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
               }}
             />
 
-            
-            <button
-              type="button"
-              onClick={() => {
-                const base = window.location.origin;
-                const w = window.open(`${base}/api/slack/oauthStart?state=${encodeURIComponent(token || '')}` , 'slack_oauth', 'width=600,height=700');
-                const listener = async (evt) => {
-                  if (!evt || !evt.data || evt.data.type !== 'SLACK_CONNECTED') return;
-                  try {
-                    const id = String(evt.data.slackId || '');
-                    if (!id) return;
-                    // Re-fetch profile to get canonical state from server
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", width: "100%" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const base = window.location.origin;
+                  const w = window.open(`${base}/api/slack/oauthStart?state=${encodeURIComponent(token || '')}` , 'slack_oauth', 'width=600,height=700');
+                  const listener = async (evt) => {
+                    if (!evt || !evt.data || evt.data.type !== 'SLACK_CONNECTED') return;
                     try {
-                      const res = await fetch('/api/getMyProfile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
-                      const data = await res.json().catch(() => ({}));
-                      if (res.ok && data?.ok) {
-                        setOnboardingStage(3); // Move to next stage instead of completing
-                      } else {
+                      const id = String(evt.data.slackId || '');
+                      if (!id) return;
+                      // Re-fetch profile to get canonical state from server
+                      try {
+                        const res = await fetch('/api/getMyProfile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
+                        const data = await res.json().catch(() => ({}));
+                        if (res.ok && data?.ok) {
+                          setOnboardingStage(3); // Move to next stage instead of completing
+                        } else {
+                          setOnboardingStage(3);
+                        }
+                      } catch (_) {
                         setOnboardingStage(3);
                       }
-                    } catch (_) {
-                      setOnboardingStage(3);
-                    }
-                  } catch (_) {}
-                  window.removeEventListener('message', listener);
-                  try { w && w.close && w.close(); } catch (_) {}
-                };
-                window.addEventListener('message', listener);
-              }}
-              style={{
-                appearance: 'none',
-                border: '2px solid black',
-                background: '#4A154B',
-                color: 'white',
-                borderRadius: '8px',
-                padding: '12px 24px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '16px',
-                transition: 'background-color 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = '#5a1a5b';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = '#4A154B';
-              }}
-            >
-              Login with Slack
-            </button>
+                    } catch (_) {}
+                    window.removeEventListener('message', listener);
+                    try { w && w.close && w.close(); } catch (_) {}
+                  };
+                  window.addEventListener('message', listener);
+                }}
+                style={{
+                  appearance: 'none',
+                  border: '2px solid black',
+                  background: '#4A154B',
+                  color: 'white',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  transition: 'background-color 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#5a1a5b';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#4A154B';
+                }}
+              >
+                Login with Slack
+              </button>
+              
+              <button
+                onClick={() => {
+                  playSound?.("next.mp3");
+                  setOnboardingStage(4); // Skip to the next stage (Godot download)
+                }}
+                style={{
+                  appearance: 'none',
+                  border: '2px solid black',
+                  background: 'white',
+                  color: 'black',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  transition: 'background-color 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#f5f5f5';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'white';
+                }}
+              >
+                Skip for now
+              </button>
+            </div>
           </div>
         )}
         

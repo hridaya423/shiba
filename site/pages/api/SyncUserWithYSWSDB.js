@@ -1,3 +1,5 @@
+import { escapeFormulaString } from './utils/security.js';
+
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
@@ -154,10 +156,6 @@ async function airtableRequest(path, options = {}) {
     throw new Error(`Airtable error ${response.status}: ${text}`);
   }
   return response.json();
-}
-
-function escapeFormulaString(value) {
-  return String(value).replace(/"/g, '\\"');
 }
 
 async function findUserByToken(token) {

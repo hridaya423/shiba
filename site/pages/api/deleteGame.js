@@ -1,3 +1,5 @@
+import { escapeFormulaString } from './utils/security.js';
+
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
@@ -46,10 +48,6 @@ export default async function handler(req, res) {
     console.error('deleteGame error:', error);
     return res.status(500).json({ message: 'An unexpected error occurred.' });
   }
-}
-
-function escapeFormulaString(value) {
-  return String(value).replace(/"/g, '\\"');
 }
 
 async function airtableRequest(path, options = {}) {
