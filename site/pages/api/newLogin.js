@@ -2,6 +2,10 @@ import crypto from 'crypto';
 import { escapeFormulaString, isValidEmail } from './utils/security.js';
 import { checkRateLimit } from './utils/rateLimit.js';
 
+// This endpoint handles user login with OTP generation
+// Includes race condition protection to prevent duplicate user creation
+// Automatically cleans up existing duplicate users by keeping the most complete and recent record
+
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = 'Users';
@@ -40,10 +44,67 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Ensure user exists (create if new)
+    // Ensure user exists (create if new) - handle race conditions with retry
     let userRecord = await findUserByEmail(normalizedEmail);
+    
+    // If not found with formula, try a broader search as fallback
     if (!userRecord) {
-      userRecord = await createUser(normalizedEmail);
+      console.log(`Formula search failed, trying broader search for: ${normalizedEmail}`);
+      userRecord = await findUserByEmailFallback(normalizedEmail);
+    }
+    
+    if (!userRecord) {
+      console.log(`Creating new user for email: ${normalizedEmail}`);
+      
+      // Try to create user with retry logic for race conditions
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries) {
+        try {
+          userRecord = await createUser(normalizedEmail);
+          console.log(`Successfully created user for email: ${normalizedEmail}`);
+          break;
+        } catch (createError) {
+          retryCount++;
+          
+          // If creation fails due to duplicate, try to find the user again
+          if (createError.message === 'User already exists') {
+            console.log(`User creation failed due to duplicate (attempt ${retryCount}), finding existing user for: ${normalizedEmail}`);
+            
+            // Add small delay before retry to allow for eventual consistency
+            if (retryCount < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 100 * retryCount));
+            }
+            
+            userRecord = await findUserByEmail(normalizedEmail);
+            if (userRecord) {
+              console.log(`Found existing user after duplicate creation attempt for: ${normalizedEmail}`);
+              break;
+            }
+          }
+          
+          // If we've exhausted retries or it's not a duplicate error, throw
+          if (retryCount >= maxRetries || createError.message !== 'User already exists') {
+            throw createError;
+          }
+        }
+      }
+      
+      // If we still don't have a user after all retries, throw an error
+      if (!userRecord) {
+        throw new Error('Failed to create or find user after multiple attempts');
+      }
+    } else {
+      console.log(`Found existing user for email: ${normalizedEmail}`);
+      
+      // Check for and clean up duplicate users
+      const cleanupResult = await cleanupDuplicateUsers(normalizedEmail, userRecord.id);
+      if (cleanupResult) {
+        // If cleanup returned a different user (current user was deleted), use that instead
+        userRecord = cleanupResult;
+        console.log(`Using best user record after cleanup: ${userRecord.id}`);
+      }
     }
 
     // Enforce 10 second cooldown for OTP
@@ -123,18 +184,69 @@ async function airtableRequest(path, options = {}) {
 }
 
 async function findUserByEmail(email) {
-  const emailEscaped = escapeFormulaString(email);
-  const formula = `LOWER(SUBSTITUTE({Email}, " ", "")) = "${emailEscaped}"`;
+  // For email searches, use simple exact match without complex escaping
+  const formula = `{Email} = "${email}"`;
   const params = new URLSearchParams({
     filterByFormula: formula,
     pageSize: '1',
   });
 
+  console.log(`Searching for user with email: ${email}`);
+  console.log(`Using formula: ${formula}`);
+
   const data = await airtableRequest(`${encodeURIComponent(AIRTABLE_USERS_TABLE)}?${params.toString()}`, {
     method: 'GET',
   });
+  
   const record = data.records && data.records[0];
+  if (record) {
+    console.log(`Found user: ${record.id} with email: ${record.fields.Email}`);
+  } else {
+    console.log(`No user found for email: ${email}`);
+  }
+  
   return record || null;
+}
+
+// Fallback function to search for users by email using a simpler approach
+async function findUserByEmailFallback(email) {
+  console.log(`Trying fallback search for email: ${email}`);
+  
+  // Try different variations of the email
+  const emailVariations = [
+    email,
+    email.toLowerCase(),
+    email.toUpperCase(),
+    email.trim(),
+    email.replace(/\s+/g, ''),
+    email.replace(/\s+/g, '').toLowerCase()
+  ];
+  
+  for (const emailVar of emailVariations) {
+    try {
+      const formula = `{Email} = "${emailVar}"`;
+      const params = new URLSearchParams({
+        filterByFormula: formula,
+        pageSize: '10',
+      });
+
+      console.log(`Trying fallback formula: ${formula}`);
+
+      const data = await airtableRequest(`${encodeURIComponent(AIRTABLE_USERS_TABLE)}?${params.toString()}`, {
+        method: 'GET',
+      });
+      
+      if (data.records && data.records.length > 0) {
+        console.log(`Found user with fallback search: ${data.records[0].id}`);
+        return data.records[0];
+      }
+    } catch (error) {
+      console.log(`Fallback search failed for variation: ${emailVar}`, error.message);
+    }
+  }
+  
+  console.log(`No user found with fallback search for: ${email}`);
+  return null;
 }
 
 async function createUser(email) {
@@ -147,11 +259,24 @@ async function createUser(email) {
       },
     ],
   };
-  const data = await airtableRequest(encodeURIComponent(AIRTABLE_USERS_TABLE), {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-  return data.records[0];
+  
+  try {
+    const data = await airtableRequest(encodeURIComponent(AIRTABLE_USERS_TABLE), {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return data.records[0];
+  } catch (error) {
+    // Check if this is a duplicate error from Airtable
+    if (error.message.includes('duplicate') || 
+        error.message.includes('already exists') ||
+        error.message.includes('422') ||
+        error.message.includes('UNIQUE')) {
+      // This is likely a duplicate user error, throw a specific error
+      throw new Error('User already exists');
+    }
+    throw error; // Re-throw other errors
+  }
 }
 
 async function updateUserToken(userId, token) {
@@ -282,6 +407,211 @@ async function sendOtpEmailViaLoops(email, otp) {
     });
     throw error; // Re-throw to be caught by caller
   }
+}
+
+// Function to find all users with the same email
+async function findAllUsersByEmail(email) {
+  console.log(`Searching for ALL users with email: ${email}`);
+  
+  // Try the main formula first
+  let allRecords = await findAllUsersByEmailWithFormula(email);
+  
+  // If no results, try fallback search
+  if (allRecords.length === 0) {
+    console.log(`No users found with main formula, trying fallback search`);
+    allRecords = await findAllUsersByEmailFallback(email);
+  }
+  
+  console.log(`Total users found for email ${email}: ${allRecords.length}`);
+  return allRecords;
+}
+
+// Main function using simple exact match
+async function findAllUsersByEmailWithFormula(email) {
+  const formula = `{Email} = "${email}"`;
+  
+  let allRecords = [];
+  let offset = null;
+  
+  do {
+    const params = new URLSearchParams({
+      filterByFormula: formula,
+      pageSize: '100', // Maximum page size
+    });
+    
+    if (offset) {
+      params.set('offset', offset);
+    }
+
+    console.log(`Fetching users with email ${email} (offset: ${offset || 'none'})`);
+    
+    const data = await airtableRequest(`${encodeURIComponent(AIRTABLE_USERS_TABLE)}?${params.toString()}`, {
+      method: 'GET',
+    });
+    
+    if (data.records) {
+      allRecords = allRecords.concat(data.records);
+      console.log(`Found ${data.records.length} records in this page, total so far: ${allRecords.length}`);
+    }
+    
+    offset = data.offset; // Get next page offset
+  } while (offset);
+  
+  return allRecords;
+}
+
+// Fallback function to find all users with the same email
+async function findAllUsersByEmailFallback(email) {
+  console.log(`Trying fallback search for ALL users with email: ${email}`);
+  
+  let allRecords = [];
+  
+  // Try different variations of the email
+  const emailVariations = [
+    email,
+    email.toLowerCase(),
+    email.toUpperCase(),
+    email.trim(),
+    email.replace(/\s+/g, ''),
+    email.replace(/\s+/g, '').toLowerCase()
+  ];
+  
+  for (const emailVar of emailVariations) {
+    try {
+      const formula = `{Email} = "${emailVar}"`;
+      
+      let offset = null;
+      do {
+        const params = new URLSearchParams({
+          filterByFormula: formula,
+          pageSize: '100',
+        });
+        
+        if (offset) {
+          params.set('offset', offset);
+        }
+
+        console.log(`Trying fallback formula: ${formula} (offset: ${offset || 'none'})`);
+
+        const data = await airtableRequest(`${encodeURIComponent(AIRTABLE_USERS_TABLE)}?${params.toString()}`, {
+          method: 'GET',
+        });
+        
+        if (data.records) {
+          allRecords = allRecords.concat(data.records);
+          console.log(`Found ${data.records.length} records with fallback, total so far: ${allRecords.length}`);
+        }
+        
+        offset = data.offset;
+      } while (offset);
+      
+    } catch (error) {
+      console.log(`Fallback search failed for variation: ${emailVar}`, error.message);
+    }
+  }
+  
+  // Remove duplicates based on record ID
+  const uniqueRecords = allRecords.filter((record, index, self) => 
+    index === self.findIndex(r => r.id === record.id)
+  );
+  
+  console.log(`Found ${uniqueRecords.length} unique users with fallback search`);
+  return uniqueRecords;
+}
+
+// Function to calculate completeness score for a user record
+function calculateCompletenessScore(record) {
+  const fields = record.fields || {};
+  let score = 0;
+  let totalFields = 0;
+  
+  // Define important fields to check for completeness
+  const importantFields = [
+    'Email', 'token', 'Token', 'User Token', 'Name', 'Username', 
+    'Slack ID', 'Slack ID (from YSWS)', 'Profile Picture', 'Bio',
+    'Created At', 'Last Login', 'Games Created', 'Games Played'
+  ];
+  
+  importantFields.forEach(field => {
+    totalFields++;
+    if (fields[field] && fields[field].toString().trim() !== '') {
+      score++;
+    }
+  });
+  
+  return { score, totalFields, completeness: score / totalFields };
+}
+
+// Function to clean up duplicate users
+async function cleanupDuplicateUsers(email, currentUserId) {
+  try {
+    console.log(`Checking for duplicate users for email: ${email}`);
+    
+    // Find all users with the same email
+    const allUsers = await findAllUsersByEmail(email);
+    
+    if (allUsers.length <= 1) {
+      console.log(`No duplicates found for email: ${email}`);
+      return;
+    }
+    
+    console.log(`Found ${allUsers.length} users for email: ${email}, cleaning up duplicates...`);
+    
+    // Calculate completeness score for each user
+    const usersWithScores = allUsers.map(user => ({
+      ...user,
+      completeness: calculateCompletenessScore(user)
+    }));
+    
+    // Sort by completeness score (highest first), then by creation date (most recent first)
+    usersWithScores.sort((a, b) => {
+      // First sort by completeness score (descending)
+      if (a.completeness.completeness !== b.completeness.completeness) {
+        return b.completeness.completeness - a.completeness.completeness;
+      }
+      
+      // If completeness is the same, sort by creation date (most recent first)
+      const aCreated = new Date(a.fields['Created At'] || a.createdTime || 0);
+      const bCreated = new Date(b.fields['Created At'] || b.createdTime || 0);
+      return bCreated - aCreated;
+    });
+    
+    // Keep the best user (first in sorted array)
+    const bestUser = usersWithScores[0];
+    const usersToDelete = usersWithScores.slice(1);
+    
+    console.log(`Keeping user ${bestUser.id} (completeness: ${bestUser.completeness.completeness.toFixed(2)}, created: ${bestUser.fields['Created At'] || bestUser.createdTime})`);
+    console.log(`Deleting ${usersToDelete.length} duplicate users...`);
+    
+    // Delete all duplicate users
+    for (const userToDelete of usersToDelete) {
+      try {
+        await deleteUser(userToDelete.id);
+        console.log(`Deleted duplicate user: ${userToDelete.id}`);
+      } catch (deleteError) {
+        console.error(`Failed to delete duplicate user ${userToDelete.id}:`, deleteError.message);
+      }
+    }
+    
+    console.log(`Duplicate cleanup completed for email: ${email}`);
+    
+    // If the current user was deleted, return the best user instead
+    if (usersToDelete.some(user => user.id === currentUserId)) {
+      console.log(`Current user was deleted, returning best user instead`);
+      return bestUser;
+    }
+    
+  } catch (error) {
+    console.error(`Error during duplicate cleanup for email ${email}:`, error);
+    // Don't throw error - we don't want to break the login process
+  }
+}
+
+// Function to delete a user record
+async function deleteUser(userId) {
+  await airtableRequest(`${encodeURIComponent(AIRTABLE_USERS_TABLE)}/${encodeURIComponent(userId)}`, {
+    method: 'DELETE',
+  });
 }
 
 

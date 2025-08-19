@@ -30,9 +30,19 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
       });
     } else if (shouldRender) {
       setIsExiting(true);
-              setTextVisible(false);
-        setButtonVisible(false);
-        setOnboardingStage(0);
+      setTextVisible(false);
+      setButtonVisible(false);
+      setOnboardingStage(0);
+      // Reset all form states when modal closes
+      setGameName("");
+      setGameDescription("");
+      setCreatingGame(false);
+      setCreatedGameId(null);
+      setDevlogContent("");
+      setDevlogFiles([]);
+      setIsPostingDevlog(false);
+      setDevlogMessage("");
+      setCompletingOnboarding(false);
       const t = setTimeout(() => {
         setShouldRender(false);
         setIsExiting(false);
@@ -42,7 +52,7 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
   }, [isOpen, shouldRender]);
 
   const handleCreateGame = async () => {
-    if (!token || !gameName.trim() || creatingGame) return;
+    if (!token || !gameName.trim() || creatingGame || createdGameId) return; // Prevent double creation
     setCreatingGame(true);
     try {
       const res = await fetch("/api/CreateNewGame", {
@@ -60,10 +70,12 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
         setOnboardingStage(8);
       } else {
         console.error('Failed to create game:', data?.message);
+        // Reset creating state on error so user can try again
+        setCreatingGame(false);
       }
     } catch (error) {
       console.error('Game creation error:', error);
-    } finally {
+      // Reset creating state on error so user can try again
       setCreatingGame(false);
     }
   };
@@ -91,11 +103,13 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
         setOnboardingStage(9);
       } else {
         setDevlogMessage(data?.message || "Failed to post");
+        // Reset posting state on error so user can try again
+        setIsPostingDevlog(false);
       }
     } catch (e) {
       console.error(e);
       setDevlogMessage("Failed to post");
-    } finally {
+      // Reset posting state on error so user can try again
       setIsPostingDevlog(false);
     }
   };
@@ -168,7 +182,12 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
             setOnboardingStage(7);
             break;
           case 7: // Create Game
-            if (gameName.trim() && !creatingGame) {
+            if (createdGameId) {
+              // If game already exists, continue to next stage
+              playSound?.("next.mp3");
+              setOnboardingStage(8);
+            } else if (gameName.trim() && !creatingGame) {
+              // If no game exists yet, create one
               handleCreateGame();
             }
             break;
@@ -188,7 +207,7 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onboardingStage, gameName, devlogContent, creatingGame, isPostingDevlog, completingOnboarding, playSound, token, createdGameId, onCompleted]);
+  }, [isOpen, onboardingStage, gameName, devlogContent, creatingGame, isPostingDevlog, completingOnboarding, createdGameId, playSound, token, onCompleted]);
 
   if (!shouldRender) return null;
 
@@ -244,6 +263,11 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
             <button
               onClick={() => {
                 playSound?.("prev.mp3");
+                // Reset states when going back from post creation stage
+                if (onboardingStage === 9) {
+                  setDevlogContent("");
+                  setDevlogMessage("");
+                }
                 setOnboardingStage(onboardingStage - 1);
               }}
               style={{
@@ -1122,41 +1146,77 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
             </div>
             
             <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-              <button
-                onClick={handleCreateGame}
-                disabled={!gameName.trim() || creatingGame}
-                style={{
-                  appearance: "none",
-                  border: "2px solid black",
-                  background: gameName.trim() && !creatingGame ? "var(--yellow)" : "#ccc",
-                  color: "black",
-                  borderRadius: "8px",
-                  padding: "12px 24px",
-                  fontSize: "16px",
-                  fontWeight: "bold",
-                  cursor: gameName.trim() && !creatingGame ? "pointer" : "not-allowed",
-                  transition: "background-color 0.2s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px"
-                }}
-                onMouseEnter={(e) => {
-                  if (gameName.trim() && !creatingGame) {
+              {createdGameId ? (
+                // Show Continue button if game already exists
+                <button
+                  onClick={() => {
+                    playSound?.("next.mp3");
+                    setOnboardingStage(8);
+                  }}
+                  style={{
+                    appearance: "none",
+                    border: "2px solid black",
+                    background: "var(--yellow)",
+                    color: "black",
+                    borderRadius: "8px",
+                    padding: "12px 24px",
+                    fontSize: "16px",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px"
+                  }}
+                  onMouseEnter={(e) => {
                     e.target.style.background = "#f7b748";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (gameName.trim() && !creatingGame) {
+                  }}
+                  onMouseLeave={(e) => {
                     e.target.style.background = "var(--yellow)";
-                  }
-                }}
-              >
-                {creatingGame ? "Creating..." : "Create Game"}
-                {!creatingGame && gameName.trim() && (
+                  }}
+                >
+                  Continue
                   <img src="/arrow.svg" alt="arrow" style={{ width: "18px", height: "18px" }} />
-                )}
-              </button>
+                </button>
+              ) : (
+                // Show Create Game button if no game exists yet
+                <button
+                  onClick={handleCreateGame}
+                  disabled={!gameName.trim() || creatingGame}
+                  style={{
+                    appearance: "none",
+                    border: "2px solid black",
+                    background: gameName.trim() && !creatingGame ? "var(--yellow)" : "#ccc",
+                    color: "black",
+                    borderRadius: "8px",
+                    padding: "12px 24px",
+                    fontSize: "16px",
+                    fontWeight: "bold",
+                    cursor: gameName.trim() && !creatingGame ? "pointer" : "not-allowed",
+                    transition: "background-color 0.2s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (gameName.trim() && !creatingGame) {
+                      e.target.style.background = "#f7b748";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (gameName.trim() && !creatingGame) {
+                      e.target.style.background = "var(--yellow)";
+                    }
+                  }}
+                >
+                  {creatingGame ? "Creating..." : "Create Game"}
+                  {!creatingGame && gameName.trim() && (
+                    <img src="/arrow.svg" alt="arrow" style={{ width: "18px", height: "18px" }} />
+                  )}
+                </button>
+              )}
             </div>
           </div>
         )}
