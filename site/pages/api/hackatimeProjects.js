@@ -23,9 +23,13 @@ export default async function handler(req, res) {
     }
     const projects = Array.isArray(json?.data?.projects) ? json.data.projects : [];
     const names = projects.map((p) => p?.name).filter(Boolean);
+    const projectsWithTime = projects.map((p) => ({
+      name: p?.name,
+      time: p?.time || 0
+    })).filter((p) => p.name);
     // Return minimal payload for client
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=300');
-    return res.status(200).json({ projects: names });
+    return res.status(200).json({ projects: names, projectsWithTime });
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error('hackatimeProjects proxy error:', e);
