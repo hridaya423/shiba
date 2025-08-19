@@ -80,18 +80,40 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 			return
 		}
 
-		sanitizedHeader := sanitizeForAirtableFormula(authHeader)
+		// Check if it's a Bearer token
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			authHeader = strings.TrimPrefix(authHeader, "Bearer ")
+		}
 
+		log.Printf("Authorization header received: %s", authHeader)
+
+		sanitizedHeader := sanitizeForAirtableFormula(authHeader)
+		
+		log.Printf("Attempting to validate token: %s", sanitizedHeader)
+
+		// Try different field names for token
 		var records, err = srv.AirtableBaseTable.GetRecords().WithFilterFormula(
 			`{token} = "`+sanitizedHeader+`"`,
-		).MaxRecords(1).ReturnFields("Email", "user_id").Do()
+		).MaxRecords(1).ReturnFields("Email", "user_id", "token").Do()
+
+		// If no records found, try alternative field names
+		if err == nil && len(records.Records) == 0 {
+			log.Printf("No records found with 'token' field, trying 'Token' field")
+			records, err = srv.AirtableBaseTable.GetRecords().WithFilterFormula(
+				`{Token} = "`+sanitizedHeader+`"`,
+			).MaxRecords(1).ReturnFields("Email", "user_id", "Token").Do()
+		}
 
 		if err != nil {
+			log.Printf("Airtable query error: %v", err)
 			http.Error(w, "Failed to validate token..", http.StatusInternalServerError)
 			return
 		}
 
+		log.Printf("Found %d records for token", len(records.Records))
+
 		if len(records.Records) == 0 {
+			log.Printf("No records found for token: %s", sanitizedHeader)
 			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 			return
 		}
