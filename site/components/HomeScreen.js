@@ -1427,6 +1427,7 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
             alignItems: "center",
             height: "100vh",
             justifyContent: "center",
+            userSelect: "none",
           }}
         >
           <GameCarousel
