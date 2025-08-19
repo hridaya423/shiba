@@ -1,4 +1,4 @@
-import { escapeFormulaString } from './utils/security.js';
+import { safeEscapeFormulaString } from './utils/security.js';
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
@@ -72,7 +72,7 @@ async function airtableRequest(path, options = {}) {
 }
 
 async function findUserByToken(token) {
-  const tokenEscaped = escapeFormulaString(token);
+  const tokenEscaped = safeEscapeFormulaString(token);
   const formula = `{token} = "${tokenEscaped}"`;
   const params = new URLSearchParams({
     filterByFormula: formula,
@@ -125,7 +125,7 @@ async function fetchPostsForGame(gameId) {
   const tryServerFilter = async () => {
     const params = new URLSearchParams();
     params.set('pageSize', '100');
-    params.set('filterByFormula', `ARRAYJOIN({Game}) = "${escapeFormulaString(gameId)}"`);
+    params.set('filterByFormula', `ARRAYJOIN({Game}) = "${safeEscapeFormulaString(gameId)}"`);
     params.set('sort[0][field]', 'Created At');
     params.set('sort[0][direction]', 'desc');
     const url = `${encodeURIComponent(AIRTABLE_POSTS_TABLE)}?${params.toString()}`;

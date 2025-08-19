@@ -41,7 +41,7 @@
 //   }
 // }
 
-// function escapeFormulaString(value) {
+// function safeEscapeFormulaString(value) {
 //   return String(value).replace(/"/g, '\\"');
 // }
 
@@ -63,7 +63,7 @@
 // }
 
 // async function findUserByToken(token) {
-//   const tokenEscaped = escapeFormulaString(token);
+//   const tokenEscaped = safeEscapeFormulaString(token);
 //   const params = new URLSearchParams({
 //     filterByFormula: `{token} = "${tokenEscaped}"`,
 //     pageSize: '1',

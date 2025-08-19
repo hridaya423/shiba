@@ -1,4 +1,4 @@
-import { escapeFormulaString, isValidUrl } from './utils/security.js';
+import { isValidUrl } from './utils/security.js';
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
@@ -21,9 +21,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: 'Missing required fields: token, gameId' });
   }
 
-  // Validate gameId format (should be a valid UUID)
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(gameId)) {
+  // Validate gameId format (should be a valid Airtable record ID)
+  const airtableRecordIdRegex = /^rec[a-zA-Z0-9]{14}$/;
+  if (!airtableRecordIdRegex.test(gameId)) {
     return res.status(400).json({ message: 'Invalid game ID format' });
   }
 
@@ -209,8 +209,8 @@ async function airtableContentUpload({ recordId, fieldName, fileBase64, contentT
 }
 
 async function findUserByToken(token) {
-  const tokenEscaped = escapeFormulaString(token);
-  const formula = `{token} = "${tokenEscaped}"`;
+  // For token searches, use simple exact match without complex escaping
+  const formula = `{token} = "${token}"`;
   const params = new URLSearchParams({
     filterByFormula: formula,
     pageSize: '1',

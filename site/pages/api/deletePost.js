@@ -1,4 +1,4 @@
-import { escapeFormulaString } from './utils/security.js';
+import { safeEscapeFormulaString } from './utils/security.js';
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
@@ -92,7 +92,7 @@ async function airtableRequest(path, options = {}) {
 }
 
 async function findUserByToken(token) {
-  const tokenEscaped = escapeFormulaString(token);
+  const tokenEscaped = safeEscapeFormulaString(token);
   
   // Try different field names like in newLogin.js
   const candidateFields = ['token', 'Token', 'User Token'];

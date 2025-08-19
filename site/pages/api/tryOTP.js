@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { escapeFormulaString, isValidEmail } from './utils/security.js';
+import { safeEscapeFormulaString, isValidEmail } from './utils/security.js';
 import { checkRateLimit } from './utils/rateLimit.js';
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;

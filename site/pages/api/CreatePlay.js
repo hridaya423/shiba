@@ -1,4 +1,4 @@
-import { escapeFormulaString, generateSecureRandomString } from './utils/security.js';
+import { safeEscapeFormulaString, generateSecureRandomString } from './utils/security.js';
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
@@ -97,7 +97,7 @@ async function airtableRequest(path, options = {}) {
 }
 
 async function findUserByToken(token) {
-  const tokenEscaped = escapeFormulaString(token);
+  const tokenEscaped = safeEscapeFormulaString(token);
   
   // Try different field names like in newLogin.js
   const candidateFields = ['token', 'Token', 'User Token'];
@@ -126,7 +126,7 @@ async function findUserByToken(token) {
 }
 
 async function findGameByName(gameName) {
-  const gameNameEscaped = escapeFormulaString(gameName);
+  const gameNameEscaped = safeEscapeFormulaString(gameName);
   const formula = `{Name} = "${gameNameEscaped}"`;
   const params = new URLSearchParams({
     filterByFormula: formula,

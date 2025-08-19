@@ -7,33 +7,36 @@
  * @param {string} value - The string to escape
  * @returns {string} - The escaped string
  */
-export function escapeFormulaString(value) {
-  // More comprehensive escaping for Airtable formulas
+
+/**
+ * Safe escaping for Airtable formulas that only escapes truly dangerous characters
+ * This is safer for normal data like emails, tokens, and names
+ * @param {string} value - The string to escape
+ * @returns {string} - The escaped string
+ */
+export function safeEscapeFormulaString(value) {
   return String(value)
-    .replace(/"/g, '\\"')  // Escape double quotes
-    .replace(/\{/g, '\\{') // Escape opening braces
-    .replace(/\}/g, '\\}') // Escape closing braces
-    .replace(/\(/g, '\\(') // Escape opening parentheses
-    .replace(/\)/g, '\\)') // Escape closing parentheses
-    .replace(/\+/g, '\\+') // Escape plus signs
-    .replace(/-/g, '\\-')  // Escape minus signs
-    .replace(/\*/g, '\\*') // Escape asterisks
-    .replace(/\//g, '\\/') // Escape forward slashes
-    .replace(/=/g, '\\=')  // Escape equals signs
-    .replace(/</g, '\\<')  // Escape less than
-    .replace(/>/g, '\\>')  // Escape greater than
-    .replace(/!/g, '\\!')  // Escape exclamation marks
-    .replace(/&/g, '\\&')  // Escape ampersands
-    .replace(/\|/g, '\\|') // Escape pipes
-    .replace(/\[/g, '\\[') // Escape square brackets
-    .replace(/\]/g, '\\]') // Escape square brackets
-    .replace(/\^/g, '\\^') // Escape caret
-    .replace(/\$/g, '\\$') // Escape dollar sign
-    .replace(/\?/g, '\\?') // Escape question mark
-    .replace(/\./g, '\\.') // Escape dots
-    .replace(/,/g, '\\,')  // Escape commas
-    .replace(/;/g, '\\;')  // Escape semicolons
-    .replace(/:/g, '\\:'); // Escape colons
+    .replace(/"/g, '\\"')  // Escape double quotes (required)
+    .replace(/\{/g, '\\{') // Escape opening braces (required)
+    .replace(/\}/g, '\\}') // Escape closing braces (required)
+    .replace(/\(/g, '\\(') // Escape opening parentheses (required)
+    .replace(/\)/g, '\\)') // Escape closing parentheses (required)
+    .replace(/\+/g, '\\+') // Escape plus signs (required for OR operations)
+    .replace(/-/g, '\\-')  // Escape minus signs (required for ranges)
+    .replace(/\*/g, '\\*') // Escape asterisks (required for wildcards)
+    .replace(/\//g, '\\/') // Escape forward slashes (required for paths)
+    .replace(/=/g, '\\=')  // Escape equals signs (required for comparisons)
+    .replace(/</g, '\\<')  // Escape less than (required for comparisons)
+    .replace(/>/g, '\\>')  // Escape greater than (required for comparisons)
+    .replace(/!/g, '\\!')  // Escape exclamation marks (required for NOT operations)
+    .replace(/&/g, '\\&')  // Escape ampersands (required for AND operations)
+    .replace(/\|/g, '\\|') // Escape pipes (required for OR operations)
+    .replace(/\[/g, '\\[') // Escape square brackets (required for arrays)
+    .replace(/\]/g, '\\]') // Escape square brackets (required for arrays)
+    .replace(/\^/g, '\\^') // Escape caret (required for regex)
+    .replace(/\$/g, '\\$') // Escape dollar sign (required for regex)
+    .replace(/\?/g, '\\?') // Escape question mark (required for regex)
+    // Don't escape dots, commas, semicolons, or colons as they're commonly needed
 }
 
 /**

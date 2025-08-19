@@ -1,4 +1,4 @@
-import { escapeFormulaString } from '../utils/security.js';
+import { safeEscapeFormulaString } from '../utils/security.js';
 
 const CLIENT_ID = process.env.SLACK_CLIENT_ID || '';
 const CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET || '';
@@ -85,7 +85,7 @@ async function airtableRequest(path, options = {}) {
 }
 
 async function findUserByToken(token) {
-  const tokenEscaped = escapeFormulaString(token);
+  const tokenEscaped = safeEscapeFormulaString(token);
   const params = new URLSearchParams({
     filterByFormula: `{token} = "${tokenEscaped}"`,
     pageSize: '1',
