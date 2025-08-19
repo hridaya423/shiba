@@ -578,9 +578,9 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
               marginBottom: "16px",
               maxWidth: "500px"
             }}>
-              Once you've joined the slack, head over to{" "}
+              Once you've joined the slack, verify your identity at{" "}
               <a 
-                href="https://hackclub.slack.com/archives/C039PAG1AV7" 
+                href="https://identity.hackclub.com/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 style={{
@@ -589,15 +589,15 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
                   fontWeight: "bold"
                 }}
               >
-                #slack-welcome-start
+                identity.hackclub.com
               </a>
-              {" "}to become a full user.               Once you're a full user, tap Login with Slack to connect your Shiba account to the Hack Club Slack.
+              {" "}to become a full user. Once you're a full user, tap Login with Slack to connect your Shiba account to the Hack Club Slack.
 
             </p>
             
-            <img 
+            {/* <img 
               src="/slack-welcome-start.png" 
-              alt="Slack Welcome Start Channel" 
+              alt="Hack Club Identity Verification" 
               style={{
                 width: "100%",
                 maxWidth: "200px",
@@ -606,9 +606,9 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
                 borderRadius: "8px",
                 marginBottom: "20px"
               }}
-            />
+            /> */}
 
-            <div style={{ display: "flex", gap: "12px", justifyContent: "center", width: "100%" }}>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexDirection: "column", width: "100%" }}>
               <button
                 type="button"
                 onClick={() => {
@@ -683,7 +683,7 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
                   e.target.style.background = 'white';
                 }}
               >
-                Skip for now
+                I've submitted, but I'm awaiting approval
               </button>
             </div>
           </div>
