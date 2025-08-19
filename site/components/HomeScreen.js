@@ -178,16 +178,6 @@ export function MovingBackground() {
             transform: scale(0.5);
           }
         }
-        @keyframes pulse {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-          50% {
-            transform: scale(1.1);
-            opacity: 0.8;
-          }
-        }
       `}</style>
     </div>
   );
@@ -1310,7 +1300,6 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
   const [hasOpenedEventsNotification, setHasOpenedEventsNotification] = useState(false);
   const [hasOnboarded, setHasOnboarded] = useState(true);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
 
   // Preload SFX and game clip audios for instant playback
   const sfxFiles = ["next.mp3", "prev.mp3", "shiba-bark.mp3"];
@@ -1319,7 +1308,6 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
     play: playSound,
     playClip,
     stopAll,
-    setVolume,
   } = useAudioManager([...sfxFiles, ...clipFiles, "zeldaSong.mp3"]);
 
   // Check if user has opened events notification
@@ -1335,11 +1323,6 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
       setHasOpenedEventsNotification(true);
     }
   }, [isEventsOpen, hasOpenedEventsNotification]);
-
-  // Control audio volume based on mute state
-  useEffect(() => {
-    setVolume(isMuted ? 0 : 1);
-  }, [isMuted, setVolume]);
 
   // When selected game changes, play its clip immediately using the preloaded element
   useEffect(() => {
@@ -1439,7 +1422,7 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
               "inset 0 1px 1.5px rgba(255, 255, 255, 0.6), inset 0 -8px 16px rgba(255, 255, 255, 0.6)",
             borderBottom: "0px solid rgba(0, 0, 0, 0)",
             justifyContent: "space-between",
-            padding: 14,
+            padding: 16,
             paddingLeft: 24,
             paddingRight: 24,
           }}
@@ -1448,8 +1431,8 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
             onClick={() => setIsProfileOpen(true)}
             style={{
               display: "flex",
-              height: 36,
-              width: 36,
+              height: 32,
+              width: 32,
               aspectRatio: 1,
               backgroundColor: "white",
               border: "1px solid rgba(0, 0, 0, 0.3)",
@@ -1525,53 +1508,7 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
           <p style={{ fontFamily: "GT Maru", fontWeight: "bold" }}>
             Shiba Arcade
           </p>
-          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-              <span style={{ 
-                fontSize: "11px", 
-                opacity: 0.6, 
-                fontWeight: "500",
-                letterSpacing: "0.5px",
-                marginBottom: "1px"
-              }}>
-                TOKYO
-              </span>
-              <span style={{ 
-                margin: 0, 
-                fontFamily: "monospace",
-                fontSize: "14px",
-                fontWeight: "600",
-                letterSpacing: "0.5px"
-              }}>
-                {tokyoTime}
-              </span>
-            </div>
-            <div
-              onClick={() => setIsMuted(!isMuted)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 40,
-                height: 40,
-                cursor: "pointer",
-                borderRadius: 8,
-                border: "1x solid rgba(0, 0, 0, 0.2)",
-                transition: "all 0.15s ease",
-                backdropFilter: "blur(4px)",
-              }}
-            >
-              <img
-                src={isMuted ? "/SoundOff.svg" : "/SoundOn.svg"}
-                alt={isMuted ? "Unmute" : "Mute"}
-                style={{
-                  width: 18,
-                  height: 18,
-                  opacity: 0.8,
-                }}
-              />
-            </div>
-          </div>
+          <p style={{ margin: 0 }}>{tokyoTime}</p>
         </div>
         <div
           style={{
@@ -1580,7 +1517,6 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
             alignItems: "center",
             height: "100vh",
             justifyContent: "center",
-            userSelect: "none",
           }}
         >
           <GameCarousel
@@ -1615,60 +1551,44 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
             paddingTop: 32,
             paddingBottom: 32,
             WebkitClipPath:
-              "polygon(0 0, 140px 0, 140px 64px, calc(100% - 88px) 64px, calc(100% - 88px) 0, 100% 0, 100% 100%, 0 100%)",
+              "polygon(0 0, 88px 0, 88px 64px, calc(100% - 88px) 64px, calc(100% - 88px) 0, 100% 0, 100% 100%, 0 100%)",
             clipPath:
-              "polygon(0 0, 140px 0, 140px 64px, calc(100% - 88px) 64px, calc(100% - 88px) 0, 100% 0, 100% 100%, 0 100%)",
+              "polygon(0 0, 88px 0, 88px 64px, calc(100% - 88px) 64px, calc(100% - 88px) 0, 100% 0, 100% 100%, 0 100%)",
           }}
         >
           <div
             onClick={() => setIsEventsOpen(true)}
             style={{
               display: "flex",
-              height: 52,
-              marginTop: -26,
-              width: 124,
-              gap: 10,
-              backgroundColor: "rgba(255, 255, 255, 1)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
-              border: "2px solid rgba(255, 255, 255, 0.8)",
-              borderRadius: "12px",
-              padding: "10px 12px",
+              height: 48,
+              marginTop: -24,
+              width: 48,
+              backgroundColor: "rgba(255, 255, 255, 0.5)",
+              aspectRatio: 1,
+              border: "1px solid rgba(0, 0, 0, 0.1)",
+              borderRadius: "4px",
+              padding: 8,
               boxSizing: "border-box",
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              transition: "background-color 0.2s ease",
               position: "relative",
-              boxShadow: "0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
-              transform: "translateY(0)",
             }}
             onMouseEnter={(e) => {
-              e.target.style.backgroundColor = "rgba(255, 255, 255, 0.9)";
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9)";
+              e.target.style.backgroundColor = "rgba(255, 255, 255, 0.7)";
             }}
             onMouseLeave={(e) => {
-              e.target.style.backgroundColor = "rgba(255, 255, 255, 0.75)";
-              e.target.style.transform = "translateY(0)";
-              e.target.style.boxShadow = "0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 1)";
+              e.target.style.backgroundColor = "rgba(255, 255, 255, 0.5)";
             }}
           >
-            <span
-              style={{
-                fontSize: "0.95rem",
-                fontWeight: "700",
-                color: "#4a5568",
-                letterSpacing: "0.02em",
-              }}
-              >Notifs</span>
             <img
               src="./ChatMessage.svg"
               alt="Chat Message"
               style={{
-                width: "24px",
-                height: "24px",
-                opacity: 0.9,
+                width: "100%",
+                opacity: 0.85,
+                height: "100%",
                 objectFit: "contain",
               }}
             />
@@ -1676,22 +1596,20 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
               <div
                 style={{
                   position: "absolute",
-                  top: -6,
-                  right: -6,
-                  width: 22,
-                  height: 22,
-                  backgroundColor: "#ef4444",
+                  top: -4,
+                  right: -4,
+                  width: 20,
+                  height: 20,
+                  backgroundColor: "#FF0000",
                   borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   color: "white",
-                  fontSize: "11px",
-                  fontWeight: "700",
-                  border: "3px solid white",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  border: "2px solid white",
                   pointerEvents: "none",
-                  boxShadow: "0 2px 8px rgba(239, 68, 68, 0.4)",
-                  animation: "pulse 2s infinite",
                 }}
               >
                 1
