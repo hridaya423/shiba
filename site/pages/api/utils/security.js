@@ -9,33 +9,34 @@
  */
 
 /**
- * Safe escaping for Airtable formulas that only escapes truly dangerous characters
- * This is safer for normal data like emails, tokens, and names
+ * Smart escaping for Airtable formulas that only escapes truly dangerous characters
+ * This is much more permissive and allows normal data like dates, emails, etc.
  * @param {string} value - The string to escape
  * @returns {string} - The escaped string
  */
 export function safeEscapeFormulaString(value) {
   return String(value)
-    .replace(/"/g, '\\"')  // Escape double quotes (required)
-    .replace(/\{/g, '\\{') // Escape opening braces (required)
-    .replace(/\}/g, '\\}') // Escape closing braces (required)
-    .replace(/\(/g, '\\(') // Escape opening parentheses (required)
-    .replace(/\)/g, '\\)') // Escape closing parentheses (required)
-    .replace(/\+/g, '\\+') // Escape plus signs (required for OR operations)
-    .replace(/-/g, '\\-')  // Escape minus signs (required for ranges)
-    .replace(/\*/g, '\\*') // Escape asterisks (required for wildcards)
-    .replace(/\//g, '\\/') // Escape forward slashes (required for paths)
-    .replace(/=/g, '\\=')  // Escape equals signs (required for comparisons)
-    .replace(/</g, '\\<')  // Escape less than (required for comparisons)
-    .replace(/>/g, '\\>')  // Escape greater than (required for comparisons)
-    .replace(/!/g, '\\!')  // Escape exclamation marks (required for NOT operations)
-    .replace(/&/g, '\\&')  // Escape ampersands (required for AND operations)
-    .replace(/\|/g, '\\|') // Escape pipes (required for OR operations)
-    .replace(/\[/g, '\\[') // Escape square brackets (required for arrays)
-    .replace(/\]/g, '\\]') // Escape square brackets (required for arrays)
-    .replace(/\^/g, '\\^') // Escape caret (required for regex)
-    .replace(/\$/g, '\\$') // Escape dollar sign (required for regex)
-    .replace(/\?/g, '\\?') // Escape question mark (required for regex)
+    .replace(/"/g, '\\"')  // Escape double quotes (required for string literals)
+    .replace(/\{/g, '\\{') // Escape opening braces (required for field references)
+    .replace(/\}/g, '\\}') // Escape closing braces (required for field references)
+    // Only escape these if they're used in formula operations, not in data
+    // .replace(/\(/g, '\\(') // Don't escape parentheses - common in data
+    // .replace(/\)/g, '\\)') // Don't escape parentheses - common in data
+    // .replace(/\+/g, '\\+') // Don't escape plus - common in phone numbers, etc.
+    // .replace(/-/g, '\\-')  // Don't escape minus - common in dates, phone numbers
+    // .replace(/\*/g, '\\*') // Don't escape asterisk - common in data
+    // .replace(/\//g, '\\/') // Don't escape slash - common in dates, URLs
+    // .replace(/=/g, '\\=')  // Don't escape equals - common in data
+    // .replace(/</g, '\\<')  // Don't escape less than - common in data
+    // .replace(/>/g, '\\>')  // Don't escape greater than - common in data
+    // .replace(/!/g, '\\!')  // Don't escape exclamation - common in data
+    // .replace(/&/g, '\\&')  // Don't escape ampersand - common in data
+    // .replace(/\|/g, '\\|') // Don't escape pipe - common in data
+    // .replace(/\[/g, '\\[') // Don't escape brackets - common in data
+    // .replace(/\]/g, '\\]') // Don't escape brackets - common in data
+    // .replace(/\^/g, '\\^') // Don't escape caret - common in data
+    // .replace(/\$/g, '\\$') // Don't escape dollar - common in data
+    // .replace(/\?/g, '\\?') // Don't escape question - common in data
     // Don't escape dots, commas, semicolons, or colons as they're commonly needed
 }
 
