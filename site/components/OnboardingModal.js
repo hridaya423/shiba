@@ -1010,7 +1010,7 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
                 </p>
                 
                 <p style={{ margin: "0 0 16px 0", fontWeight: "bold" }}>
-                  FURTHER, you understand that our systems are specifically trained to detect automated heartbeat emissions and that such detection will result in immediate account termination without appeal.
+                  FURTHER, you understand that our systems are specifically trained to detect automated heartbeat emissions and that such detection will result in immediate account termination.
                 </p>
                 
                 <p style={{ margin: "0", fontStyle: "italic" }}>
