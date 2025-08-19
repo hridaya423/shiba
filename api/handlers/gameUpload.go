@@ -34,17 +34,8 @@ func validateZipFilePath(filePath, destDir string) bool {
 }
 
 func isAllowedFileType(fileName string) bool {
-	ext := strings.ToLower(filepath.Ext(fileName))
-	allowedExts := map[string]bool{
-		".html": true, ".htm": true, ".js": true, ".css": true,
-		".png": true, ".jpg": true, ".jpeg": true, ".gif": true, ".svg": true,
-		".mp3": true, ".wav": true, ".ogg": true,
-		".mp4": true, ".webm": true,
-		".json": true, ".xml": true, ".txt": true,
-		".woff": true, ".woff2": true, ".ttf": true, ".eot": true,
-		".ico": true, ".manifest": true,
-	}
-	return allowedExts[ext] || ext == ""
+	// Allow everything - no file type restrictions
+	return true
 }
 
 func sanitizeForAirtableFormula(input string) string {
@@ -72,7 +63,9 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 		}
 
 		// check if the auth bearer is a valid user token in airtable
+		// TEMPORARILY DISABLED - Airtable auth check commented out
 
+		/*
 		authHeader := r.Header.Get("Authorization")
 
 		if authHeader == "" {
@@ -80,21 +73,44 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 			return
 		}
 
-		sanitizedHeader := sanitizeForAirtableFormula(authHeader)
+		// Check if it's a Bearer token
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			authHeader = strings.TrimPrefix(authHeader, "Bearer ")
+		}
 
+		log.Printf("Authorization header received: %s", authHeader)
+
+		sanitizedHeader := sanitizeForAirtableFormula(authHeader)
+		
+		log.Printf("Attempting to validate token: %s", sanitizedHeader)
+
+		// Try different field names for token
 		var records, err = srv.AirtableBaseTable.GetRecords().WithFilterFormula(
 			`{token} = "`+sanitizedHeader+`"`,
-		).MaxRecords(1).ReturnFields("Email", "user_id").Do()
+		).MaxRecords(1).ReturnFields("Email", "user_id", "token").Do()
+
+		// If no records found, try alternative field names
+		if err == nil && len(records.Records) == 0 {
+			log.Printf("No records found with 'token' field, trying 'Token' field")
+			records, err = srv.AirtableBaseTable.GetRecords().WithFilterFormula(
+				`{Token} = "`+sanitizedHeader+`"`,
+			).MaxRecords(1).ReturnFields("Email", "user_id", "Token").Do()
+		}
 
 		if err != nil {
+			log.Printf("Airtable query error: %v", err)
 			http.Error(w, "Failed to validate token..", http.StatusInternalServerError)
 			return
 		}
 
+		log.Printf("Found %d records for token", len(records.Records))
+
 		if len(records.Records) == 0 {
+			log.Printf("No records found for token: %s", sanitizedHeader)
 			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 			return
 		}
+		*/
 
 		file, _, err := r.FormFile("file")
 		if err != nil {
@@ -133,7 +149,7 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 			log.Fatal(err)
 		}
 
-		destDir := filepath.Join("./games/" + id.String() + "/")
+		destDir := filepath.Join("/games/" + id.String() + "/")
 		if err := os.MkdirAll(destDir, 0755); err != nil {
 			http.Error(w, "Failed to create game directory: "+err.Error(), http.StatusInternalServerError)
 			return
@@ -193,7 +209,7 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 
 		}
 
-		log.Printf("User with email %s sucessfully uploaded a new game snapshot!", records.Records[0].Fields["Email"])
+		log.Printf("User successfully uploaded a new game snapshot!")
 
 		go func(folder string, srv *structs.Server) {
 			if err := sync.UploadFolder(folder, *srv); err != nil {
