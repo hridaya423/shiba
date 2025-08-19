@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import ShopItemRenderer from "./utils/ShopItemRenderer";
 import useAudioManager from "./useAudioManager";
 
-export default function ShopComponent() {
+export default function ShopComponent({ profile }) {
   const { play: playSound, stopAll } = useAudioManager(["mysteryShopMusic.mp3"]);
 
   // Play shop music when component mounts
@@ -90,7 +90,7 @@ export default function ShopComponent() {
           lineHeight: 1.6
         }}>
           <p style={{ marginBottom: 16, fontSize: 16 }}>
-            You currently have <strong>0 SSS</strong>.
+            You currently have <strong>{profile?.sssBalance || 0} SSS</strong>.
           </p>
           <div style={{ 
             display: "flex", 

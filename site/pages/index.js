@@ -200,6 +200,7 @@ export default function Home() {
               goHome={goHome}
               token={token}
               SlackId={profile?.slackId || null}
+              profile={profile}
               onOpenProfile={appOpen === "My Games" ? () => {
                 setAutoOpenProfile(true);
                 setDisableTopBar(false);
