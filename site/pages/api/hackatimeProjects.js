@@ -13,7 +13,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: 'That is a funny looking slack id' });
   }
 
-  const url = `https://hackatime.hackclub.com/api/v1/users/${encodeURIComponent(slackId)}/stats?features=projects`;
+  const startDate = '2025-08-18';
+  const url = `https://hackatime.hackclub.com/api/v1/users/${encodeURIComponent(slackId)}/stats?features=projects&start_date=${startDate}`;
   try {
     const r = await fetch(url, { headers: { Accept: 'application/json' } });
     const json = await r.json().catch(() => ({}));
