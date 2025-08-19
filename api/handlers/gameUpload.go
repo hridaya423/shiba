@@ -43,6 +43,7 @@ func isAllowedFileType(fileName string) bool {
 		".json": true, ".xml": true, ".txt": true,
 		".woff": true, ".woff2": true, ".ttf": true, ".eot": true,
 		".ico": true, ".manifest": true,
+		".cfg": true, // Godot export presets
 	}
 	return allowedExts[ext] || ext == ""
 }
