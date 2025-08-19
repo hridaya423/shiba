@@ -102,17 +102,8 @@ function buildAirtableFieldsFromProfile(p) {
     if (c.length > 0) out['Last Name'] = c;
   }
   
-  if (typeof p.birthday === 'string') {
-    const t = p.birthday.trim();
-    if (/^\d{4}-\d{2}-\d{2}$/.test(t)) {
-      const date = new Date(t);
-      const [year, month, day] = t.split('-').map(Number);
-      if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
-        if (year >= 1900 && year <= new Date().getFullYear()) {
-          out['birthday'] = t;
-        }
-      }
-    }
+  if (p.birthday) {
+    out['birthday'] = String(p.birthday);
   }
   
   if (typeof p.slackId === 'string') {
@@ -157,7 +148,7 @@ function normalizeProfileFields(f) {
     githubUsername: typeof f['github username'] === 'string' ? f['github username'] : '',
     firstName: typeof f['First Name'] === 'string' ? f['First Name'] : '',
     lastName: typeof f['Last Name'] === 'string' ? f['Last Name'] : '',
-    birthday: typeof f['birthday'] === 'string' ? f['birthday'] : '',
+    birthday: f['birthday'] || '',
     slackId: typeof f['slack id'] === 'string' ? f['slack id'] : '',
     address: {
       street1: typeof f['street address'] === 'string' ? f['street address'] : '',

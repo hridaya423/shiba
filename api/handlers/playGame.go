@@ -34,7 +34,7 @@ func MainGamePlayHandler(srv *structs.Server) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-		var filepath = "./games/" + gameId + "/index.html"
+		var filepath = "/games/" + gameId + "/index.html"
 
 		log.Printf("Serving game %s from %s", gameId, filepath)
 
@@ -48,14 +48,14 @@ func AssetsPlayHandler(srv *structs.Server) http.HandlerFunc {
 
 		assetPath := chi.URLParam(r, "*")
 		if assetPath == "" {
-			var filepath = "./games/" + gameId + "/index.html"
+			var filepath = "/games/" + gameId + "/index.html"
 			http.ServeFile(w, r, filepath)
 		} else {
 			if !validateAssetPath(assetPath) {
 				http.Error(w, "Invalid asset path", http.StatusBadRequest)
 				return
 			}
-			var filepath = "./games/" + gameId + "/" + assetPath
+			var filepath = "/games/" + gameId + "/" + assetPath
 			http.ServeFile(w, r, filepath)
 		}
 	}

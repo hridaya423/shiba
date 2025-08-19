@@ -72,12 +72,14 @@ function normalizeProfileFields(f) {
     hasOnboarded = Boolean(f['hasOnboarded']);
   }
   
+
+  
   return {
     email: typeof f.Email === 'string' ? f.Email : '',
     githubUsername: typeof f['github username'] === 'string' ? f['github username'] : '',
     firstName: typeof f['First Name'] === 'string' ? f['First Name'] : '',
     lastName: typeof f['Last Name'] === 'string' ? f['Last Name'] : '',
-    birthday: typeof f['birthday'] === 'string' ? f['birthday'] : '',
+    birthday: f['birthday'] || '',
     slackId: typeof f['slack id'] === 'string' ? f['slack id'] : '',
     hasOnboarded: hasOnboarded,
     address: {

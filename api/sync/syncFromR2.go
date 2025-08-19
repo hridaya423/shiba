@@ -14,7 +14,7 @@ import (
 )
 
 func SyncFromR2(server structs.Server) error {
-	localFolder := "./games"
+	localFolder := "/games"
 	bucket := os.Getenv("R2_BUCKET")
 	client := server.S3Client
 
