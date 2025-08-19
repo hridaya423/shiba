@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     const names = projects.map((p) => p?.name).filter(Boolean);
     const projectsWithTime = projects.map((p) => ({
       name: p?.name,
-      time: p?.time || 0
+      time: Math.round((p?.total_seconds || 0) / 60) // Convert seconds to minutes
     })).filter((p) => p.name);
     // Return minimal payload for client
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=300');
