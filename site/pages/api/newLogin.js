@@ -133,8 +133,25 @@ export default async function handler(req, res) {
         userRecord = cleanupResult;
         console.log(`Using best user record after cleanup: ${userRecord.id}`);
       }
-      
+    }
 
+    // Ensure user has a referral code (for both new and existing users)
+    if (!userRecord.fields?.ReferralCode || userRecord.fields.ReferralCode.trim() === '') {
+      console.log(`User ${userRecord.id} doesn't have a referral code, generating one...`);
+      try {
+        const newReferralCode = generateReferralCode();
+        await updateUserReferralCode(userRecord.id, newReferralCode);
+        console.log(`Generated and assigned referral code ${newReferralCode} to user ${userRecord.id}`);
+        
+        // Update the userRecord to include the new referral code
+        userRecord.fields = userRecord.fields || {};
+        userRecord.fields.ReferralCode = newReferralCode;
+      } catch (referralCodeError) {
+        console.error('Failed to generate referral code for existing user:', referralCodeError);
+        // Don't fail the entire login process if referral code generation fails
+      }
+    } else {
+      console.log(`User ${userRecord.id} already has referral code: ${userRecord.fields.ReferralCode}`);
     }
 
     // Enforce 10 second cooldown for OTP
