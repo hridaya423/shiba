@@ -22,14 +22,14 @@ export default function AppHead({ title = "Shiba Arcade" }) {
       <meta name="twitter:image" content="/bg.gif" />
       
       {/* Preload commonly used audio to reduce first-play latency */}
-      <link rel="preload" as="audio" href="/next.mp3" />
-      <link rel="preload" as="audio" href="/prev.mp3" />
-      <link rel="preload" as="audio" href="/shiba-bark.mp3" />
-      <link rel="preload" as="audio" href="/MyGames.mp3" />
-      <link rel="preload" as="audio" href="/Global.mp3" />
-      <link rel="preload" as="audio" href="/Shop.mp3" />
-      <link rel="preload" as="audio" href="/Help.mp3" />
-      <link rel="preload" as="audio" href="/WelcomeToShibaArcade.mp3" />
+      <link rel="preload" href="/next.mp3" as="fetch" type="audio/mpeg" crossOrigin="anonymous" />
+      <link rel="preload" href="/prev.mp3" as="fetch" type="audio/mpeg" crossOrigin="anonymous" />
+      <link rel="preload" href="/shiba-bark.mp3" as="fetch" type="audio/mpeg" crossOrigin="anonymous" />
+      <link rel="preload" href="/MyGames.mp3" as="fetch" type="audio/mpeg" crossOrigin="anonymous" />
+      <link rel="preload" href="/Global.mp3" as="fetch" type="audio/mpeg" crossOrigin="anonymous" />
+      <link rel="preload" href="/Shop.mp3" as="fetch" type="audio/mpeg" crossOrigin="anonymous" />
+      <link rel="preload" href="/Help.mp3" as="fetch" type="audio/mpeg" crossOrigin="anonymous" />
+      <link rel="preload" href="/WelcomeToShibaArcade.mp3" as="fetch" type="audio/mpeg" crossOrigin="anonymous" />
     </Head>
   );
 }
