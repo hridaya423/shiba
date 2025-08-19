@@ -122,7 +122,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
     const result = await verifyOtp(email, otp);
     if (result?.ok && result?.token) {
       setToken?.(result.token);
-      alert("Verification successful! Welcome to Shiba Arcade!");
+      // alert("Verification successful! Welcome to Shiba Arcade!");
     } else {
       // If verification fails, automatically request a new OTP
       alert("Verification failed. A new code has been sent to your email.");

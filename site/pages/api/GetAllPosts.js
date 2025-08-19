@@ -25,9 +25,15 @@ export default async function handler(req, res) {
       limit: hardLimit,
     });
 
-    // 2) Collect linked Game IDs
+    // 2) Filter out posts that have no game tied to them
+    const postsWithGames = allPosts.filter((rec) => {
+      const linkedGameIds = normalizeLinkedIds(rec?.fields?.Game);
+      return linkedGameIds.length > 0 && linkedGameIds[0];
+    });
+
+    // 3) Collect linked Game IDs
     const gameIdsSet = new Set();
-    for (const rec of allPosts) {
+    for (const rec of postsWithGames) {
       const linkedGameIds = normalizeLinkedIds(rec?.fields?.Game);
       if (linkedGameIds[0]) gameIdsSet.add(linkedGameIds[0]);
     }
@@ -50,7 +56,7 @@ export default async function handler(req, res) {
     );
 
     // 5) Build response rows with requested fields
-    const rows = allPosts.map((rec) => {
+    const rows = postsWithGames.map((rec) => {
       const fields = rec.fields || {};
       const createdAt = fields['Created At'] || rec.createdTime || '';
       const playLink = typeof fields.PlayLink === 'string' ? fields.PlayLink : '';
