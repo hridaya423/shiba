@@ -683,6 +683,7 @@ function ProfileModal({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [birthday, setBirthday] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [street1, setStreet1] = useState("");
   const [street2, setStreet2] = useState("");
   const [city, setCity] = useState("");
@@ -724,6 +725,7 @@ function ProfileModal({
     setFirstName(p.firstName || "");
     setLastName(p.lastName || "");
     setBirthday(p.birthday || "");
+    setPhoneNumber(p.phoneNumber || "");
     setStreet1((p.address && p.address.street1) || "");
     setStreet2((p.address && p.address.street2) || "");
     setCity((p.address && p.address.city) || "");
@@ -740,6 +742,7 @@ function ProfileModal({
       firstName !== (p.firstName || "") ||
       lastName !== (p.lastName || "") ||
       birthday !== (p.birthday || "") ||
+      phoneNumber !== (p.phoneNumber || "") ||
       street1 !== ((p.address && p.address.street1) || "") ||
       street2 !== ((p.address && p.address.street2) || "") ||
       city !== ((p.address && p.address.city) || "") ||
@@ -752,6 +755,7 @@ function ProfileModal({
     firstName,
     lastName,
     birthday,
+    phoneNumber,
     street1,
     street2,
     city,
@@ -1096,10 +1100,10 @@ function ProfileModal({
             />
           </div>
 
-          {/* Birthday */}
+          {/* Birthday and Phone Number */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 12, opacity: 0.7 }}>Birthday</span>
-            {!birthday && (
+            <span style={{ fontSize: 12, opacity: 0.7 }}>Birthday & Phone</span>
+            {(!birthday || !phoneNumber) && (
               <span
                 style={{ fontSize: 10, color: "#FF0000", fontWeight: "bold" }}
               >
@@ -1107,12 +1111,31 @@ function ProfileModal({
               </span>
             )}
           </div>
-          <input
-            type="date"
-            value={birthday}
-            onChange={(e) => setBirthday(e.target.value)}
-            style={{ ...inputStyle, width: "100%" }}
-          />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input
+              type="date"
+              placeholder="Birthday"
+              value={birthday}
+              onChange={(e) => setBirthday(e.target.value)}
+              style={{ ...inputStyle, flex: 1, minWidth: "calc(50% - 4px)" }}
+            />
+            <input
+              type="tel"
+              placeholder="Phone Number"
+              value={phoneNumber}
+              onChange={(e) => {
+                // Force phone number formatting like in PurchaseModal
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.startsWith('1') && value.length > 1) {
+                  value = '+' + value;
+                } else if (value.length > 0 && !value.startsWith('+')) {
+                  value = '+' + value;
+                }
+                setPhoneNumber(value);
+              }}
+              style={{ ...inputStyle, flex: 1, minWidth: "calc(50% - 4px)" }}
+            />
+          </div>
 
           {/* Address */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1196,6 +1219,7 @@ function ProfileModal({
                     firstName,
                     lastName,
                     birthday,
+                    phoneNumber,
                     address: {
                       street1,
                       street2,

@@ -14,10 +14,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const shopItems = await getAllShopItems();
-    return res.status(200).json({ ok: true, shopItems });
-  } catch (e) {
-    console.error('GetShopItems error:', e);
+    const shopItems = await fetchAllShopItems();
+    
+    return res.status(200).json(shopItems);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('GetShopItems error:', error);
     return res.status(500).json({ message: 'An unexpected error occurred.' });
   }
 }
@@ -32,6 +34,7 @@ async function airtableRequest(path, options = {}) {
       ...(options.headers || {}),
     },
   });
+
   if (!response.ok) {
     const text = await response.text().catch(() => '');
     throw new Error(`Airtable error ${response.status}: ${text}`);
@@ -39,43 +42,32 @@ async function airtableRequest(path, options = {}) {
   return response.json();
 }
 
-async function getAllShopItems() {
-  const allItems = [];
-  let offset = null;
+async function fetchAllShopItems() {
+  let allRecords = [];
+  let offset;
   
   do {
-    const params = new URLSearchParams({
-      pageSize: '100', // Maximum page size
-    });
-    
-    if (offset) {
-      params.set('offset', offset);
-    }
+    const params = new URLSearchParams();
+    params.set('pageSize', '100');
+    if (offset) params.set('offset', offset);
 
-    const data = await airtableRequest(`${encodeURIComponent(AIRTABLE_SHOP_TABLE)}?${params.toString()}`, {
+    const page = await airtableRequest(`${encodeURIComponent(AIRTABLE_SHOP_TABLE)}?${params.toString()}`, {
       method: 'GET',
     });
     
-    if (data.records) {
-      // Extract and normalize shop item data
-      const items = data.records.map(record => {
-        const fields = record.fields || {};
-        return {
-          id: record.id,
-          name: fields.Name || '',
-          cost: typeof fields.Cost === 'number' ? fields.Cost : 0,
-          description: fields.Description || '',
-          soldItems: typeof fields.SoldItems === 'number' ? fields.SoldItems : 0,
-          initialStock: typeof fields.InitialStock === 'number' ? fields.InitialStock : 0,
-          inStock: typeof fields['In Stock'] === 'number' ? fields['In Stock'] : 0,
-        };
-      });
-      
-      allItems.push(...items);
-    }
-    
-    offset = data.offset; // Get next page offset
+    const pageRecords = page?.records || [];
+    allRecords = allRecords.concat(pageRecords);
+    offset = page?.offset;
   } while (offset);
-  
-  return allItems;
+
+  return allRecords.map((record) => ({
+    id: record.id,
+    Name: record.fields?.Name || record.fields?.item || '',
+    Cost: record.fields?.Cost || record.fields?.cost || 0,
+    Description: record.fields?.Description || '',
+    SoldItems: record.fields?.SoldItems || 0,
+    InitialStock: record.fields?.InitialStock || record.fields?.stockAvailable || 0,
+    InStock: record.fields?.['In Stock'] || record.fields?.stockAvailable || 0,
+    Images: record.fields?.Images || [],
+  }));
 }
