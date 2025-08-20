@@ -984,7 +984,7 @@ function ProfileModal({
             {/* Referral Code */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 12, opacity: 0.7 }}>Referral Code</span>
+                <span style={{ fontSize: 12, opacity: 0.7 }}>Share Code</span>
               </div>
               <div
                 style={{
