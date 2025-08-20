@@ -82,7 +82,7 @@ export default async function handler(req, res) {
           if (sentby && sentby.trim() !== '') {
             console.log(`Creating referral record for new user with referral code: ${sentby}`);
             try {
-              await createReferralRecord(userRecord.id, sentby.trim());
+              await createReferralRecord(userRecord.id, sentby.trim(), normalizedEmail);
               console.log(`Successfully created referral record for new user with referral code: ${sentby}`);
               
               // Track successful referral usage
@@ -757,7 +757,7 @@ async function findUserByReferralCode(referralCode) {
 }
 
 // Function to create a referral record
-async function createReferralRecord(referredPersonId, referralCode) {
+async function createReferralRecord(referredPersonId, referralCode, email) {
   // Find the user who has this referral code
   const referrerUser = await findUserByReferralCode(referralCode);
   
@@ -765,7 +765,7 @@ async function createReferralRecord(referredPersonId, referralCode) {
     records: [
       {
         fields: {
-          Email: '', // This will be filled by the referred person's email
+          Email: email, // Email of the person who signed up
           ReferredPerson: [referredPersonId], // Linked record to the new user
           ReferredBy: referrerUser ? [referrerUser.id] : [], // Linked record to the referrer (if found)
           ReferralCode: referralCode, // The referral code used
