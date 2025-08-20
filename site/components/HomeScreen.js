@@ -985,6 +985,11 @@ function ProfileModal({
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 12, opacity: 0.7 }}>Share Code</span>
+                {initialProfile?.referralNumber !== undefined && (
+                  <span style={{ fontSize: 11, opacity: 0.6, fontWeight: 500 }}>
+                    ({initialProfile.referralNumber} onboarded)
+                  </span>
+                )}
               </div>
               <div
                 style={{
