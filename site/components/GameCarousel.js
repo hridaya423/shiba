@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import GameCard from "@/components/GameCard";
 
-export default function GameCarousel({ games, onSelect, playSound, playClip, setAppOpen, stopAll, selectedIndex: controlledIndex, isProfileOpen, isEventsOpen, isOnboardingOpen }) {
+export default function GameCarousel({ games, onSelect, playSound, playClip, setAppOpen, stopAll, selectedIndex: controlledIndex, isProfileOpen, isEventsOpen, isOnboardingOpen, isMuted }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const numGames = games?.length ?? 0;
 
@@ -62,7 +62,7 @@ export default function GameCarousel({ games, onSelect, playSound, playClip, set
       setSelectedIndex(idx);
       if (onSelect) onSelect(idx);
       const clip = games?.[idx]?.gameClipAudio;
-      if (clip) {
+      if (clip && !isMuted) {
         playClip?.(clip);
       }
     };
@@ -71,7 +71,7 @@ export default function GameCarousel({ games, onSelect, playSound, playClip, set
     return () => {
       embla.off("select", onSelectInternal);
     };
-  }, [embla, onSelect, games, playClip]);
+  }, [embla, onSelect, games, playClip, isMuted]);
 
   // Pause music when any modal is open
   useEffect(() => {
