@@ -6,7 +6,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Apply headers only to My Games and Global Games pages
+        // Apply headers only to My Games and Global Games pages for Godot support
         source: '/(my-games|global-games)',
         headers: [
           {
@@ -16,6 +16,28 @@ const nextConfig = {
           {
             key: 'Cross-Origin-Opener-Policy',
             value: 'same-origin'
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin'
+          }
+        ]
+      },
+      {
+        // Apply headers to any embedded content/iframes on these pages
+        source: '/(my-games|global-games)/(.*)',
+        headers: [
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'require-corp'
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin'
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin'
           }
         ]
       }
