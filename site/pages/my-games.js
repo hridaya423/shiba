@@ -65,7 +65,7 @@ export default function MyGamesPage() {
   return (
     <>
       <Head>
-        <meta httpEquiv="Cross-Origin-Embedder-Policy" content="require-corp" />
+        <meta httpEquiv="Cross-Origin-Embedder-Policy" content="credentialless" />
         <meta httpEquiv="Cross-Origin-Opener-Policy" content="same-origin" />
         <meta httpEquiv="Cross-Origin-Resource-Policy" content="cross-origin" />
       </Head>
