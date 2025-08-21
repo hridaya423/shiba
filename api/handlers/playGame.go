@@ -33,6 +33,9 @@ func MainGamePlayHandler(srv *structs.Server) http.HandlerFunc {
 		gameId := chi.URLParam(r, "gameId")
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		// Ensure Godot web support headers are set for HTML files
+		w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
+		w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
 
 		var filepath = "/games/" + gameId + "/index.html"
 
@@ -46,8 +49,13 @@ func AssetsPlayHandler(srv *structs.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gameId := chi.URLParam(r, "gameId")
 
+		// Set Godot web support headers for all assets
+		w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
+		w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
+
 		assetPath := chi.URLParam(r, "*")
 		if assetPath == "" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			var filepath = "/games/" + gameId + "/index.html"
 			http.ServeFile(w, r, filepath)
 		} else {
