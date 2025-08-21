@@ -124,6 +124,16 @@ func main() {
 		MaxAge:           600,
 	}))
 
+	// Add middleware for Godot web support headers
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Required headers for Godot web games (cross-origin isolation)
+			w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
+			w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
+			next.ServeHTTP(w, r)
+		})
+	})
+
 	api.SetupRoutes(r, srv)
 
 	log.Println("Listening on :3001")
