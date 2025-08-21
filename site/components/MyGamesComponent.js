@@ -460,47 +460,49 @@ export default function MyGamesComponent({
                       </span>
                     )}
 
-                    <div
-                      style={{
-                        display: hoverIndex === idx ? "flex" : "none",
-                        position: "absolute",
-                        top: 8,
-                        right: 8,
-                        cursor: "pointer",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <button
+                    {myGames.length > 1 && (
+                      <div
                         style={{
-                          fontSize: 12,
+                          display: hoverIndex === idx ? "flex" : "none",
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
                           cursor: "pointer",
-                          color: "#b00020",
-                        }}
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const confirmText = `DELETE ${title}`;
-                          const input = window.prompt(
-                            `Type \"${confirmText}\" to confirm deletion`,
-                          );
-                          if (input !== confirmText) return;
-                          try {
-                            const res = await fetch("/api/deleteGame", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ token, gameId: g.id }),
-                            });
-                            const data = await res.json().catch(() => ({}));
-                            if (res.ok && data?.ok) {
-                              await refresh();
-                            }
-                          } catch (e) {
-                            console.error(e);
-                          }
+                          justifyContent: "center",
                         }}
                       >
-                        Delete
-                      </button>
-                    </div>
+                        <button
+                          style={{
+                            fontSize: 12,
+                            cursor: "pointer",
+                            color: "#b00020",
+                          }}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const confirmText = `DELETE ${title}`;
+                            const input = window.prompt(
+                              `Type \"${confirmText}\" to confirm deletion`,
+                            );
+                            if (input !== confirmText) return;
+                            try {
+                              const res = await fetch("/api/deleteGame", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ token, gameId: g.id }),
+                              });
+                              const data = await res.json().catch(() => ({}));
+                              if (res.ok && data?.ok) {
+                                await refresh();
+                              }
+                            } catch (e) {
+                              console.error(e);
+                            }
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -819,25 +821,31 @@ function DetailView({
     thumbnailFile,
   ]);
 
-  const isProfileComplete = useMemo(() => {
-    if (!userProfile) return false;
+  const profileCompletionData = useMemo(() => {
+    if (!userProfile) return { isComplete: false, missingFields: [] };
 
     const missingFields = [
-      !userProfile.firstName && "firstName",
-      !userProfile.lastName && "lastName",
-      !userProfile.email && "email",
-      !userProfile.githubUsername && "githubUsername",
-      !userProfile.birthday && "birthday",
-      !userProfile.slackId && "slackId",
-      !userProfile.address?.street1 && "street1",
-      !userProfile.address?.city && "city",
-      !userProfile.address?.state && "state",
-      !userProfile.address?.zipcode && "zipcode",
-      !userProfile.address?.country && "country",
+      !userProfile.firstName && "First Name",
+      !userProfile.lastName && "Last Name",
+      !userProfile.email && "Email",
+      !userProfile.githubUsername && "GitHub Username",
+      !userProfile.birthday && "Birthday",
+      !userProfile.phoneNumber && "Phone Number",
+      !userProfile.slackId && "Slack Connection",
+      !userProfile.address?.street1 && "Street Address",
+      !userProfile.address?.city && "City",
+      !userProfile.address?.state && "State/Province",
+      !userProfile.address?.zipcode && "Zipcode",
+      !userProfile.address?.country && "Country",
     ].filter(Boolean);
 
-    return missingFields.length === 0;
+    return {
+      isComplete: missingFields.length === 0,
+      missingFields
+    };
   }, [userProfile]);
+
+  const isProfileComplete = profileCompletionData.isComplete;
 
   const handleUpdate = async () => {
     if (!token || !game?.id) return;
@@ -1293,7 +1301,7 @@ function DetailView({
               className="moments-textarea"
               placeholder={
                 postType === "ship" && !isProfileComplete
-                  ? "Complete your profile to unlock demo posting"
+                  ? `Complete missing profile fields to unlock demo posting: ${profileCompletionData.missingFields.join(", ")}`
                   : "Write what you added here..."
               }
               value={postContent}
@@ -1534,7 +1542,7 @@ function DetailView({
                   if (postType === "ship") {
                     if (!isProfileComplete) {
                       alert(
-                        "You must finish filling out your profile before you can upload your demo. See your profile on the top left corner of the main Shiba Homescreen",
+                        `You must complete your profile before uploading your demo. Missing fields: ${profileCompletionData.missingFields.join(", ")}. See your profile on the top left corner of the main Shiba Homescreen.`,
                       );
                       return;
                     }
@@ -1723,7 +1731,7 @@ function DetailView({
                 fontWeight: "bold",
               }}
             >
-              ⚠️ Missing profile details,{" "}
+              ⚠️ Missing profile fields: {profileCompletionData.missingFields.join(", ")}.{" "}
               <button
                 onClick={() => {
                   onBack();
@@ -1743,7 +1751,7 @@ function DetailView({
                   fontWeight: "bold",
                 }}
               >
-                complete your profile
+                Complete your profile
               </button>{" "}
               to unlock demo posting
             </div>
