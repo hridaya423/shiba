@@ -685,12 +685,14 @@ function DetailView({
   useEffect(() => {
     // Fetch Hackatime projects via server proxy to avoid CORS
     const fetchProjects = async () => {
-      console.log('Fetching projects for SlackId:', SlackId);
+      console.log('Fetching projects for SlackId:', SlackId, 'and gameId:', game?.id);
       if (!SlackId) return;
+      let url = `/api/hackatimeProjects?slackId=${encodeURIComponent(SlackId)}`;
+      if (game?.id) {
+        url += `&gameId=${encodeURIComponent(game.id)}`;
+      }
       try {
-        const res = await fetch(
-          `/api/hackatimeProjects?slackId=${encodeURIComponent(SlackId)}`,
-        );
+        const res = await fetch(url);
         const json = await res.json().catch(() => ({}));
         const names = Array.isArray(json?.projects) ? json.projects : [];
         const projectsWithTimeData = Array.isArray(json?.projectsWithTime) ? json.projectsWithTime : [];
@@ -704,7 +706,7 @@ function DetailView({
       }
     };
     fetchProjects();
-  }, [SlackId]);
+  }, [SlackId, game?.id]);
 
   // Fetch user profile
   useEffect(() => {
