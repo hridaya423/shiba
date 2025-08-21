@@ -23,7 +23,7 @@ func RemoveGameHandler(srv *structs.Server) http.HandlerFunc {
 
 		// Delete the folder in /games/{gameId}
 
-		gamePath := "./local_storage/games/" + gameId
+		gamePath := "/games/" + gameId
 		err := os.RemoveAll(gamePath)
 		if err != nil {
 			http.Error(w, "Failed to remove game: "+err.Error(), http.StatusInternalServerError)
