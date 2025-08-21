@@ -396,7 +396,7 @@ function EventsModal({ isOpen, onClose, token }) {
               22 august · 4:30pm – 5:30pm PST
             </p>
             <p style={{ margin: 0, fontSize: "14px" }}>
-              our kickoff event where we'll release features & many surpises
+              our kickoff event where we&apos;ll release features & many surpises
             </p>
             {hasRSVPedForShibaDirect ? (
               <div
@@ -416,7 +416,7 @@ function EventsModal({ isOpen, onClose, token }) {
                     color: "#006600",
                   }}
                 >
-                  You're RSVPed, you'll automatically receive an email with the
+                  You&apos;re RSVPed, you&apos;ll automatically receive an email with the
                   zoom link 30 minutes before.
                 </p>
               </div>
@@ -500,7 +500,7 @@ function EventsModal({ isOpen, onClose, token }) {
                     color: "#006600",
                   }}
                 >
-                  You're RSVPed! We'll remind you to join the Slack huddle.
+                  You&apos;re RSVPed! We&apos;ll remind you to join the Slack huddle.
                 </p>
               </div>
             ) : (
@@ -557,13 +557,13 @@ function EventsModal({ isOpen, onClose, token }) {
             }}
           >
             <p style={{ margin: 0, fontSize: "16px", fontWeight: "bold" }}>
-              Shiba Workshop: Let's Make a Clicker Game!
+              Shiba Workshop: Let&apos;s Make a Clicker Game!
             </p>
             <p style={{ margin: 0, fontSize: "14px" }}>
               19 august · 3pm–4pm PT
             </p>
             <p style={{ margin: 0, fontSize: "14px" }}>
-              let's make a godot clicker game together to learn the basics of godot!
+              let&apos;s make a godot clicker game together to learn the basics of godot!
             </p>
             {hasRSVPedForClickerWorkshop ? (
               <div
@@ -583,7 +583,7 @@ function EventsModal({ isOpen, onClose, token }) {
                     color: "#006600",
                   }}
                 >
-                  You're RSVPed! We'll remind you to join the Slack huddle.
+                  You&apos;re RSVPed! We&apos;ll remind you to join the Slack huddle.
                 </p>
               </div>
             ) : (

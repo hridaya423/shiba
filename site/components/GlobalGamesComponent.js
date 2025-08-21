@@ -243,10 +243,10 @@ export default function GlobalGamesComponent({ token }) {
                 You currently have <strong>0 playtest tickets</strong>.
               </p>
               <p style={{ marginBottom: 16, textAlign: 'left', fontSize: 14, opacity: 0.9 }}>
-                You'll earn <strong>3 playtest tickets</strong> for every 10 hours of work on your project. You'll need to ship a demo for our Shiba HQ reivew team to try in order for us to grant you the tickets.
+                You&apos;ll earn <strong>3 playtest tickets</strong> for every 10 hours of work on your project. You&apos;ll need to ship a demo for our Shiba HQ reivew team to try in order for us to grant you the tickets.
               </p>
               <p style={{ textAlign: 'left', fontSize: 14, opacity: 0.9 }}>
-                With each playtest ticket, you'll review a game and your feedback will determine how many SSS tokens that person receives. The number of people assigned to your game will be based in part on the number of playtests you give others.
+                With each playtest ticket, you&apos;ll review a game and your feedback will determine how many SSS tokens that person receives. The number of people assigned to your game will be based in part on the number of playtests you give others.
               </p>
             </div>
             <div style={{ 
