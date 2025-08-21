@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // Simple audio manager that preloads audio files and plays them instantly
 export default function useAudioManager(fileNames = []) {
   const audioMapRef = useRef(new Map());
   const currentClipRef = useRef(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [sfxMuted, setSfxMuted] = useState(false);
+  const sfxFiles = ["next.mp3", "prev.mp3", "shiba-bark.mp3"];
 
   // Preload provided files once mounted
   useEffect(() => {
@@ -23,6 +26,27 @@ export default function useAudioManager(fileNames = []) {
     });
   }, [Array.isArray(fileNames) ? fileNames.join("|") : String(fileNames)]);
 
+  // Apply muted state to audio elements based on their type
+  useEffect(() => {
+    audioMapRef.current.forEach((audio, name) => {
+      try {
+        // If it's an SFX file, use sfxMuted state; otherwise use isMuted state
+        const isSfx = sfxFiles.includes(name);
+        audio.muted = isSfx ? sfxMuted : isMuted;
+      } catch (_) {
+        // ignore
+      }
+    });
+  }, [isMuted, sfxMuted]);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => !prev);
+  }, []);
+
+  const toggleSfxMute = useCallback(() => {
+    setSfxMuted(prev => !prev);
+  }, []);
+
   const stopAll = useCallback(() => {
     audioMapRef.current.forEach((audio) => {
       try {
@@ -38,8 +62,14 @@ export default function useAudioManager(fileNames = []) {
     if (!name) return;
     const audio = audioMapRef.current.get(name);
     if (!audio) return;
+    
+    // Determine if this is a sound effect
+    const isSfx = sfxFiles.includes(name);
+    
     try {
       audio.currentTime = 0;
+      // Apply appropriate mute state based on audio type
+      audio.muted = isSfx ? sfxMuted : isMuted;
     } catch (_) {
       // ignore
     }
@@ -49,7 +79,7 @@ export default function useAudioManager(fileNames = []) {
         // Autoplay policies or not ready; ignore to avoid unhandled promise
       });
     }
-  }, []);
+  }, [isMuted, sfxMuted]);
 
   const playExclusive = useCallback(
     (name) => {
@@ -79,5 +109,14 @@ export default function useAudioManager(fileNames = []) {
     [play],
   );
 
-  return { play, playExclusive, playClip, stopAll };
+  return { 
+    play, 
+    playExclusive, 
+    playClip, 
+    stopAll, 
+    isMuted, 
+    toggleMute,
+    sfxMuted,
+    toggleSfxMute
+  };
 }

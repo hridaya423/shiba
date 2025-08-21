@@ -1324,6 +1324,8 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
     play: playSound,
     playClip,
     stopAll,
+    isMuted,
+    toggleMute
   } = useAudioManager([...sfxFiles, ...clipFiles, "zeldaSong.mp3"]);
 
   // Check if user has opened events notification
@@ -1343,10 +1345,10 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
   // When selected game changes, play its clip immediately using the preloaded element
   useEffect(() => {
     const clip = games[selectedGame]?.gameClipAudio;
-    if (clip) {
+    if (clip && !isMuted) {
       playClip(clip);
     }
-  }, [selectedGame]);
+  }, [selectedGame, isMuted]);
 
   useEffect(() => {
     const updateTokyoTime = () => {
@@ -1525,7 +1527,37 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
           <p style={{ fontFamily: "GT Maru", fontWeight: "bold" }}>
             Shiba Arcade
           </p>
-          <p style={{ margin: 0 }}>{tokyoTime}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button 
+              onClick={toggleMute}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+              aria-label={isMuted ? "Unmute Music" : "Mute Music"}
+              title={isMuted ? "Unmute Music" : "Mute Music"}
+            >
+              {isMuted ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                  <line x1="23" y1="9" x2="17" y2="15"></line>
+                  <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+              )}
+            </button>
+            <p style={{ margin: 0 }}>{tokyoTime}</p>
+          </div>
         </div>
         <div
           style={{
@@ -1546,6 +1578,8 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
             isProfileOpen={isProfileOpen}
             isEventsOpen={isEventsOpen}
             isOnboardingOpen={isOnboardingOpen}
+            isMuted={isMuted}
+            playClip={playClip}
           />
           <GameDetails game={games[selectedGame]} />
         </div>
@@ -1688,6 +1722,7 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
         playSound={playSound}
         playClip={playClip}
         stopAll={stopAll}
+        isMuted={isMuted}
         onCompleted={(updatedProfile) => {
           setProfile?.(updatedProfile);
           setHasOnboarded(true);
