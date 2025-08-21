@@ -350,7 +350,8 @@ export default function PlayGameComponent({
       {started && (
         <>
           <iframe
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts allow-same-origin allow-downloads allow-forms"
+            credentialless={true}
             ref={iframeRef}
             src={url}
             title={`Play ${gameId}`}
@@ -362,7 +363,7 @@ export default function PlayGameComponent({
               border: "1px solid #ddd",
               borderRadius: 8,
             }}
-            allow="autoplay; fullscreen"
+            allow="autoplay; fullscreen; cross-origin-isolated"
           />
           <div
             style={{
