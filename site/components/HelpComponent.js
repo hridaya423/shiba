@@ -68,7 +68,7 @@ export default function HelpComponent() {
       question: "How do I create and upload a game?",
       answer: (
         <p style={{ marginTop: "16px", lineHeight: "1.6" }}>
-          To create a game, you'll need to use Godot Engine. Once your game is ready, you can upload it through the "Upload Game" section. Make sure your game is exported as a web build (.html, .js, .wasm files) and packaged as a .zip file.
+          To create a game, you&apos;ll need to use Godot Engine. Once your game is ready, you can upload it through the &quot;Upload Game&quot; section. Make sure your game is exported as a web build (.html, .js, .wasm files) and packaged as a .zip file.
         </p>
       ),
       backgroundColor: "#E5F3FF",
@@ -88,7 +88,7 @@ export default function HelpComponent() {
       question: "How do I get playtest tickets?",
       answer: (
         <p style={{ marginTop: "16px", lineHeight: "1.6" }}>
-          You earn playtest tickets by uploading your game demo and getting approved for time spent making your game through Hackatime. The more time you log working on your game, the more playtest tickets you'll receive.
+          You earn playtest tickets by uploading your game demo and getting approved for time spent making your game through Hackatime. The more time you log working on your game, the more playtest tickets you&apos;ll receive.
         </p>
       ),
       backgroundColor: "#FFF2E5",
@@ -98,7 +98,7 @@ export default function HelpComponent() {
       question: "What is Shiba Direct?",
       answer: (
         <p style={{ marginTop: "16px", lineHeight: "1.6" }}>
-          Shiba Direct is a live event on August 22nd where you can get the latest news and information about Shiba Arcade. It's also when the shop will officially launch. Make sure to RSVP to attend!
+          Shiba Direct is a live event on August 22nd where you can get the latest news and information about Shiba Arcade. It&apos;s also when the shop will officially launch. Make sure to RSVP to attend!
         </p>
       ),
       backgroundColor: "#F0E5FF",
@@ -108,7 +108,7 @@ export default function HelpComponent() {
       question: "How do I qualify for the Tokyo trip?",
       answer: (
         <p style={{ marginTop: "16px", lineHeight: "1.6" }}>
-          To qualify for the Tokyo trip, you need to earn enough SSS by creating a great game that receives high ratings from other players. The SSS you earn can be used to purchase a ticket to Tokyo, where you'll help build the arcade from November 5-12th.
+          To qualify for the Tokyo trip, you need to earn enough SSS by creating a great game that receives high ratings from other players. The SSS you earn can be used to purchase a ticket to Tokyo, where you&apos;ll help build the arcade from November 5-12th.
         </p>
       ),
       backgroundColor: "#FFE5F0",
@@ -119,7 +119,7 @@ export default function HelpComponent() {
       answer: (
         <div style={{ marginTop: "16px", lineHeight: "1.6" }}>
           <p style={{ marginBottom: "16px" }}>
-            To log your time working on your game, you'll need to:
+            To log your time working on your game, you&apos;ll need to:
           </p>
           <ol style={{ marginBottom: "16px", paddingLeft: "20px" }}>
             <li style={{ marginBottom: "8px" }}>
@@ -129,17 +129,17 @@ export default function HelpComponent() {
               <strong>Login to Hackatime:</strong> Go to <a href="http://hackatime.hackclub.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#0066CC", textDecoration: "underline" }}>hackatime.hackclub.com</a> and login with your Slack account.
             </li>
             <li style={{ marginBottom: "8px" }}>
-              <strong>Add the Godot Extension:</strong> Install the <a href="https://github.com/BudzioT/Godot_Super-Wakatime" target="_blank" rel="noopener noreferrer" style={{ color: "#0066CC", textDecoration: "underline" }}>Godot Super-Wakatime extension</a> to automatically track your time while working in Godot Engine. If you're having trouble, head over to <a href="https://hackatime.hackclub.com/docs/editors/godot" target="_blank" rel="noopener noreferrer" style={{ color: "#0066CC", textDecoration: "underline" }}>hackatime.hackclub.com/docs/editors/godot</a> for detailed instructions.
+              <strong>Add the Godot Extension:</strong> Install the <a href="https://github.com/BudzioT/Godot_Super-Wakatime" target="_blank" rel="noopener noreferrer" style={{ color: "#0066CC", textDecoration: "underline" }}>Godot Super-Wakatime extension</a> to automatically track your time while working in Godot Engine. If you&apos;re having trouble, head over to <a href="https://hackatime.hackclub.com/docs/editors/godot" target="_blank" rel="noopener noreferrer" style={{ color: "#0066CC", textDecoration: "underline" }}>hackatime.hackclub.com/docs/editors/godot</a> for detailed instructions.
             </li>
             <li style={{ marginBottom: "8px" }}>
               <strong>Log some time:</strong> Work on your game in Godot for a bit so that some time gets logged.
             </li>
             <li style={{ marginBottom: "8px" }}>
-              <strong>Go to My Games:</strong> Navigate to the "My Games" section and select the name of your Hackatime project (it will appear after you've logged some time).
+              <strong>Go to My Games:</strong> Navigate to the &quot;My Games&quot; section and select the name of your Hackatime project (it will appear after you&apos;ve logged some time).
             </li>
           </ol>
           <p>
-            Once set up, your time will be automatically logged when you're working in Godot, and this will help you earn playtest tickets! For every playtest ticket you earn, someone will play your game and you'll get to play someone else's game. You'll both earn SSS from the playtest.
+            Once set up, your time will be automatically logged when you&apos;re working in Godot, and this will help you earn playtest tickets! For every playtest ticket you earn, someone will play your game and you&apos;ll get to play someone else&apos;s game. You&apos;ll both earn SSS from the playtest.
           </p>
         </div>
       ),
@@ -151,7 +151,7 @@ export default function HelpComponent() {
       answer: (
         <div style={{ marginTop: "16px", lineHeight: "1.6" }}>
           <p style={{ marginBottom: "16px" }}>
-            No, we've never done an event in Japan before, but here are two of our past adventures!
+            No, we&apos;ve never done an event in Japan before, but here are two of our past adventures!
           </p>
           <div style={{ 
             display: "flex", 
@@ -189,10 +189,10 @@ export default function HelpComponent() {
       borderColor: "#006666"
     },
          {
-       question: "I'm new to game development. Can I still participate?",
+       question: "I&apos;m new to game development. Can I still participate?",
        answer: (
          <p style={{ marginTop: "16px", lineHeight: "1.6" }}>
-           Absolutely! Beginners are welcome and encouraged to participate. We'll be running workshops to teach you how to make games in Godot. You'll also get plenty of feedback on your games and the chance to make multiple iterations to improve them.
+           Absolutely! Beginners are welcome and encouraged to participate. We&apos;ll be running workshops to teach you how to make games in Godot. You&apos;ll also get plenty of feedback on your games and the chance to make multiple iterations to improve them.
          </p>
        ),
        backgroundColor: "#F0F8FF",
@@ -304,7 +304,7 @@ export default function HelpComponent() {
                   Join the <a href="https://slack.hackclub.com" target="_blank" rel="noopener noreferrer" style={{ color: "#0066CC", textDecoration: "underline" }}>Hack Club Slack</a>, 
                   log into <a href="https://hackatime.hackclub.com" target="_blank" rel="noopener noreferrer" style={{ color: "#0066CC", textDecoration: "underline" }}>Hackatime</a> with your Slack account, 
                   and install the <a href="https://github.com/BudzioT/Godot_Super-Wakatime" target="_blank" rel="noopener noreferrer" style={{ color: "#0066CC", textDecoration: "underline" }}>Godot Super-Wakatime extension</a>. 
-                  Work on your game for a bit, then go to "My Games" and select your Hackatime project name.
+                  Work on your game for a bit, then go to &quot;My Games&quot; and select your Hackatime project name.
                 </p>
               </div>
             </div>
@@ -359,7 +359,7 @@ export default function HelpComponent() {
                   Add Your Game to Shiba
                 </h3>
                 <p style={{ margin: 0, lineHeight: "1.5", fontSize: "14px" }}>
-                  Go to the "My Games" section and click the "+" button to create a new game. Add your game details, 
+                  Go to the &quot;My Games&quot; section and click the &quot;+&quot; button to create a new game. Add your game details, 
                   upload a thumbnail image, and link your GitHub repository.
                 </p>
               </div>
@@ -387,8 +387,8 @@ export default function HelpComponent() {
                   Post Regular Updates
                 </h3>
                                  <p style={{ margin: 0, lineHeight: "1.5", fontSize: "14px" }}>
-                   <strong>Every 3-4 hours:</strong> Post a "Devlog" with a screenshot/GIF/video showing what you added and a short description. 
-                   <strong>Every ~10 hours:</strong> Ship a new demo by uploading your Godot web build (.zip file) with a description of what's new. 
+                   <strong>Every 3-4 hours:</strong> Post a &quot;Devlog&quot; with a screenshot/GIF/video showing what you added and a short description. 
+                   <strong>Every ~10 hours:</strong> Ship a new demo by uploading your Godot web build (.zip file) with a description of what&apos;s new. 
                    Every 10 hours you log will be turned into up to 3 playtest tickets!
                  </p>
               </div>
@@ -416,7 +416,7 @@ export default function HelpComponent() {
                   Earn SSS & Playtest Others
                 </h3>
                 <p style={{ margin: 0, lineHeight: "1.5", fontSize: "14px" }}>
-                  Use your playtest tickets to play other people's games and rate them (Fun, Art, Creativity, Audio, Mood). 
+                  Use your playtest tickets to play other people&apos;s games and rate them (Fun, Art, Creativity, Audio, Mood). 
                   Each rating earns you SSS currency. The more SSS you earn, the closer you get to winning a trip to Tokyo!
                 </p>
               </div>
