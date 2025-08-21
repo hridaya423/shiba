@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 
 const PostAttachmentRenderer = dynamic(() => import('@/components/utils/PostAttachmentRenderer'), { ssr: false });
+const PlaytestTicket = dynamic(() => import('@/components/PlaytestTicket'), { ssr: false });
 
 function ShaderToyBackground() {
   return (
@@ -22,11 +23,15 @@ function ShaderToyBackground() {
 
 export default function GlobalGamesComponent({ token }) {
   const [posts, setPosts] = useState([]);
+  const [playtests, setPlaytests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [playtestsLoading, setPlaytestsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [playtestsError, setPlaytestsError] = useState('');
   const [displayCount, setDisplayCount] = useState(12);
   const [hasMore, setHasMore] = useState(true);
   const [selectedView, setSelectedView] = useState('global'); // 'global' | 'playtests'
+  const [playtestsFetched, setPlaytestsFetched] = useState(false);
   const circleRef = useRef(null);
 
   useEffect(() => {
@@ -91,6 +96,45 @@ export default function GlobalGamesComponent({ token }) {
       cancelled = true;
     };
   }, []);
+
+  // Fetch playtests when switching to playtests view
+  const fetchPlaytests = async () => {
+    if (!token) return;
+    
+    try {
+      setPlaytestsLoading(true);
+      setPlaytestsError('');
+      
+      const res = await fetch('/api/GetMyPlaytests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.ok) {
+        setPlaytests(data.playtests || []);
+        setPlaytestsFetched(true);
+      } else {
+        setPlaytestsError(data.message || 'Failed to fetch playtests');
+      }
+    } catch (error) {
+      console.error('Error fetching playtests:', error);
+      setPlaytestsError('Failed to fetch playtests');
+    } finally {
+      setPlaytestsLoading(false);
+    }
+  };
+
+  // Fetch playtests when view changes to playtests and we haven't fetched them yet
+  useEffect(() => {
+    if (selectedView === 'playtests' && !playtestsFetched && !playtestsLoading) {
+      fetchPlaytests();
+    }
+  }, [selectedView, playtestsFetched, playtestsLoading, token]);
 
   const loadMore = () => {
     const newCount = displayCount + 12;
@@ -231,36 +275,63 @@ export default function GlobalGamesComponent({ token }) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <h1 style={{ textAlign: 'center', marginBottom: 2, color: '#fff' }}>My Playtests</h1>
-            <div style={{ 
-              textAlign: 'center', 
-              marginBottom: 30, 
-              color: '#fff',
-              maxWidth: 600,
-              margin: '0 auto 30px auto',
-              lineHeight: 1.6
-            }}>
-              <p style={{ marginBottom: 16, fontSize: 16 }}>
-                You currently have <strong>0 playtest tickets</strong>.
-              </p>
-              <p style={{ marginBottom: 16, textAlign: 'left', fontSize: 14, opacity: 0.9 }}>
-                You'll earn <strong>3 playtest tickets</strong> for every 10 hours of work on your project. You'll need to ship a demo for our Shiba HQ reivew team to try in order for us to grant you the tickets.
-              </p>
-              <p style={{ textAlign: 'left', fontSize: 14, opacity: 0.9 }}>
-                With each playtest ticket, you'll review a game and your feedback will determine how many SSS tokens that person receives. The number of people assigned to your game will be based in part on the number of playtests you give others.
-              </p>
-            </div>
-            <div style={{ 
-              textAlign: 'center', 
-              padding: 40, 
-              maxWidth: 600,
-              background: 'rgba(255,255,255,0.1)', 
-              borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.2)'
-            }}>
-              <p style={{ color: '#fff', opacity: 0.7, fontSize: 16 }}>
-                No playtest tickets available yet. Keep building to earn your playtest tickets!
-              </p>
-            </div>
+            <p style={{ textAlign: 'center', marginBottom: 20, color: '#fff' }}>view and complete your assigned playtests</p>
+            
+            {playtestsLoading ? (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: 40, 
+                maxWidth: 600,
+                background: 'rgba(255,255,255,0.1)', 
+                borderRadius: 12,
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}>
+                <p style={{ color: '#fff', opacity: 0.7, fontSize: 16 }}>
+                  Loading playtests...
+                </p>
+              </div>
+            ) : playtestsError ? (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: 40, 
+                maxWidth: 600,
+                background: 'rgba(255,0,0,0.1)', 
+                borderRadius: 12,
+                border: '1px solid rgba(255,0,0,0.2)'
+              }}>
+                <p style={{ color: '#ff6b6b', fontSize: 16 }}>
+                  {playtestsError}
+                </p>
+              </div>
+            ) : playtests.length > 0 ? (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 16,
+                  marginBottom: 20,
+                  width: '100%',
+                  maxWidth: 1000,
+                }}
+              >
+                {playtests.map((playtest, idx) => (
+                  <PlaytestTicket key={playtest.id || idx} playtest={playtest} />
+                ))}
+              </div>
+            ) : (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: 40, 
+                maxWidth: 600,
+                background: 'rgba(255,255,255,0.1)', 
+                borderRadius: 12,
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}>
+                <p style={{ color: '#fff', opacity: 0.7, fontSize: 16 }}>
+                  No playtests assigned yet. Check back later!
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
