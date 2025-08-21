@@ -1441,6 +1441,7 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
             padding: 16,
             paddingLeft: 24,
             paddingRight: 24,
+            zIndex: 9999,
           }}
         >
           <div
