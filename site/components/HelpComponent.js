@@ -46,6 +46,7 @@ export default function HelpComponent() {
                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                referrerPolicy="strict-origin-when-cross-origin" 
                allowFullScreen
+               credentialless
                style={{ maxWidth: "100%", borderRadius: "8px" }}
              ></iframe>
            </div>
@@ -169,6 +170,7 @@ export default function HelpComponent() {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
               referrerPolicy="strict-origin-when-cross-origin" 
               allowFullScreen
+              credentialless
               style={{ maxWidth: "100%", borderRadius: "8px" }}
             ></iframe>
             <iframe 
@@ -180,6 +182,7 @@ export default function HelpComponent() {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
               referrerPolicy="strict-origin-when-cross-origin" 
               allowFullScreen
+              credentialless
               style={{ maxWidth: "100%", borderRadius: "8px" }}
             ></iframe>
           </div>
