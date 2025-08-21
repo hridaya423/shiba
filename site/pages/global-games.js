@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import StartScreen from "@/components/StartScreen";
 import GlobalGamesComponent from "@/components/GlobalGamesComponent";
 import TopBar from "@/components/TopBar";
@@ -61,24 +62,31 @@ export default function GlobalGamesPage() {
   }
 
   return (
-    <div style={{ position: "relative", minHeight: "100vh" }}>
-      {!disableTopBar && (
-        <TopBar
-          backgroundColor={gameData.bgColor}
-          title={gameData.name}
-          image={gameData.backgroundImage}
-          onBack={goHome}
-        />
-      )}
-      <div style={{ paddingTop: disableTopBar ? 0 : 64 }}>
-        <GlobalGamesComponent
-          disableTopBar={disableTopBar}
-          setDisableTopBar={setDisableTopBar}
-          goHome={goHome}
-          token={token}
-          SlackId={profile?.slackId || null}
-        />
+    <>
+      <Head>
+        <meta httpEquiv="Cross-Origin-Embedder-Policy" content="require-corp" />
+        <meta httpEquiv="Cross-Origin-Opener-Policy" content="same-origin" />
+        <meta httpEquiv="Cross-Origin-Resource-Policy" content="cross-origin" />
+      </Head>
+      <div style={{ position: "relative", minHeight: "100vh" }}>
+        {!disableTopBar && (
+          <TopBar
+            backgroundColor={gameData.bgColor}
+            title={gameData.name}
+            image={gameData.backgroundImage}
+            onBack={goHome}
+          />
+        )}
+        <div style={{ paddingTop: disableTopBar ? 0 : 64 }}>
+          <GlobalGamesComponent
+            disableTopBar={disableTopBar}
+            setDisableTopBar={setDisableTopBar}
+            goHome={goHome}
+            token={token}
+            SlackId={profile?.slackId || null}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

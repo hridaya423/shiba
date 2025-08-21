@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import StartScreen from "@/components/StartScreen";
 import MyGamesComponent from "@/components/MyGamesComponent";
 import TopBar from "@/components/TopBar";
@@ -62,29 +63,36 @@ export default function MyGamesPage() {
   }
 
   return (
-    <div style={{ position: "relative", minHeight: "100vh" }}>
-      {!disableTopBar && (
-        <TopBar
-          backgroundColor={gameData.bgColor}
-          title={gameData.name}
-          image={gameData.backgroundImage}
-          onBack={goHome}
-        />
-      )}
-      <div style={{ paddingTop: disableTopBar ? 0 : 64 }}>
-        <MyGamesComponent
-          disableTopBar={disableTopBar}
-          setDisableTopBar={setDisableTopBar}
-          goHome={goHome}
-          token={token}
-          SlackId={profile?.slackId || null}
-          onOpenProfile={() => {
-            setAutoOpenProfile(true);
-            setDisableTopBar(false);
-            router.push("/?openProfile=true");
-          }}
-        />
+    <>
+      <Head>
+        <meta httpEquiv="Cross-Origin-Embedder-Policy" content="require-corp" />
+        <meta httpEquiv="Cross-Origin-Opener-Policy" content="same-origin" />
+        <meta httpEquiv="Cross-Origin-Resource-Policy" content="cross-origin" />
+      </Head>
+      <div style={{ position: "relative", minHeight: "100vh" }}>
+        {!disableTopBar && (
+          <TopBar
+            backgroundColor={gameData.bgColor}
+            title={gameData.name}
+            image={gameData.backgroundImage}
+            onBack={goHome}
+          />
+        )}
+        <div style={{ paddingTop: disableTopBar ? 0 : 64 }}>
+          <MyGamesComponent
+            disableTopBar={disableTopBar}
+            setDisableTopBar={setDisableTopBar}
+            goHome={goHome}
+            token={token}
+            SlackId={profile?.slackId || null}
+            onOpenProfile={() => {
+              setAutoOpenProfile(true);
+              setDisableTopBar(false);
+              router.push("/?openProfile=true");
+            }}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
