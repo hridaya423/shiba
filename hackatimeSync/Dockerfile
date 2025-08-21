@@ -10,12 +10,15 @@ RUN apk --no-cache add ca-certificates curl
 RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
 
+# Create app directory
+WORKDIR /hackatimeSync
+
 # Copy node modules and source code
 COPY --from=builder /src/node_modules ./node_modules
 COPY . .
 
 # Set proper ownership
-RUN chown -R appuser:appgroup /src
+RUN chown -R appuser:appgroup /hackatimeSync
 
 # Create directory for logs/data if needed
 RUN mkdir -p /data && chown appuser:appgroup /data

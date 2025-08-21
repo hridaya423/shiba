@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
@@ -11,6 +10,12 @@ let isSyncRunning = false;
 let lastSyncTime = null;
 let lastSyncResult = null;
 let syncError = null;
+
+// Airtable configuration
+const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+const AIRTABLE_GAMES_TABLE = process.env.AIRTABLE_GAMES_TABLE || 'Games';
+const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
 
 // Background sync function
 async function runBackgroundSync() {
@@ -36,7 +41,7 @@ async function runBackgroundSync() {
   }
 }
 
-// Extract sync logic into reusable function
+// Core sync logic
 async function performFullSync() {
   if (!AIRTABLE_API_KEY) {
     throw new Error('Server configuration error: Missing Airtable API key');
@@ -101,7 +106,6 @@ async function performFullSync() {
   // Update each game with calculated seconds
   let successCount = 0;
   let errorCount = 0;
-  const updatedGames = [];
   
   for (let i = 0; i < allGames.length; i++) {
     const game = allGames[i];
@@ -110,21 +114,9 @@ async function performFullSync() {
     
     console.log(`Processing game ${i + 1}/${allGames.length}: ${fields.Name}`);
     
-    // Always include the game in results, even if no updates
-    const gameResult = {
-      id: game.id,
-      Name: fields.Name || '',
-      'slack id': slackId || '',
-      'Hackatime Projects': Array.isArray(fields['Hackatime Projects'])
-        ? fields['Hackatime Projects'].filter(Boolean).join(', ')
-        : (typeof fields['Hackatime Projects'] === 'string' ? fields['Hackatime Projects'] : ''),
-      HackatimeSeconds: fields.HackatimeSeconds || 0
-    };
-    
     // Skip update if no slack id or hackatime projects
     if (!slackId || !fields['Hackatime Projects']) {
       console.log(`Skipping ${fields.Name} - missing slack id or hackatime projects`);
-      updatedGames.push(gameResult);
       continue;
     }
     
@@ -142,17 +134,12 @@ async function performFullSync() {
       // Update the game in Airtable
       await updateGameHackatimeSeconds(game.id, totalSeconds);
       
-      // Update the result object
-      gameResult.HackatimeSeconds = totalSeconds;
-      updatedGames.push(gameResult);
-      
       successCount++;
       console.log(`✅ Updated ${fields.Name}: ${totalSeconds} seconds`);
       
     } catch (error) {
       errorCount++;
       console.error(`❌ Error updating ${fields.Name}:`, error.message);
-      updatedGames.push(gameResult);
     }
   }
   
@@ -164,134 +151,9 @@ async function performFullSync() {
     uniqueUsers: uniqueUsers.length,
     successfulUpdates: successCount,
     errors: errorCount,
-    games: updatedGames,
     timestamp: new Date().toISOString()
   };
 }
-
-// Start background sync interval
-console.log(`🔄 Starting background sync every ${SYNC_INTERVAL / 1000 / 60} minutes...`);
-setInterval(runBackgroundSync, SYNC_INTERVAL);
-
-// Run initial sync after 10 seconds
-setTimeout(() => {
-  console.log('🚀 Running initial sync in 10 seconds...');
-  runBackgroundSync();
-}, 10000);
-
-// Airtable configuration
-const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
-const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
-const AIRTABLE_GAMES_TABLE = process.env.AIRTABLE_GAMES_TABLE || 'Games';
-const AIRTABLE_POSTS_TABLE = process.env.AIRTABLE_POSTS_TABLE || 'Posts';
-const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
-
-// Routes
-app.get('/', (req, res) => {
-  res.json({ 
-    message: 'HackatimeSync Server is running!',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
-});
-
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Sync routes
-app.get('/api/sync', (req, res) => {
-  res.json({ 
-    message: 'Sync endpoint ready',
-    status: 'not implemented'
-  });
-});
-
-app.post('/api/sync', (req, res) => {
-  res.json({ 
-    message: 'Sync data received',
-    data: req.body,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Test endpoint to verify Hackatime API functionality
-app.get('/api/test-hackatime/:slackId', async (req, res) => {
-  const slackId = req.params.slackId;
-  
-  if (!slackId) {
-    return res.status(400).json({ error: 'Missing slackId parameter' });
-  }
-  
-  try {
-    const hackatimeData = await fetchHackatimeData(slackId);
-    res.json({
-      success: true,
-      slackId,
-      hackatimeData,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// SyncAllGames endpoint - manually trigger a sync
-app.get('/api/SyncAllGames', async (req, res) => {
-  if (isSyncRunning) {
-    return res.status(409).json({ 
-      message: 'Sync already running',
-      lastSyncTime: lastSyncTime?.toISOString(),
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  try {
-    console.log('Manual sync triggered via API...');
-    const result = await performFullSync();
-    res.json(result);
-  } catch (error) {
-    console.error('Manual sync error:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Failed to sync games',
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// Sync status endpoint
-app.get('/api/sync-status', (req, res) => {
-  res.json({
-    isRunning: isSyncRunning,
-    lastSyncTime: lastSyncTime?.toISOString(),
-    lastSyncResult: lastSyncResult,
-    lastError: syncError?.message,
-    nextSyncIn: lastSyncTime ? SYNC_INTERVAL - (Date.now() - lastSyncTime.getTime()) : null,
-    syncIntervalMinutes: SYNC_INTERVAL / 1000 / 60,
-    timestamp: new Date().toISOString()
-  });
-});
 
 // Airtable helper functions
 async function airtableRequest(path, options = {}) {
@@ -311,8 +173,6 @@ async function airtableRequest(path, options = {}) {
   }
   return response.json();
 }
-
-
 
 async function fetchAllGames() {
   let allRecords = [];
@@ -370,8 +230,6 @@ async function fetchHackatimeData(slackId) {
   }
 }
 
-
-
 // Helper function to calculate project seconds with claiming to prevent double counting across games
 function calculateProjectSecondsWithClaiming(hackatimeData, gameProjectsField, claimedProjects) {
   let totalSeconds = 0;
@@ -415,41 +273,6 @@ function calculateProjectSecondsWithClaiming(hackatimeData, gameProjectsField, c
   return totalSeconds;
 }
 
-// Legacy helper function (kept for backwards compatibility if needed)
-function calculateProjectSeconds(hackatimeData, gameProjectsField) {
-  let totalSeconds = 0;
-  
-  if (!gameProjectsField || !hackatimeData.projects.length) {
-    return totalSeconds;
-  }
-  
-  // Parse the game's Hackatime Projects field (can be comma-separated)
-  const projectNames = Array.isArray(gameProjectsField) 
-    ? gameProjectsField.filter(Boolean)
-    : (typeof gameProjectsField === 'string' ? gameProjectsField.split(',').map(p => p.trim()) : []);
-  
-  // Track which projects we've already counted to avoid double counting
-  const countedProjects = new Set();
-  
-  for (const projectName of projectNames) {
-    if (!projectName || countedProjects.has(projectName.toLowerCase())) {
-      continue; // Skip empty names or already counted projects
-    }
-    
-    const matchingProject = hackatimeData.projects.find(p => 
-      p.name && p.name.toLowerCase() === projectName.toLowerCase()
-    );
-    
-    if (matchingProject) {
-      totalSeconds += matchingProject.total_seconds || 0;
-      countedProjects.add(projectName.toLowerCase());
-      console.log(`  ├─ Project "${projectName}": ${matchingProject.total_seconds}s`);
-    }
-  }
-  
-  return totalSeconds;
-}
-
 async function updateGameHackatimeSeconds(gameId, seconds) {
   const url = `${AIRTABLE_API_BASE}/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_GAMES_TABLE)}/${gameId}`;
   
@@ -480,13 +303,52 @@ async function updateGameHackatimeSeconds(gameId, seconds) {
   }
 }
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'Something went wrong!',
-    message: err.message
+// Minimal middleware - only what's needed
+app.use(express.json({ limit: '1mb' }));
+
+// Essential routes only
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy',
+    timestamp: new Date().toISOString()
   });
+});
+
+// Manual sync trigger (for debugging/monitoring)
+app.get('/api/sync-status', (req, res) => {
+  res.json({
+    isRunning: isSyncRunning,
+    lastSyncTime: lastSyncTime?.toISOString(),
+    lastError: syncError?.message,
+    nextSyncIn: lastSyncTime ? SYNC_INTERVAL - (Date.now() - lastSyncTime.getTime()) : null,
+    syncIntervalMinutes: SYNC_INTERVAL / 1000 / 60,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Manual sync trigger
+app.post('/api/sync', async (req, res) => {
+  if (isSyncRunning) {
+    return res.status(409).json({ 
+      message: 'Sync already running',
+      lastSyncTime: lastSyncTime?.toISOString(),
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  try {
+    console.log('Manual sync triggered via API...');
+    const result = await performFullSync();
+    res.json(result);
+  } catch (error) {
+    console.error('Manual sync error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to sync games',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // 404 handler
@@ -497,9 +359,18 @@ app.use((req, res) => {
   });
 });
 
+// Start background sync interval
+console.log(`🔄 Starting background sync every ${SYNC_INTERVAL / 1000 / 60} minutes...`);
+setInterval(runBackgroundSync, SYNC_INTERVAL);
+
+// Run initial sync after 10 seconds
+setTimeout(() => {
+  console.log('🚀 Running initial sync in 10 seconds...');
+  runBackgroundSync();
+}, 10000);
+
 app.listen(PORT, () => {
   console.log(`HackatimeSync server is running on port ${PORT}`);
-  console.log(`Visit http://localhost:${PORT} to test the server`);
 });
 
 module.exports = app;
