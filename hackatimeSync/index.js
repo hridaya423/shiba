@@ -3,13 +3,13 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 // Global sync state
 let isSyncRunning = false;
 let lastSyncTime = null;
 let lastSyncResult = null;
 let syncError = null;
+let syncCount = 0;
 
 // Airtable configuration
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
@@ -17,27 +17,66 @@ const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 const AIRTABLE_GAMES_TABLE = process.env.AIRTABLE_GAMES_TABLE || 'Games';
 const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
 
-// Background sync function
-async function runBackgroundSync() {
+// Smart backoff configuration
+const MAX_RETRIES = 5;
+const BASE_DELAY = 1000; // 1 second base delay
+
+// Continuous sync function
+async function runContinuousSync() {
   if (isSyncRunning) {
     console.log('Sync already running, skipping...');
     return;
   }
 
   isSyncRunning = true;
-  console.log(`\n🔄 Starting background sync at ${new Date().toISOString()}`);
+  syncCount++;
+  console.log(`\n🔄 Starting continuous sync #${syncCount} at ${new Date().toISOString()}`);
 
   try {
     const result = await performFullSync();
     lastSyncResult = result;
     lastSyncTime = new Date();
     syncError = null;
-    console.log(`✅ Background sync completed successfully at ${lastSyncTime.toISOString()}`);
+    console.log(`✅ Continuous sync #${syncCount} completed successfully at ${lastSyncTime.toISOString()}`);
+    
+    // Start the next sync immediately
+    console.log('🔄 Starting next sync immediately...');
+    setTimeout(() => {
+      isSyncRunning = false; // Allow next sync to start
+      runContinuousSync();
+    }, 1000); // Small delay to prevent overwhelming
+    
   } catch (error) {
     syncError = error;
-    console.error(`❌ Background sync failed:`, error.message);
-  } finally {
-    isSyncRunning = false;
+    console.error(`❌ Continuous sync #${syncCount} failed:`, error.message);
+    
+    // Even on error, try again after a short delay
+    console.log('🔄 Retrying sync after error...');
+    setTimeout(() => {
+      isSyncRunning = false; // Allow retry to start
+      runContinuousSync();
+    }, 5000); // 5 second delay on errors
+  }
+}
+
+// Smart retry function with exponential backoff
+async function retryWithBackoff(fn, maxRetries = MAX_RETRIES) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (error.message.includes('429') || error.message.includes('rate limit')) {
+        if (attempt === maxRetries) {
+          throw error; // Give up after max retries
+        }
+        
+        const delay = BASE_DELAY * Math.pow(2, attempt); // Exponential backoff
+        console.log(`⚠️ Rate limited (attempt ${attempt + 1}/${maxRetries + 1}), backing off for ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error; // Re-throw non-rate-limit errors immediately
+    }
   }
 }
 
@@ -79,19 +118,24 @@ async function performFullSync() {
   });
   console.log(`Found ${uniqueUsersAll.length} unique users; ${uniqueUsers.length} with Hackatime Projects`);
   
-  // Fetch Hackatime data for each unique user
+  // Fetch Hackatime data for each unique user with smart retry
   const userHackatimeData = {};
   for (let i = 0; i < uniqueUsers.length; i++) {
     const slackId = uniqueUsers[i];
     console.log(`Fetching Hackatime data for user ${i + 1}/${uniqueUsers.length}: ${slackId}`);
     
     try {
-      userHackatimeData[slackId] = await fetchHackatimeData(slackId);
+      // Use retry with backoff for Hackatime API calls
+      userHackatimeData[slackId] = await retryWithBackoff(async () => {
+        return await fetchHackatimeData(slackId);
+      });
+      
       // Small delay to be respectful to Hackatime API
       await new Promise(resolve => setTimeout(resolve, 200));
     } catch (error) {
-      console.error(`Error fetching Hackatime data for ${slackId}:`, error.message);
-      userHackatimeData[slackId] = { projects: [], total_seconds: 0 };
+      console.error(`❌ Failed to fetch Hackatime data for ${slackId} after retries:`, error.message);
+      // Don't default to 0 - skip this user entirely if we can't get data
+      continue;
     }
   }
   
@@ -106,6 +150,7 @@ async function performFullSync() {
   // Update each game with calculated seconds
   let successCount = 0;
   let errorCount = 0;
+  let skippedCount = 0;
   
   for (let i = 0; i < allGames.length; i++) {
     const game = allGames[i];
@@ -117,12 +162,20 @@ async function performFullSync() {
     // Skip update if no slack id or hackatime projects
     if (!slackId || !fields['Hackatime Projects']) {
       console.log(`Skipping ${fields.Name} - missing slack id or hackatime projects`);
+      skippedCount++;
+      continue;
+    }
+    
+    // Skip if we don't have Hackatime data for this user (due to rate limiting)
+    if (!userHackatimeData[slackId]) {
+      console.log(`Skipping ${fields.Name} - no Hackatime data available for user ${slackId} (likely rate limited)`);
+      skippedCount++;
       continue;
     }
     
     try {
       // Get the user's Hackatime data (already fetched)
-      const hackatimeData = userHackatimeData[slackId] || { projects: [], total_seconds: 0 };
+      const hackatimeData = userHackatimeData[slackId];
       
       // Calculate total seconds for this specific game's projects (with claiming)
       const totalSeconds = calculateProjectSecondsWithClaiming(
@@ -131,11 +184,18 @@ async function performFullSync() {
         userClaimedProjects[slackId]
       );
       
-      // Update the game in Airtable
-      await updateGameHackatimeSeconds(game.id, totalSeconds);
+      // Update the game in Airtable with retry
+      const updateSuccess = await retryWithBackoff(async () => {
+        return await updateGameHackatimeSeconds(game.id, totalSeconds);
+      });
       
-      successCount++;
-      console.log(`✅ Updated ${fields.Name}: ${totalSeconds} seconds`);
+      if (updateSuccess) {
+        successCount++;
+        console.log(`✅ Updated ${fields.Name}: ${totalSeconds} seconds`);
+      } else {
+        errorCount++;
+        console.error(`❌ Failed to update ${fields.Name} in Airtable`);
+      }
       
     } catch (error) {
       errorCount++;
@@ -143,7 +203,7 @@ async function performFullSync() {
     }
   }
   
-  console.log(`Sync complete! ${successCount} successful, ${errorCount} errors`);
+  console.log(`Sync complete! ${successCount} successful, ${errorCount} errors, ${skippedCount} skipped`);
   
   return {
     success: true,
@@ -151,6 +211,7 @@ async function performFullSync() {
     uniqueUsers: uniqueUsers.length,
     successfulUpdates: successCount,
     errors: errorCount,
+    skipped: skippedCount,
     timestamp: new Date().toISOString()
   };
 }
@@ -198,36 +259,35 @@ async function fetchAllGames() {
   return allRecords;
 }
 
-// Hackatime API integration
+// Hackatime API integration with better error handling
 async function fetchHackatimeData(slackId) {
-  if (!slackId) return { projects: [], total_seconds: 0 };
+  if (!slackId) throw new Error('Missing slackId');
   
   const start_date = process.env.HACKATIME_START_DATE || '2025-08-18';
   const end_date = process.env.HACKATIME_END_DATE || new Date().toISOString().slice(0, 10);
   const url = `https://hackatime.hackclub.com/api/v1/users/${encodeURIComponent(slackId)}/stats?features=projects&start_date=${start_date}&end_date=${end_date}`;
   
-  try {
-    console.log(`Fetching Hackatime data for ${slackId}...`);
-    const headers = { Accept: 'application/json' };
-    if (process.env.RACK_ATTACK_BYPASS) {
-      headers['Rack-Attack-Bypass'] = process.env.RACK_ATTACK_BYPASS;
-    }
-    const response = await fetch(url, { headers });
-    
-    if (!response.ok) {
-      console.log(`Hackatime API error for ${slackId}: ${response.status}`);
-      return { projects: [], total_seconds: 0 };
-    }
-    
-    const data = await response.json();
-    const projects = Array.isArray(data?.data?.projects) ? data.data.projects : [];
-    const total_seconds = data?.data?.total_seconds || 0;
-    
-    return { projects, total_seconds };
-  } catch (error) {
-    console.error(`Error fetching Hackatime data for ${slackId}:`, error.message);
-    return { projects: [], total_seconds: 0 };
+  console.log(`Fetching Hackatime data for ${slackId}...`);
+  const headers = { Accept: 'application/json' };
+  if (process.env.RACK_ATTACK_BYPASS) {
+    headers['Rack-Attack-Bypass'] = process.env.RACK_ATTACK_BYPASS;
   }
+  
+  const response = await fetch(url, { headers });
+  
+  if (response.status === 429) {
+    throw new Error('429: Rate limit exceeded');
+  }
+  
+  if (!response.ok) {
+    throw new Error(`Hackatime API error ${response.status}: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  const projects = Array.isArray(data?.data?.projects) ? data.data.projects : [];
+  const total_seconds = data?.data?.total_seconds || 0;
+  
+  return { projects, total_seconds };
 }
 
 // Helper function to calculate project seconds with claiming to prevent double counting across games
@@ -276,31 +336,25 @@ function calculateProjectSecondsWithClaiming(hackatimeData, gameProjectsField, c
 async function updateGameHackatimeSeconds(gameId, seconds) {
   const url = `${AIRTABLE_API_BASE}/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_GAMES_TABLE)}/${gameId}`;
   
-  try {
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        fields: {
-          HackatimeSeconds: seconds
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
-      console.error(`Failed to update game ${gameId}: ${response.status} ${errorText}`);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error(`Error updating game ${gameId}:`, error.message);
-    return false;
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      fields: {
+        HackatimeSeconds: seconds
+      }
+    })
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    throw new Error(`Failed to update game ${gameId}: ${response.status} ${errorText}`);
   }
+  
+  return true;
 }
 
 // Minimal middleware - only what's needed
@@ -320,8 +374,7 @@ app.get('/api/sync-status', (req, res) => {
     isRunning: isSyncRunning,
     lastSyncTime: lastSyncTime?.toISOString(),
     lastError: syncError?.message,
-    nextSyncIn: lastSyncTime ? SYNC_INTERVAL - (Date.now() - lastSyncTime.getTime()) : null,
-    syncIntervalMinutes: SYNC_INTERVAL / 1000 / 60,
+    syncCount: syncCount,
     timestamp: new Date().toISOString()
   });
 });
@@ -359,14 +412,11 @@ app.use((req, res) => {
   });
 });
 
-// Start background sync interval
-console.log(`🔄 Starting background sync every ${SYNC_INTERVAL / 1000 / 60} minutes...`);
-setInterval(runBackgroundSync, SYNC_INTERVAL);
-
-// Run initial sync after 10 seconds
+// Start continuous sync
+console.log('🚀 Starting continuous sync loop...');
 setTimeout(() => {
-  console.log('🚀 Running initial sync in 10 seconds...');
-  runBackgroundSync();
+  console.log('🔄 Starting first sync in 10 seconds...');
+  runContinuousSync();
 }, 10000);
 
 app.listen(PORT, () => {
