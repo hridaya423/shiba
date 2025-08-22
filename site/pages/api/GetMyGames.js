@@ -41,6 +41,14 @@ export default async function handler(req, res) {
             ? rec.fields['Hackatime Projects'].filter(Boolean).join(', ')
             : (typeof rec.fields?.['Hackatime Projects'] === 'string' ? rec.fields['Hackatime Projects'] : ''),
           HoursSpent: rec.fields?.HoursSpent || 0,
+          AveragePlaytestSeconds: rec.fields?.AveragePlaytestSeconds || 0,
+          AverageFunScore: rec.fields?.AverageFunScore || 0,
+          AverageArtScore: rec.fields?.AverageArtScore || 0,
+          AverageCreativityScore: rec.fields?.AverageCreativityScore || 0,
+          AverageAudioScore: rec.fields?.AverageAudioScore || 0,
+          AverageMoodScore: rec.fields?.AverageMoodScore || 0,
+          numberComplete: rec.fields?.numberComplete || 0,
+          Feedback: rec.fields?.Feedback || '',
           posts,
         };
       })
