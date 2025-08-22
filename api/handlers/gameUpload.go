@@ -81,7 +81,7 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 		log.Printf("Authorization header received: %s", authHeader)
 
 		sanitizedHeader := sanitizeForAirtableFormula(authHeader)
-		
+
 		log.Printf("Attempting to validate token: %s", sanitizedHeader)
 
 		// Try different field names for token
@@ -149,7 +149,7 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 			log.Fatal(err)
 		}
 
-		destDir := filepath.Join("/games/" + id.String() + "/")
+		destDir := filepath.Join("./games/" + id.String() + "/")
 		if err := os.MkdirAll(destDir, 0755); err != nil {
 			http.Error(w, "Failed to create game directory: "+err.Error(), http.StatusInternalServerError)
 			return
