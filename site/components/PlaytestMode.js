@@ -83,14 +83,33 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
 
   // Fetch posts when entering stage 1
   useEffect(() => {
-    if (currentStage === 1 && token) {
+    if (currentStage === 1 && playtestGame?.gameLink) {
       const fetchPosts = async () => {
         setPostsLoading(true);
         try {
-          const res = await fetch('/api/GetPostsForUser', {
+          // Extract game ID from the gameLink
+          let gameId = '';
+          const gameLink = Array.isArray(playtestGame.gameLink) ? playtestGame.gameLink[0] : playtestGame.gameLink;
+          if (gameLink) {
+            try {
+              const path = gameLink.startsWith('http') ? new URL(gameLink).pathname : gameLink;
+              const m = /\/play\/([^\/?#]+)/.exec(path);
+              gameId = m && m[1] ? decodeURIComponent(m[1]) : '';
+            } catch (_) {
+              gameId = '';
+            }
+          }
+          
+          if (!gameId) {
+            console.error('Could not extract game ID from gameLink:', playtestGame.gameLink);
+            setPosts([]);
+            return;
+          }
+          
+          const res = await fetch('/api/GetPostsForGame', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token }),
+            body: JSON.stringify({ gameId }),
           });
           const data = await res.json().catch(() => []);
           if (Array.isArray(data)) {
@@ -104,7 +123,7 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
       };
       fetchPosts();
     }
-  }, [currentStage, token]);
+  }, [currentStage, playtestGame?.gameLink]);
 
   // Timer effect for game play time
   useEffect(() => {
