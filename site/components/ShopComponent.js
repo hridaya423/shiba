@@ -37,16 +37,17 @@ export default function ShopComponent({ profile, token, setProfile }) {
         
         // Transform the API data to match the expected format for ShopItemRenderer
         const transformedItems = data.map(item => {
-          let image = "/comingSoon.png"; // Default image
+          let images = ["/comingSoon.png"]; // Default image
           
-          // Try to get the image from the Images field
-          if (item.Images && Array.isArray(item.Images) && item.Images[0]?.url) {
-            image = item.Images[0].url;
+          // Get all images from the Images field
+          if (item.Images && Array.isArray(item.Images) && item.Images.length > 0) {
+            images = item.Images.map(img => img.url).filter(url => url);
           }
           
           return {
             id: item.id,
-            image: image,
+            images: images,
+            image: images[0], // Keep for backward compatibility
             itemName: item.Name || "Unknown Item",
             price: item.Cost?.toString() || "0",
             description: item.Description || "",
@@ -326,6 +327,7 @@ export default function ShopComponent({ profile, token, setProfile }) {
                     shopItems.map((item, index) => (
                       <ShopItemRenderer
                         key={item.id || index}
+                        images={item.images}
                         image={item.image}
                         itemName={item.itemName}
                         price={item.price}
