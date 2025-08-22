@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import HomeScreen from "@/components/HomeScreen";
 import StartScreen from "@/components/StartScreen";
 import MyGamesComponent from "@/components/MyGamesComponent";
@@ -10,6 +11,7 @@ import PlaytestMode from "@/components/PlaytestMode";
 import useAudioManager from "@/components/useAudioManager";
 
 export default function Home() {
+  const router = useRouter();
   const games = [
     {
       name: "My Games",
@@ -61,6 +63,18 @@ export default function Home() {
   const goHome = () => {
     setAppOpen("Home");
   };
+
+  // Handle URL query parameters
+  useEffect(() => {
+    if (router.isReady) {
+      const { openProfile } = router.query;
+      if (openProfile === "true") {
+        setAutoOpenProfile(true);
+        // Clean up the URL without triggering a page reload
+        router.replace("/", undefined, { shallow: true });
+      }
+    }
+  }, [router.isReady, router.query]);
 
   // Reset autoOpenProfile after it's been used
   useEffect(() => {

@@ -1,9 +1,12 @@
 import { useEffect, useState, useRef, useMemo } from "react";
+import dynamic from 'next/dynamic';
 import CreateGameModal from "@/components/CreateGameModal";
 import useAudioManager from "@/components/useAudioManager";
 import TopBar from "@/components/TopBar";
 import RadarChart from "@/components/RadarChart";
 import { uploadGame as uploadGameUtil } from "@/components/utils/uploadGame";
+
+const PostAttachmentRenderer = dynamic(() => import('@/components/utils/PostAttachmentRenderer'), { ssr: false });
 
 function ShaderToyBackground() {
   const canvasRef = useRef(null);
@@ -704,12 +707,14 @@ function DetailView({
   useEffect(() => {
     // Fetch Hackatime projects via server proxy to avoid CORS
     const fetchProjects = async () => {
-      console.log('Fetching projects for SlackId:', SlackId);
+      console.log('Fetching projects for SlackId:', SlackId, 'and gameId:', game?.id);
       if (!SlackId) return;
+      let url = `/api/hackatimeProjects?slackId=${encodeURIComponent(SlackId)}`;
+      if (game?.id) {
+        url += `&gameId=${encodeURIComponent(game.id)}`;
+      }
       try {
-        const res = await fetch(
-          `/api/hackatimeProjects?slackId=${encodeURIComponent(SlackId)}`,
-        );
+        const res = await fetch(url);
         const json = await res.json().catch(() => ({}));
         const names = Array.isArray(json?.projects) ? json.projects : [];
         const projectsWithTimeData = Array.isArray(json?.projectsWithTime) ? json.projectsWithTime : [];
@@ -723,7 +728,7 @@ function DetailView({
       }
     };
     fetchProjects();
-  }, [SlackId]);
+  }, [SlackId, game?.id]);
 
   // Fetch user profile
   useEffect(() => {
@@ -1957,23 +1962,17 @@ function DetailView({
                     </button>
                   </div>
                   <div style={{ marginTop: 8 }}>
-                    {(() => {
-                      const AttachmentRenderer =
-                        require("@/components/utils/PostAttachmentRenderer").default;
-                      return (
-                        <AttachmentRenderer
-                          content={p.content}
-                          attachments={p.attachments}
-                          playLink={p.PlayLink}
-                          gameName={game?.name || ""}
-                          thumbnailUrl={game?.thumbnailUrl || ""}
-                          token={token}
-                          onPlayCreated={(play) => {
-                            console.log("Play created:", play);
-                          }}
-                        />
-                      );
-                    })()}
+                    <PostAttachmentRenderer
+                      content={p.content}
+                      attachments={p.attachments}
+                      playLink={p.PlayLink}
+                      gameName={game?.name || ""}
+                      thumbnailUrl={game?.thumbnailUrl || ""}
+                      token={token}
+                      onPlayCreated={(play) => {
+                        console.log("Play created:", play);
+                      }}
+                    />
                   </div>
                 </div>
               ))}

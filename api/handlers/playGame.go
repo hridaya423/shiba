@@ -3,40 +3,43 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"path/filepath"
+	"os"
 	"shiba-api/structs"
+	"shiba-api/sync"
 
 	"github.com/go-chi/chi/v5"
 )
 
-
-
-// validateAssetPath ensures the asset path is safe and doesn't contain path traversal
-func validateAssetPath(assetPath string) bool {
-	if assetPath == "" {
-		return true
-	}
-	// Check for path traversal attempts
-	cleanPath := filepath.Clean(assetPath)
-	if cleanPath != assetPath {
-		return false
-	}
-	// Prevent access to hidden files or directories
-	if filepath.Base(assetPath)[0] == '.' {
-		return false
-	}
-	return true
-}
-
 func MainGamePlayHandler(srv *structs.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gameId := chi.URLParam(r, "gameId")
+		if gameId == "" {
+			http.Error(w, "Game ID is required", http.StatusBadRequest)
+			return
+		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-		var filepath = "/games/" + gameId + "/index.html"
+		var filepath = "./games/" + gameId + "/index.html"
 
 		log.Printf("Serving game %s from %s", gameId, filepath)
+
+		// check if the file is present
+		// if not, return 404
+		if _, err := os.Stat(filepath); os.IsNotExist(err) {
+			println("File does not exist:", filepath)
+			// Trigger a fetch for the game from the sync manager using a goroutine
+			go func() {
+				err := sync.FetchGameFromR2(srv, gameId)
+				if err != nil {
+					log.Printf("Failed to fetch game %s: %v", gameId, err)
+				} else {
+					log.Printf("Successfully fetched game %s", gameId)
+				}
+			}()
+			// Send a message saying to wait for the game to be fetched
+			http.Error(w, "Game not found. The server will try to download it asap. Please try again later.", http.StatusNotFound)
+		}
 
 		http.ServeFile(w, r, filepath)
 	}
@@ -45,17 +48,18 @@ func MainGamePlayHandler(srv *structs.Server) http.HandlerFunc {
 func AssetsPlayHandler(srv *structs.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gameId := chi.URLParam(r, "gameId")
+		if gameId == "" {
+			http.Error(w, "Game ID is required", http.StatusBadRequest)
+			return
+		}
 
 		assetPath := chi.URLParam(r, "*")
 		if assetPath == "" {
-			var filepath = "/games/" + gameId + "/index.html"
+			var filepath = "./games/" + gameId + "/index.html"
+
 			http.ServeFile(w, r, filepath)
 		} else {
-			if !validateAssetPath(assetPath) {
-				http.Error(w, "Invalid asset path", http.StatusBadRequest)
-				return
-			}
-			var filepath = "/games/" + gameId + "/" + assetPath
+			var filepath = "./games/" + gameId + "/" + assetPath
 			http.ServeFile(w, r, filepath)
 		}
 	}

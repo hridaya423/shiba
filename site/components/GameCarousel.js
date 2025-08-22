@@ -1,8 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/router";
 import useEmblaCarousel from "embla-carousel-react";
 import GameCard from "@/components/GameCard";
 
-export default function GameCarousel({ games, onSelect, playSound, playClip, setAppOpen, stopAll, selectedIndex: controlledIndex, isProfileOpen, isEventsOpen, isOnboardingOpen }) {
+// Map game names to routes
+const getRouteForGame = (gameName) => {
+  const routeMap = {
+    "My Games": "/my-games",
+    "Global Games": "/global-games",
+    "Shop": "/shop",
+    "Help": "/help"
+  };
+  return routeMap[gameName] || "/";
+};
+
+export default function GameCarousel({ games, onSelect, playSound, playClip, setAppOpen, stopAll, selectedIndex: controlledIndex, isProfileOpen, isEventsOpen, isOnboardingOpen, isMuted }) {
+  const router = useRouter();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const numGames = games?.length ?? 0;
 
@@ -35,11 +48,12 @@ export default function GameCarousel({ games, onSelect, playSound, playClip, set
         if (activeName) {
           // Stop any currently playing audio (SFX or clip) before opening
           try { stopAll?.(); } catch (_) {}
-          setAppOpen?.(activeName);
+          const route = getRouteForGame(activeName);
+          router.push(route);
         }
       }
     },
-    [embla, playSound, setAppOpen, games, selectedIndex, isProfileOpen, isEventsOpen, isOnboardingOpen]
+    [embla, playSound, router, games, selectedIndex, isProfileOpen, isEventsOpen, isOnboardingOpen, stopAll]
   );
 
   useEffect(() => {
@@ -62,7 +76,7 @@ export default function GameCarousel({ games, onSelect, playSound, playClip, set
       setSelectedIndex(idx);
       if (onSelect) onSelect(idx);
       const clip = games?.[idx]?.gameClipAudio;
-      if (clip) {
+      if (clip && !isMuted) {
         playClip?.(clip);
       }
     };
@@ -71,7 +85,7 @@ export default function GameCarousel({ games, onSelect, playSound, playClip, set
     return () => {
       embla.off("select", onSelectInternal);
     };
-  }, [embla, onSelect, games, playClip]);
+  }, [embla, onSelect, games, playClip, isMuted]);
 
   // Pause music when any modal is open
   useEffect(() => {
@@ -126,7 +140,8 @@ export default function GameCarousel({ games, onSelect, playSound, playClip, set
                 if (idx === current) {
                   // Open the active game
                   try { stopAll?.(); } catch (_) {}
-                  setAppOpen?.(game.name);
+                  const route = getRouteForGame(game.name);
+                  router.push(route);
                   return;
                 }
                 const total = games.length;
