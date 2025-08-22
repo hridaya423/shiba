@@ -56,7 +56,14 @@ export default function ShopComponent({ profile, token, setProfile }) {
           };
         });
         
-        setShopItems(transformedItems);
+        // Sort items by price (lowest to highest)
+        const sortedItems = transformedItems.sort((a, b) => {
+          const priceA = parseInt(a.price) || 0;
+          const priceB = parseInt(b.price) || 0;
+          return priceA - priceB;
+        });
+        
+        setShopItems(sortedItems);
       } catch (err) {
         console.error('Error fetching shop items:', err);
         setError('Failed to load shop items');
@@ -309,37 +316,52 @@ export default function ShopComponent({ profile, token, setProfile }) {
             )}
             
             {!isLoading && !error && (
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "20px"
-              }}>
-                {shopItems.length > 0 ? (
-                  shopItems.map((item, index) => (
-                    <ShopItemRenderer
-                      key={item.id || index}
-                      image={item.image}
-                      itemName={item.itemName}
-                      price={item.price}
-                      inStock={item.inStock}
-                      userBalance={profile?.sssBalance || 0}
-                      onBuyClick={() => {
-                        setSelectedItem(item);
-                        setIsPurchaseModalOpen(true);
-                      }}
-                    />
-                  ))
-                ) : (
+              <>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: "20px"
+                }}>
+                  {shopItems.length > 0 ? (
+                    shopItems.map((item, index) => (
+                      <ShopItemRenderer
+                        key={item.id || index}
+                        image={item.image}
+                        itemName={item.itemName}
+                        price={item.price}
+                        description={item.description}
+                        inStock={item.inStock}
+                        userBalance={profile?.sssBalance || 0}
+                        onBuyClick={() => {
+                          setSelectedItem(item);
+                          setIsPurchaseModalOpen(true);
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <div style={{
+                      gridColumn: "1 / -1",
+                      textAlign: "center",
+                      padding: "40px",
+                      color: "#2d5a27"
+                    }}>
+                      <p>No shop items available at the moment.</p>
+                    </div>
+                  )}
+                </div>
+                
+                {shopItems.length > 0 && (
                   <div style={{
-                    gridColumn: "1 / -1",
                     textAlign: "center",
-                    padding: "40px",
-                    color: "#2d5a27"
+                    padding: "40px 20px 20px 20px",
+                    color: "#2d5a27",
+                    fontStyle: "italic",
+                    fontSize: "16px"
                   }}>
-                    <p>No shop items available at the moment.</p>
+                    <p>More items coming soon...</p>
                   </div>
                 )}
-              </div>
+              </>
             )}
           </>
         )}

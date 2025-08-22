@@ -4,11 +4,13 @@ export default function ShopItemRenderer({
   image, 
   itemName, 
   price, 
+  description = "",
   inStock = 0, 
   userBalance = 0,
   onBuyClick 
 }) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
   
   const priceNumber = parseInt(price) || 0;
   const stockNumber = parseInt(inStock) || 0;
@@ -51,16 +53,52 @@ export default function ShopItemRenderer({
       backgroundColor: "#fff",
       position: "relative"
     }}>
-      <img
-        src={image}
-        alt={itemName}
-        style={{
-          width: "100%",
-          height: "240px",
-          objectFit: "cover",
-          marginBottom: "12px"
-        }}
-      />
+      <div style={{
+        position: "relative",
+        width: "100%",
+        height: "240px",
+        marginBottom: "12px",
+        cursor: "pointer"
+      }}
+      onMouseEnter={() => setShowDescription(true)}
+      onMouseLeave={() => setShowDescription(false)}
+      >
+        <img
+          src={image}
+          alt={itemName}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover"
+          }}
+        />
+        {showDescription && description && (
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+            transition: "background-color 0.2s ease"
+          }}>
+            <p style={{
+              color: "white",
+              fontSize: "14px",
+              lineHeight: "1.4",
+              textAlign: "center",
+              margin: 0,
+              fontWeight: "500"
+            }}>
+              {description}
+            </p>
+          </div>
+        )}
+      </div>
       <p style={{
         margin: "0 0 8px 0",
         fontSize: "16px",
