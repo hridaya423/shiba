@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import useEmblaCarousel from "embla-carousel-react";
 
 export default function ShopItemRenderer({ 
+  images = [],
   image, 
   itemName, 
   price, 
@@ -12,6 +14,18 @@ export default function ShopItemRenderer({
   const [showTooltip, setShowTooltip] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
   
+  // Use images array if provided, otherwise fall back to single image
+  const imageArray = images && images.length > 0 ? images : [image];
+  const hasMultipleImages = imageArray.length > 1;
+  
+  const [emblaRef, embla] = useEmblaCarousel({
+    loop: hasMultipleImages,
+    align: "center",
+    slidesToScroll: 1,
+  });
+  
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  
   const priceNumber = parseInt(price) || 0;
   const stockNumber = parseInt(inStock) || 0;
   const balanceNumber = parseInt(userBalance) || 0;
@@ -19,6 +33,18 @@ export default function ShopItemRenderer({
   const hasEnoughBalance = balanceNumber >= priceNumber;
   const hasStock = stockNumber > 0;
   const isDisabled = !hasEnoughBalance || !hasStock;
+  
+  // Handle carousel selection
+  useEffect(() => {
+    if (!embla || !hasMultipleImages) return;
+    
+    const onSelect = () => {
+      setSelectedImageIndex(embla.selectedScrollSnap());
+    };
+    
+    embla.on("select", onSelect);
+    return () => embla.off("select", onSelect);
+  }, [embla, hasMultipleImages]);
   
   const getTooltipText = () => {
     if (!hasStock) {
@@ -58,20 +84,148 @@ export default function ShopItemRenderer({
         width: "100%",
         height: "240px",
         marginBottom: "12px",
-        cursor: "pointer"
+        cursor: hasMultipleImages ? "pointer" : "default"
       }}
-      onMouseEnter={() => setShowDescription(true)}
-      onMouseLeave={() => setShowDescription(false)}
+      onMouseEnter={() => {
+        setShowDescription(true);
+      }}
+      onMouseLeave={() => {
+        setShowDescription(false);
+      }}
       >
-        <img
-          src={image}
-          alt={itemName}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover"
-          }}
-        />
+        {hasMultipleImages ? (
+          <div ref={emblaRef} style={{ overflow: "hidden", width: "100%", height: "100%" }}>
+            <div style={{ display: "flex", height: "100%" }}>
+              {imageArray.map((img, index) => (
+                <div
+                  key={index}
+                  style={{
+                    flex: "0 0 100%",
+                    minWidth: 0,
+                    position: "relative"
+                  }}
+                >
+                  <img
+                    src={img}
+                    alt={`${itemName} - Image ${index + 1}`}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover"
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+            
+            {/* Navigation arrows */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (embla) embla.scrollPrev();
+              }}
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%) translateX(-120px)",
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                color: "white",
+                border: "none",
+                borderRadius: "50%",
+                width: "32px",
+                height: "32px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                fontSize: "16px",
+                fontWeight: "bold",
+                zIndex: 10,
+                transition: "background-color 0.2s ease"
+              }}
+              onMouseOver={(e) => {
+                e.target.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+              }}
+              onMouseOut={(e) => {
+                e.target.style.backgroundColor = "rgba(0, 0, 0, 0.6)";
+              }}
+            >
+              ‹
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (embla) embla.scrollNext();
+              }}
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%) translateX(120px)",
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                color: "white",
+                border: "none",
+                borderRadius: "50%",
+                width: "32px",
+                height: "32px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                fontSize: "16px",
+                fontWeight: "bold",
+                zIndex: 10,
+                transition: "background-color 0.2s ease"
+              }}
+              onMouseOver={(e) => {
+                e.target.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+              }}
+              onMouseOut={(e) => {
+                e.target.style.backgroundColor = "rgba(0, 0, 0, 0.6)";
+              }}
+            >
+              ›
+            </button>
+          </div>
+        ) : (
+          <img
+            src={imageArray[0]}
+            alt={itemName}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover"
+            }}
+          />
+        )}
+        
+        {/* Image indicators for multiple images */}
+        {hasMultipleImages && (
+          <div style={{
+            position: "absolute",
+            bottom: "8px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            gap: "4px"
+          }}>
+            {imageArray.map((_, index) => (
+              <div
+                key={index}
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  backgroundColor: index === selectedImageIndex ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.4)",
+                  transition: "background-color 0.2s ease"
+                }}
+              />
+            ))}
+          </div>
+        )}
+        
         {showDescription && description && (
           <div style={{
             position: "absolute",
