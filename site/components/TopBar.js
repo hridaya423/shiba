@@ -22,7 +22,7 @@ export default function TopBar({ backgroundColor, title, image, onBack }) {
   return (
     <div
       style={{
-        position: "absolute",
+        position: "fixed",
         top: 0,
         left: 0,
         width: "100%",

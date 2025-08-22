@@ -247,10 +247,11 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             className="opening-video"
             src="https://www.youtube.com/embed/MdnJ_neHE7Q?si=nHBkEvAzlmyh_01_"
             title="YouTube video player"
-            frameborder="0"
+            frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+            credentialless
           ></iframe>
 
           <div

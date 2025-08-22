@@ -15,6 +15,8 @@ COPY --from=builder /src/server /server
 RUN chown appuser:appgroup /server
 # Create games directory with proper permissions
 RUN mkdir -p /games && chown appuser:appgroup /games
+# Declare volume for persistent storage
+VOLUME ["/games"]
 EXPOSE 3001
 USER appuser
 HEALTHCHECK CMD exit 0

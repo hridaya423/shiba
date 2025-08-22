@@ -89,7 +89,7 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	srv := NewServer(s3Client, "./local_storage", "games")
+	srv := NewServer(s3Client, "/games", "games")
 
 	srv.AirtableBaseTable = srv.AirtableClient.GetTable(os.Getenv("AIRTABLE_BASE_ID"), "Users")
 	if srv.AirtableBaseTable == nil {
@@ -123,6 +123,16 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           600,
 	}))
+
+	// Add middleware for Godot web support headers
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Required headers for Godot web games (cross-origin isolation)
+			w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
+			w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
+			next.ServeHTTP(w, r)
+		})
+	})
 
 	api.SetupRoutes(r, srv)
 

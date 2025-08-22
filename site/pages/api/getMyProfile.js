@@ -171,6 +171,7 @@ function normalizeProfileFields(f) {
     phoneNumber: typeof f['phone number'] === 'string' ? f['phone number'] : '',
     slackId: typeof f['slack id'] === 'string' ? f['slack id'] : '',
     referralCode: typeof f['ReferralCode'] === 'string' ? f['ReferralCode'] : '',
+    referralNumber: typeof f['ReferralNumber'] === 'number' ? f['ReferralNumber'] : (typeof f['ReferralNumber'] === 'string' ? parseInt(f['ReferralNumber']) || 0 : 0),
     hasOnboarded: hasOnboarded,
     sssBalance: sssBalance,
     address: {
