@@ -197,6 +197,25 @@ async function getPlaytestsForUser(userId) {
               gameDetails.gameThumbnail = gameData.fields.Thumbnail;
             }
             
+            // Get the game owner's slack ID
+            const ownerId = Array.isArray(gameData.fields.Owner) 
+              ? gameData.fields.Owner[0] 
+              : gameData.fields.Owner;
+            
+            if (ownerId) {
+              try {
+                const ownerData = await airtableRequest(`Users/${encodeURIComponent(ownerId)}`, {
+                  method: 'GET',
+                });
+                
+                if (ownerData && ownerData.fields) {
+                  gameDetails.ownerSlackId = ownerData.fields['slack id'] || '';
+                }
+              } catch (error) {
+                console.log('Error fetching owner details for:', ownerId, error.message);
+              }
+            }
+            
             console.log('Fetched game details:', gameDetails);
           }
         } catch (error) {
@@ -214,6 +233,7 @@ async function getPlaytestsForUser(userId) {
         gameName: gameDetails.gameName || playtest.fields.GameName || playtest.fields['Game Name'] || '',
         gameLink: gameDetails.playableURL || playtest.fields.GameLink || playtest.fields['Game Link'] || '',
         gameThumbnail: gameDetails.gameThumbnail || '',
+        ownerSlackId: gameDetails.ownerSlackId || '',
         HoursSpent: playtest.fields?.HoursSpent || 0,
         // Rating data for completed playtests
         funScore: playtest.fields['Fun Score'] || 0,

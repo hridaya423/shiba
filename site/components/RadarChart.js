@@ -32,6 +32,18 @@ const RadarChart = ({
   animate = false,
   isMiniature = false
 }) => {
+  // Create a subtle rainbow gradient
+  const createRainbowGradient = (ctx) => {
+    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 200);
+    gradient.addColorStop(0, 'rgba(255, 100, 100, 0.3)');    // Red
+    gradient.addColorStop(0.2, 'rgba(255, 150, 100, 0.3)');  // Orange
+    gradient.addColorStop(0.4, 'rgba(255, 200, 100, 0.3)');  // Yellow
+    gradient.addColorStop(0.6, 'rgba(100, 255, 100, 0.3)');  // Green
+    gradient.addColorStop(0.8, 'rgba(100, 100, 255, 0.3)');  // Blue
+    gradient.addColorStop(1, 'rgba(200, 100, 255, 0.3)');    // Purple
+    return gradient;
+  };
+
   const chartData = {
     labels: labels,
     datasets: [
@@ -39,7 +51,14 @@ const RadarChart = ({
         label: 'Ratings',
         data: data,
         fill: true,
-        backgroundColor: backgroundColor,
+        backgroundColor: (context) => {
+          const chart = context.chart;
+          const { ctx, chartArea } = chart;
+          if (!chartArea) {
+            return backgroundColor;
+          }
+          return createRainbowGradient(ctx);
+        },
         borderColor: borderColor,
         borderWidth: isMiniature ? 1 : 2,
         pointBackgroundColor: pointBackgroundColor,
@@ -85,8 +104,11 @@ const RadarChart = ({
           },
           stepSize: 1,
           min: 0,
-          max: 5
-        }
+          max: 5,
+          beginAtZero: true
+        },
+        suggestedMin: 0,
+        suggestedMax: 5
       }
     },
     plugins: {

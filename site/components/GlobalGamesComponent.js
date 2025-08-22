@@ -326,7 +326,8 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
                           gameThumbnail: playtest.gameThumbnail,
                           playtestId: playtest.playtestId,
                           instructions: playtest.instructions,
-                          HoursSpent: playtest.HoursSpent
+                          HoursSpent: playtest.HoursSpent,
+                          ownerSlackId: playtest.ownerSlackId
                         });
                         setPlaytestMode(true);
                       }
