@@ -83,33 +83,17 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
 
   // Fetch posts when entering stage 1
   useEffect(() => {
-    if (currentStage === 1 && playtestGame?.gameLink) {
+    if (currentStage === 1 && playtestGame?.gameName && playtestGame?.ownerSlackId) {
       const fetchPosts = async () => {
         setPostsLoading(true);
         try {
-          // Extract game ID from the gameLink
-          let gameId = '';
-          const gameLink = Array.isArray(playtestGame.gameLink) ? playtestGame.gameLink[0] : playtestGame.gameLink;
-          if (gameLink) {
-            try {
-              const path = gameLink.startsWith('http') ? new URL(gameLink).pathname : gameLink;
-              const m = /\/play\/([^\/?#]+)/.exec(path);
-              gameId = m && m[1] ? decodeURIComponent(m[1]) : '';
-            } catch (_) {
-              gameId = '';
-            }
-          }
-          
-          if (!gameId) {
-            console.error('Could not extract game ID from gameLink:', playtestGame.gameLink);
-            setPosts([]);
-            return;
-          }
-          
           const res = await fetch('/api/GetPostsForGame', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ gameId }),
+            body: JSON.stringify({ 
+              gameName: playtestGame.gameName,
+              ownerSlackId: playtestGame.ownerSlackId
+            }),
           });
           const data = await res.json().catch(() => []);
           if (Array.isArray(data)) {
@@ -123,7 +107,7 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
       };
       fetchPosts();
     }
-  }, [currentStage, playtestGame?.gameLink]);
+  }, [currentStage, playtestGame?.gameName, playtestGame?.ownerSlackId]);
 
   // Timer effect for game play time
   useEffect(() => {

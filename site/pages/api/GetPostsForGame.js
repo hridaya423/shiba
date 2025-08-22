@@ -18,13 +18,46 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { gameId } = req.body || {};
-    if (!gameId) {
-      return res.status(400).json({ message: 'Missing gameId parameter' });
+    const { gameName, ownerSlackId } = req.body || {};
+    if (!gameName) {
+      return res.status(400).json({ message: 'Missing gameName parameter' });
+    }
+    if (!ownerSlackId) {
+      return res.status(400).json({ message: 'Missing ownerSlackId parameter' });
     }
 
+    // Find the game record by name first
+    const gameRecord = await findGameByName(gameName);
+    if (!gameRecord) {
+      console.log(`[GetPostsForGame] Game not found by name: ${gameName}`);
+      return res.status(200).json([]);
+    }
+
+    console.log(`[GetPostsForGame] Found game record: ${gameRecord.id} for name: ${gameName}`);
+
+    // Verify that the game's owner's slack ID matches the expected ownerSlackId
+    const ownerId = normalizeLinkedIds(gameRecord.fields?.Owner)[0];
+    if (!ownerId) {
+      console.log(`[GetPostsForGame] Game has no owner: ${gameName}`);
+      return res.status(200).json([]);
+    }
+
+    const ownerRecord = await findUserById(ownerId);
+    if (!ownerRecord) {
+      console.log(`[GetPostsForGame] Owner record not found for game: ${gameName}`);
+      return res.status(200).json([]);
+    }
+
+    const gameOwnerSlackId = ownerRecord.fields?.['slack id'] || '';
+    if (gameOwnerSlackId !== ownerSlackId) {
+      console.log(`[GetPostsForGame] Slack ID mismatch. Expected: ${ownerSlackId}, Found: ${gameOwnerSlackId} for game: ${gameName}`);
+      return res.status(200).json([]);
+    }
+
+    console.log(`[GetPostsForGame] Verified owner match for game: ${gameName}, owner: ${ownerSlackId}`);
+
     // Fetch posts for the specific game
-    const posts = await fetchPostsForGame(gameId);
+    const posts = await fetchPostsForGame(gameRecord.id);
     
     return res.status(200).json(posts);
   } catch (error) {
@@ -36,45 +69,18 @@ export default async function handler(req, res) {
 async function fetchPostsForGame(gameId) {
   console.log('[GetPostsForGame] fetchPostsForGame gameId:', gameId);
   
-  // First, try filtering server-side for performance and correctness
-  const tryServerFilter = async () => {
-    const params = new URLSearchParams();
-    params.set('pageSize', '100');
-    params.set('filterByFormula', `ARRAYJOIN({Game}) = "${safeEscapeFormulaString(gameId)}"`);
-    params.set('sort[0][field]', 'Created At');
-    params.set('sort[0][direction]', 'desc');
-    const url = `${encodeURIComponent(AIRTABLE_POSTS_TABLE)}?${params.toString()}`;
-    const page = await airtableRequest(url, { method: 'GET' });
-    const records = Array.isArray(page?.records) ? page.records : [];
-    console.log(`[GetPostsForGame] server filter posts count for ${gameId}:`, records.length);
-    return records;
-  };
-
-  let records = await tryServerFilter();
-  if (!records || records.length === 0) {
-    // Fallback: fetch pages and filter in code
-    let allRecords = [];
-    let offset;
-    do {
-      const params = new URLSearchParams();
-      params.set('pageSize', '100');
-      if (offset) params.set('offset', offset);
-      const url = `${encodeURIComponent(AIRTABLE_POSTS_TABLE)}?${params.toString()}`;
-      const page = await airtableRequest(url, { method: 'GET' });
-      const pageRecords = (page?.records || []).filter((rec) => Array.isArray(rec.fields?.Game) && rec.fields.Game.includes(gameId));
-      allRecords = allRecords.concat(pageRecords);
-      offset = page?.offset;
-    } while (offset);
-    console.log(`[GetPostsForGame] fallback client-filter posts count for ${gameId}:`, allRecords.length);
-    records = allRecords;
-  }
-
-  // Sort newest first using "Created At" (fallback to createdTime)
-  records.sort((a, b) => {
-    const ad = new Date(a?.fields?.['Created At'] || a?.createdTime || 0).getTime();
-    const bd = new Date(b?.fields?.['Created At'] || b?.createdTime || 0).getTime();
-    return bd - ad;
+  // Fetch all posts and filter by game ID
+  const allPosts = await fetchAllAirtableRecords(AIRTABLE_POSTS_TABLE, {
+    sort: [{ field: 'Created At', direction: 'desc' }],
   });
+
+  // Filter posts that are linked to the specific game
+  const postsForGame = allPosts.filter((rec) => {
+    const linkedGameIds = normalizeLinkedIds(rec?.fields?.Game);
+    return linkedGameIds.includes(gameId);
+  });
+
+  console.log(`[GetPostsForGame] found ${postsForGame.length} posts for game ${gameId}`);
 
   // Get game and user information for the posts
   const gameRecord = await findGameById(gameId);
@@ -82,27 +88,37 @@ async function fetchPostsForGame(gameId) {
   const ownerRecord = ownerId ? await findUserById(ownerId) : null;
   const slackId = ownerRecord ? (ownerRecord.fields?.['slack id'] || '') : '';
 
-  return records.map((rec) => ({
-    id: rec.id,
-    postId: rec.fields?.PostID || '',
-    content: rec.fields?.Content || '',
-    createdAt: rec.fields?.['Created At'] || rec.createdTime || '',
-    PlayLink: typeof rec.fields?.PlayLink === 'string' ? rec.fields.PlayLink : '',
-    Attachements: Array.isArray(rec.fields?.Attachements)
-      ? rec.fields.Attachements.map((a) => ({
-          url: a?.url,
-          type: a?.type,
-          filename: a?.filename,
-          id: a?.id,
-          size: a?.size,
-        })).filter((a) => a.url)
-      : [],
-    'slack id': slackId,
-    'Game Name': gameRecord?.fields?.Name || '',
-    GameThumbnail: Array.isArray(gameRecord?.fields?.Thumbnail) && gameRecord.fields.Thumbnail[0]?.url 
-      ? gameRecord.fields.Thumbnail[0].url 
-      : '',
-  }));
+  return postsForGame.map((rec) => {
+    const fields = rec.fields || {};
+    const createdAt = fields['Created At'] || rec.createdTime || '';
+    const playLink = typeof fields.PlayLink === 'string' ? fields.PlayLink : '';
+    const attachments = Array.isArray(fields.Attachements)
+      ? fields.Attachements
+          .map((a) => ({ url: a?.url, type: a?.type, filename: a?.filename, id: a?.id, size: a?.size }))
+          .filter((a) => a.url)
+      : [];
+
+    // Determine thumbnail: prefer post's GameThumbnail, then game's Thumbnail
+    let gameThumbnail = '';
+    if (typeof fields.GameThumbnail === 'string') {
+      gameThumbnail = fields.GameThumbnail;
+    } else if (Array.isArray(fields.GameThumbnail) && fields.GameThumbnail[0]?.url) {
+      gameThumbnail = fields.GameThumbnail[0].url;
+    } else if (Array.isArray(gameRecord?.fields?.Thumbnail) && gameRecord.fields.Thumbnail[0]?.url) {
+      gameThumbnail = gameRecord.fields.Thumbnail[0].url;
+    }
+
+    return {
+      'Created At': createdAt,
+      PlayLink: playLink,
+      Attachements: attachments,
+      'slack id': slackId,
+      'Game Name': gameRecord?.fields?.Name || '',
+      Content: fields.Content || '',
+      PostID: fields.PostID || '',
+      GameThumbnail: gameThumbnail,
+    };
+  });
 }
 
 async function findGameById(gameId) {
@@ -125,30 +141,71 @@ async function findUserById(userId) {
   }
 }
 
+async function findGameByName(gameName) {
+  const gameNameEscaped = safeEscapeFormulaString(gameName);
+  const formula = `{Name} = "${gameNameEscaped}"`;
+  const params = new URLSearchParams({
+    filterByFormula: formula,
+    pageSize: '1',
+  });
+
+  const data = await airtableRequest(`${encodeURIComponent(AIRTABLE_GAMES_TABLE)}?${params.toString()}`, {
+    method: 'GET',
+  });
+  const record = data.records && data.records[0];
+  return record || null;
+}
+
 async function airtableRequest(path, options = {}) {
   const url = `${AIRTABLE_API_BASE}/${AIRTABLE_BASE_ID}/${path}`;
   const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
     ...options,
+    headers: {
+      Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
   });
 
   if (!response.ok) {
-    throw new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+    const text = await response.text().catch(() => '');
+    throw new Error(`Airtable error ${response.status}: ${text}`);
   }
-
   return response.json();
 }
 
 function normalizeLinkedIds(value) {
   if (Array.isArray(value)) {
-    return value.filter(Boolean);
-  } else if (typeof value === 'string') {
-    return value ? [value] : [];
-  } else {
-    return [];
+    if (value.length === 0) return [];
+    if (typeof value[0] === 'string') return value;
+    if (typeof value[0] === 'object' && value[0] && typeof value[0].id === 'string') {
+      return value.map((v) => v.id);
+    }
   }
+  return [];
+}
+
+async function fetchAllAirtableRecords(tableName, { sort, limit } = {}) {
+  let allRecords = [];
+  let offset;
+  do {
+    const params = new URLSearchParams();
+    params.set('pageSize', '100');
+    if (offset) params.set('offset', offset);
+    if (Array.isArray(sort) && sort.length > 0) {
+      sort.forEach((s, idx) => {
+        if (s && s.field) {
+          params.set(`sort[${idx}][field]`, s.field);
+          params.set(`sort[${idx}][direction]`, s.direction === 'asc' ? 'asc' : 'desc');
+        }
+      });
+    }
+    const page = await airtableRequest(`${encodeURIComponent(tableName)}?${params.toString()}`, { method: 'GET' });
+    allRecords = allRecords.concat(page?.records || []);
+    if (typeof limit === 'number' && limit > 0 && allRecords.length >= limit) {
+      return allRecords.slice(0, limit);
+    }
+    offset = page?.offset;
+  } while (offset);
+  return allRecords;
 }
