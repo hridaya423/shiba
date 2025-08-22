@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import CreateGameModal from "@/components/CreateGameModal";
 import useAudioManager from "@/components/useAudioManager";
 import TopBar from "@/components/TopBar";
+import RadarChart from "@/components/RadarChart";
 import { uploadGame as uploadGameUtil } from "@/components/utils/uploadGame";
 
 function ShaderToyBackground() {
@@ -171,6 +172,14 @@ export default function MyGamesComponent({
           thumbnailUrl: g.thumbnailUrl ?? "",
           GitHubURL: g.GitHubURL ?? "",
           HackatimeProjects: g.HackatimeProjects ?? "",
+          AveragePlaytestSeconds: g.AveragePlaytestSeconds ?? 0,
+          AverageFunScore: g.AverageFunScore ?? 0,
+          AverageArtScore: g.AverageArtScore ?? 0,
+          AverageCreativityScore: g.AverageCreativityScore ?? 0,
+          AverageAudioScore: g.AverageAudioScore ?? 0,
+          AverageMoodScore: g.AverageMoodScore ?? 0,
+          numberComplete: g.numberComplete ?? 0,
+          Feedback: g.Feedback ?? '',
           posts: Array.isArray(g.posts) ? g.posts : [],
         }));
         if (isMounted) setMyGames(normalized);
@@ -305,6 +314,14 @@ export default function MyGamesComponent({
           thumbnailUrl: g.thumbnailUrl ?? "",
           GitHubURL: g.GitHubURL ?? "",
           HackatimeProjects: g.HackatimeProjects ?? "",
+          AveragePlaytestSeconds: g.AveragePlaytestSeconds ?? 0,
+          AverageFunScore: g.AverageFunScore ?? 0,
+          AverageArtScore: g.AverageArtScore ?? 0,
+          AverageCreativityScore: g.AverageCreativityScore ?? 0,
+          AverageAudioScore: g.AverageAudioScore ?? 0,
+          AverageMoodScore: g.AverageMoodScore ?? 0,
+          numberComplete: g.numberComplete ?? 0,
+          Feedback: g.Feedback ?? '',
           posts: Array.isArray(g.posts) ? g.posts : [],
         }));
         setMyGames(normalized);
@@ -1220,6 +1237,96 @@ function DetailView({
             {saving ? "Updating..." : "Update"}
           </button>
         )}
+
+        {/* Game Radar Chart */}
+        <div style={{ 
+          marginTop: 24,
+          backgroundColor: "rgba(255, 255, 255, 0.75)",
+          borderRadius: 12,
+          padding: 20,
+          border: "1px solid rgba(0, 0, 0, 0.18)",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)"
+        }}>
+          <h3 style={{ 
+            fontSize: 16, 
+            fontWeight: "bold", 
+            marginBottom: 12,
+            color: "#333",
+            textAlign: "left"
+          }}>
+            Game Radar Chart
+          </h3>
+          <div style={{ 
+            display: "flex", 
+            justifyContent: "flex-start",
+            marginBottom: 16
+          }}>
+            <RadarChart
+              data={[
+                game?.AverageFunScore || 0,
+                game?.AverageArtScore || 0,
+                game?.AverageCreativityScore || 0,
+                game?.AverageAudioScore || 0,
+                game?.AverageMoodScore || 0
+              ]}
+              labels={["Fun", "Art", "Creativity", "Audio", "Mood"]}
+              width={300}
+              height={300}
+              isMiniature={true}
+            />
+          </div>
+          <div style={{ 
+            textAlign: "left",
+            fontSize: 14,
+            color: "#666",
+            fontWeight: "500",
+            marginBottom: 8
+          }}>
+            Based on {game?.numberComplete || 0} people who playtested your game
+          </div>
+          <div style={{ 
+            textAlign: "left",
+            fontSize: 14,
+            color: "#666",
+            fontWeight: "500"
+          }}>
+            Average Playtest Time: {Math.round((game?.AveragePlaytestSeconds || 0) / 60)} minutes
+          </div>
+          
+          {/* Feedback Section */}
+          {game?.Feedback && Array.isArray(game.Feedback) && game.Feedback.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <h4 style={{ 
+                fontSize: 14, 
+                fontWeight: "bold", 
+                marginBottom: 8,
+                color: "#333",
+                textAlign: "left"
+              }}>
+                Feedback on your game:
+              </h4>
+              <div style={{ 
+                textAlign: "left",
+                fontSize: 13,
+                color: "#555",
+                lineHeight: 1.5,
+                fontStyle: "italic"
+              }}>
+                {game.Feedback.map((feedback, index) => (
+                  <div key={index} style={{ 
+                    marginBottom: 8,
+                    padding: "8px 12px",
+                    backgroundColor: "rgba(255, 255, 255, 0.5)",
+                    borderRadius: 8,
+                    border: "1px solid rgba(0, 0, 0, 0.1)"
+                  }}>
+                    "{feedback}"
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <div
         style={{
