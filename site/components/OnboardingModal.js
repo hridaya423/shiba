@@ -1088,7 +1088,6 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
           </div>
         )}
         
-        {/* Stage 7: Download Extension & Connect Hackatime */}
         {onboardingStage === 7 && (
           <div
             style={{
