@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import CreateGameModal from "@/components/CreateGameModal";
 import useAudioManager from "@/components/useAudioManager";
 import TopBar from "@/components/TopBar";
+import RadarChart from "@/components/RadarChart";
 import { uploadGame as uploadGameUtil } from "@/components/utils/uploadGame";
 
 const PostAttachmentRenderer = dynamic(() => import('@/components/utils/PostAttachmentRenderer'), { ssr: false });
@@ -174,6 +175,14 @@ export default function MyGamesComponent({
           thumbnailUrl: g.thumbnailUrl ?? "",
           GitHubURL: g.GitHubURL ?? "",
           HackatimeProjects: g.HackatimeProjects ?? "",
+          AveragePlaytestSeconds: g.AveragePlaytestSeconds ?? 0,
+          AverageFunScore: g.AverageFunScore ?? 0,
+          AverageArtScore: g.AverageArtScore ?? 0,
+          AverageCreativityScore: g.AverageCreativityScore ?? 0,
+          AverageAudioScore: g.AverageAudioScore ?? 0,
+          AverageMoodScore: g.AverageMoodScore ?? 0,
+          numberComplete: g.numberComplete ?? 0,
+          Feedback: g.Feedback ?? '',
           posts: Array.isArray(g.posts) ? g.posts : [],
         }));
         if (isMounted) setMyGames(normalized);
@@ -308,6 +317,14 @@ export default function MyGamesComponent({
           thumbnailUrl: g.thumbnailUrl ?? "",
           GitHubURL: g.GitHubURL ?? "",
           HackatimeProjects: g.HackatimeProjects ?? "",
+          AveragePlaytestSeconds: g.AveragePlaytestSeconds ?? 0,
+          AverageFunScore: g.AverageFunScore ?? 0,
+          AverageArtScore: g.AverageArtScore ?? 0,
+          AverageCreativityScore: g.AverageCreativityScore ?? 0,
+          AverageAudioScore: g.AverageAudioScore ?? 0,
+          AverageMoodScore: g.AverageMoodScore ?? 0,
+          numberComplete: g.numberComplete ?? 0,
+          Feedback: g.Feedback ?? '',
           posts: Array.isArray(g.posts) ? g.posts : [],
         }));
         setMyGames(normalized);
@@ -344,6 +361,8 @@ export default function MyGamesComponent({
       </div>
     );
   }
+
+
 
   return (
     <div>
@@ -826,25 +845,31 @@ function DetailView({
     thumbnailFile,
   ]);
 
-  const isProfileComplete = useMemo(() => {
-    if (!userProfile) return false;
+  const profileCompletionData = useMemo(() => {
+    if (!userProfile) return { isComplete: false, missingFields: [] };
 
     const missingFields = [
-      !userProfile.firstName && "firstName",
-      !userProfile.lastName && "lastName",
-      !userProfile.email && "email",
-      !userProfile.githubUsername && "githubUsername",
-      !userProfile.birthday && "birthday",
-      !userProfile.slackId && "slackId",
-      !userProfile.address?.street1 && "street1",
-      !userProfile.address?.city && "city",
-      !userProfile.address?.state && "state",
-      !userProfile.address?.zipcode && "zipcode",
-      !userProfile.address?.country && "country",
+      !userProfile.firstName && "First Name",
+      !userProfile.lastName && "Last Name",
+      !userProfile.email && "Email",
+      !userProfile.githubUsername && "GitHub Username",
+      !userProfile.birthday && "Birthday",
+      !userProfile.phoneNumber && "Phone Number",
+      !userProfile.slackId && "Slack Connection",
+      !userProfile.address?.street1 && "Street Address",
+      !userProfile.address?.city && "City",
+      !userProfile.address?.state && "State/Province",
+      !userProfile.address?.zipcode && "Zipcode",
+      !userProfile.address?.country && "Country",
     ].filter(Boolean);
 
-    return missingFields.length === 0;
+    return {
+      isComplete: missingFields.length === 0,
+      missingFields
+    };
   }, [userProfile]);
+
+  const isProfileComplete = profileCompletionData.isComplete;
 
   const handleUpdate = async () => {
     if (!token || !game?.id) return;
@@ -1217,6 +1242,96 @@ function DetailView({
             {saving ? "Updating..." : "Update"}
           </button>
         )}
+
+        {/* Game Radar Chart */}
+        <div style={{ 
+          marginTop: 24,
+          backgroundColor: "rgba(255, 255, 255, 0.75)",
+          borderRadius: 12,
+          padding: 20,
+          border: "1px solid rgba(0, 0, 0, 0.18)",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)"
+        }}>
+          <h3 style={{ 
+            fontSize: 16, 
+            fontWeight: "bold", 
+            marginBottom: 12,
+            color: "#333",
+            textAlign: "left"
+          }}>
+            Game Radar Chart
+          </h3>
+          <div style={{ 
+            display: "flex", 
+            justifyContent: "flex-start",
+            marginBottom: 16
+          }}>
+            <RadarChart
+              data={[
+                game?.AverageFunScore || 0,
+                game?.AverageArtScore || 0,
+                game?.AverageCreativityScore || 0,
+                game?.AverageAudioScore || 0,
+                game?.AverageMoodScore || 0
+              ]}
+              labels={["Fun", "Art", "Creativity", "Audio", "Mood"]}
+              width={300}
+              height={300}
+              isMiniature={true}
+            />
+          </div>
+          <div style={{ 
+            textAlign: "left",
+            fontSize: 14,
+            color: "#666",
+            fontWeight: "500",
+            marginBottom: 8
+          }}>
+            Based on {game?.numberComplete || 0} people who playtested your game
+          </div>
+          <div style={{ 
+            textAlign: "left",
+            fontSize: 14,
+            color: "#666",
+            fontWeight: "500"
+          }}>
+            Average Playtest Time: {Math.round((game?.AveragePlaytestSeconds || 0) / 60)} minutes
+          </div>
+          
+          {/* Feedback Section */}
+          {game?.Feedback && Array.isArray(game.Feedback) && game.Feedback.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <h4 style={{ 
+                fontSize: 14, 
+                fontWeight: "bold", 
+                marginBottom: 8,
+                color: "#333",
+                textAlign: "left"
+              }}>
+                Feedback on your game:
+              </h4>
+              <div style={{ 
+                textAlign: "left",
+                fontSize: 13,
+                color: "#555",
+                lineHeight: 1.5,
+                fontStyle: "italic"
+              }}>
+                {game.Feedback.map((feedback, index) => (
+                  <div key={index} style={{ 
+                    marginBottom: 8,
+                    padding: "8px 12px",
+                    backgroundColor: "rgba(255, 255, 255, 0.5)",
+                    borderRadius: 8,
+                    border: "1px solid rgba(0, 0, 0, 0.1)"
+                  }}>
+                    "{feedback}"
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <div
         style={{
@@ -1300,7 +1415,7 @@ function DetailView({
               className="moments-textarea"
               placeholder={
                 postType === "ship" && !isProfileComplete
-                  ? "Complete your profile to unlock demo posting"
+                  ? `Complete missing profile fields to unlock demo posting: ${profileCompletionData.missingFields.join(", ")}`
                   : "Write what you added here..."
               }
               value={postContent}
@@ -1541,7 +1656,7 @@ function DetailView({
                   if (postType === "ship") {
                     if (!isProfileComplete) {
                       alert(
-                        "You must finish filling out your profile before you can upload your demo. See your profile on the top left corner of the main Shiba Homescreen",
+                        `You must complete your profile before uploading your demo. Missing fields: ${profileCompletionData.missingFields.join(", ")}. See your profile on the top left corner of the main Shiba Homescreen.`,
                       );
                       return;
                     }
@@ -1730,7 +1845,7 @@ function DetailView({
                 fontWeight: "bold",
               }}
             >
-              ⚠️ Missing profile details,{" "}
+              ⚠️ Missing profile fields: {profileCompletionData.missingFields.join(", ")}.{" "}
               <button
                 onClick={() => {
                   onBack();
@@ -1750,7 +1865,7 @@ function DetailView({
                   fontWeight: "bold",
                 }}
               >
-                complete your profile
+                Complete your profile
               </button>{" "}
               to unlock demo posting
             </div>

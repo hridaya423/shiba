@@ -156,7 +156,11 @@ function normalizeProfileFields(f) {
     hasOnboarded = Boolean(f['hasOnboarded']);
   }
   
-
+  // Get SSS Balance, default to 0 if not set
+  let sssBalance = 0;
+  if (f['SSS Balance'] !== undefined) {
+    sssBalance = typeof f['SSS Balance'] === 'number' ? f['SSS Balance'] : 0;
+  }
   
   return {
     email: typeof f.Email === 'string' ? f.Email : '',
@@ -164,10 +168,12 @@ function normalizeProfileFields(f) {
     firstName: typeof f['First Name'] === 'string' ? f['First Name'] : '',
     lastName: typeof f['Last Name'] === 'string' ? f['Last Name'] : '',
     birthday: f['birthday'] || '',
+    phoneNumber: typeof f['phone number'] === 'string' ? f['phone number'] : '',
     slackId: typeof f['slack id'] === 'string' ? f['slack id'] : '',
     referralCode: typeof f['ReferralCode'] === 'string' ? f['ReferralCode'] : '',
     referralNumber: typeof f['ReferralNumber'] === 'number' ? f['ReferralNumber'] : (typeof f['ReferralNumber'] === 'string' ? parseInt(f['ReferralNumber']) || 0 : 0),
     hasOnboarded: hasOnboarded,
+    sssBalance: sssBalance,
     address: {
       street1: typeof f['street address'] === 'string' ? f['street address'] : '',
       street2: typeof f['street address #2'] === 'string' ? f['street address #2'] : '',

@@ -11,16 +11,7 @@ import React, { useState, useRef } from "react";
  * - apiBase: string (optional) override API base URL; defaults to NEXT_PUBLIC_API_BASE or same-origin
  * - style: React.CSSProperties (optional)
  */
-export default function PlayGameComponent({
-  gameId,
-  width = "100%",
-  apiBase,
-  style,
-  gameName,
-  thumbnailUrl,
-  token,
-  onPlayCreated,
-}) {
+export default function PlayGameComponent({ gameId, width = "100%", apiBase, style, gameName, thumbnailUrl, token, onPlayCreated, onGameStart }) {
   const base = apiBase || process.env.NEXT_PUBLIC_API_BASE || "";
   const normalizedWidth = typeof width === "number" ? `${width}` : width;
   const [started, setStarted] = useState(false);
@@ -137,6 +128,10 @@ export default function PlayGameComponent({
             setTimeout(() => {
               setStarted(true);
               setAnimating(false);
+              // Call onGameStart when the game actually starts
+              if (onGameStart) {
+                onGameStart();
+              }
             }, 900);
           }}
           style={{

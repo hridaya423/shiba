@@ -106,6 +106,13 @@ function buildAirtableFieldsFromProfile(p) {
     out['birthday'] = String(p.birthday);
   }
   
+  if (typeof p.phoneNumber === 'string') {
+    const c = p.phoneNumber.trim();
+    if (c.length > 0 && c.length <= 20) {
+      out['phone number'] = c;
+    }
+  }
+  
   if (typeof p.slackId === 'string') {
     const c = p.slackId.trim();
     if (/^[A-Za-z0-9_-]{1,50}$/.test(c)) {
@@ -149,7 +156,9 @@ function normalizeProfileFields(f) {
     firstName: typeof f['First Name'] === 'string' ? f['First Name'] : '',
     lastName: typeof f['Last Name'] === 'string' ? f['Last Name'] : '',
     birthday: f['birthday'] || '',
+    phoneNumber: typeof f['phone number'] === 'string' ? f['phone number'] : '',
     slackId: typeof f['slack id'] === 'string' ? f['slack id'] : '',
+    referralCode: typeof f['ReferralCode'] === 'string' ? f['ReferralCode'] : '',
     address: {
       street1: typeof f['street address'] === 'string' ? f['street address'] : '',
       street2: typeof f['street address #2'] === 'string' ? f['street address #2'] : '',
