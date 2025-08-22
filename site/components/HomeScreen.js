@@ -393,7 +393,7 @@ function EventsModal({ isOpen, onClose, token }) {
               style={{ width: "80%", marginBottom: "8px" }}
             />
             <p style={{ margin: 0, fontSize: "14px" }}>
-              22 august · 4:30pm – 5:30pm PST
+              22 august · 4:00pm – 5:00pm PST
             </p>
             <p style={{ margin: 0, fontSize: "14px" }}>
               our kickoff event where we'll release features & many surpises
