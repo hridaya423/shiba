@@ -1,8 +1,11 @@
 import { useEffect, useState, useRef, useMemo } from "react";
+import dynamic from 'next/dynamic';
 import CreateGameModal from "@/components/CreateGameModal";
 import useAudioManager from "@/components/useAudioManager";
 import TopBar from "@/components/TopBar";
 import { uploadGame as uploadGameUtil } from "@/components/utils/uploadGame";
+
+const PostAttachmentRenderer = dynamic(() => import('@/components/utils/PostAttachmentRenderer'), { ssr: false });
 
 function ShaderToyBackground() {
   const canvasRef = useRef(null);
@@ -1844,23 +1847,17 @@ function DetailView({
                     </button>
                   </div>
                   <div style={{ marginTop: 8 }}>
-                    {(() => {
-                      const AttachmentRenderer =
-                        require("@/components/utils/PostAttachmentRenderer").default;
-                      return (
-                        <AttachmentRenderer
-                          content={p.content}
-                          attachments={p.attachments}
-                          playLink={p.PlayLink}
-                          gameName={game?.name || ""}
-                          thumbnailUrl={game?.thumbnailUrl || ""}
-                          token={token}
-                          onPlayCreated={(play) => {
-                            console.log("Play created:", play);
-                          }}
-                        />
-                      );
-                    })()}
+                    <PostAttachmentRenderer
+                      content={p.content}
+                      attachments={p.attachments}
+                      playLink={p.PlayLink}
+                      gameName={game?.name || ""}
+                      thumbnailUrl={game?.thumbnailUrl || ""}
+                      token={token}
+                      onPlayCreated={(play) => {
+                        console.log("Play created:", play);
+                      }}
+                    />
                   </div>
                 </div>
               ))}
