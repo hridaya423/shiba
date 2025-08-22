@@ -6,6 +6,8 @@ import GlobalGamesComponent from "@/components/GlobalGamesComponent";
 import ShopComponent from "@/components/ShopComponent";
 import HelpComponent from "@/components/HelpComponent";
 import TopBar from "@/components/TopBar";
+import PlaytestMode from "@/components/PlaytestMode";
+import useAudioManager from "@/components/useAudioManager";
 
 export default function Home() {
   const games = [
@@ -50,6 +52,11 @@ export default function Home() {
   const [selectedGame, setSelectedGame] = useState(0);
   const [disableTopBar, setDisableTopBar] = useState(false);
   const [autoOpenProfile, setAutoOpenProfile] = useState(false);
+  const [playtestMode, setPlaytestMode] = useState(false);
+  const [selectedPlaytestGame, setSelectedPlaytestGame] = useState(null);
+
+  // Audio manager for sound effects
+  const { play: playSound, stopAll } = useAudioManager(["next.mp3", "prev.mp3", "Dream.mp3"]);
 
   const goHome = () => {
     setAppOpen("Home");
@@ -157,6 +164,23 @@ export default function Home() {
   }
 
   if (token !== null) {
+    // Render playtest mode if active
+    if (playtestMode) {
+      return (
+        <PlaytestMode 
+          onExit={() => {
+            setPlaytestMode(false);
+            setSelectedPlaytestGame(null);
+          }}
+          profile={profile}
+          playtestGame={selectedPlaytestGame}
+          playSound={playSound}
+          stopAll={stopAll}
+          token={token}
+        />
+      );
+    }
+
     if (appOpen === "Home") {
       return (
         <HomeScreen
@@ -202,6 +226,8 @@ export default function Home() {
               SlackId={profile?.slackId || null}
               profile={profile}
               setProfile={setProfile}
+              setPlaytestMode={setPlaytestMode}
+              setSelectedPlaytestGame={setSelectedPlaytestGame}
               onOpenProfile={appOpen === "My Games" ? () => {
                 setAutoOpenProfile(true);
                 setDisableTopBar(false);

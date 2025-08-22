@@ -1,9 +1,14 @@
 import React from 'react';
+import dynamic from 'next/dynamic';
 
-export default function PlaytestTicket({ playtest }) {
+const RadarChart = dynamic(() => import('@/components/RadarChart'), { ssr: false });
+
+export default function PlaytestTicket({ playtest, onPlaytestClick }) {
   const handlePlaytest = () => {
-    // For now, do nothing as requested
     console.log('Playtest clicked for:', playtest.gameName);
+    if (onPlaytestClick) {
+      onPlaytestClick(playtest);
+    }
   };
 
   return (
@@ -117,10 +122,10 @@ export default function PlaytestTicket({ playtest }) {
             borderRadius: 4,
             fontSize: 12,
             fontWeight: 600,
-            background: playtest.status === 'Completed' ? 'rgba(34, 197, 94, 0.2)' : 
+            background: playtest.status === 'Complete' ? 'rgba(40, 167, 69, 0.2)' : 
                        playtest.status === 'In Progress' ? 'rgba(251, 191, 36, 0.2)' : 
                        'rgba(156, 163, 175, 0.2)',
-            color: playtest.status === 'Completed' ? '#22c55e' : 
+            color: playtest.status === 'Complete' ? '#28a745' : 
                    playtest.status === 'In Progress' ? '#fbbf24' : 
                    '#9ca3af'
           }}>
@@ -146,25 +151,54 @@ export default function PlaytestTicket({ playtest }) {
         )}
       </div>
 
-      {/* Right side - Button */}
+      {/* Right side - Button or Skill Tree */}
       <div style={{ flexShrink: 0 }}>
-        <button
-          onClick={handlePlaytest}
-          style={{
-            padding: '12px 24px',
-            background: 'linear-gradient(180deg, #ff8ec3 0%, #ff6fa5 100%)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            fontSize: 16,
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'all 120ms ease',
-          }}
-
-        >
-          Playtest
-        </button>
+        {playtest.status === 'Complete' ? (
+          <div style={{ 
+            width: 160, 
+            height: 80,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'visible'
+          }}>
+            <RadarChart
+              data={[
+                playtest.funScore || 0,
+                playtest.creativityScore || 0,
+                playtest.audioScore || 0,
+                playtest.artScore || 0,
+                playtest.moodScore || 0
+              ]}
+              labels={['Fun', 'Creativity', 'Audio', 'Art', 'Mood']}
+              width={160}
+              height={120}
+              backgroundColor="rgba(0, 0, 0, 0.1)"
+              borderColor="rgba(0, 0, 0, 0.8)"
+              pointBackgroundColor="rgba(0, 0, 0, 0.8)"
+              pointBorderColor="rgba(0, 0, 0, 0.8)"
+              animate={false}
+              isMiniature={true}
+            />
+          </div>
+        ) : (
+          <button
+            onClick={handlePlaytest}
+            style={{
+              padding: '12px 24px',
+              background: 'linear-gradient(180deg, #ff8ec3 0%, #ff6fa5 100%)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 120ms ease',
+            }}
+          >
+            Playtest
+          </button>
+        )}
       </div>
 
       <style jsx>{`

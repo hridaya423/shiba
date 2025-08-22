@@ -342,6 +342,8 @@ export default function MyGamesComponent({
     );
   }
 
+
+
   return (
     <div>
       {mySelectedGameId ? (

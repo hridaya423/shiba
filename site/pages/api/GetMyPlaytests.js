@@ -208,12 +208,21 @@ async function getPlaytestsForUser(userId) {
         id: playtest.id,
         playtestId: playtest.fields.PlaytestId || playtest.fields.PlaytestID || '',
         gameToTest: gameToTestId || '',
-        status: playtest.fields.Status || 'Pending',
+        status: playtest.fields.status || 'Pending',
         createdAt: playtest.fields['Created At'] || playtest.createdTime,
         instructions: playtest.fields.Instructions || '',
         gameName: gameDetails.gameName || playtest.fields.GameName || playtest.fields['Game Name'] || '',
         gameLink: gameDetails.playableURL || playtest.fields.GameLink || playtest.fields['Game Link'] || '',
         gameThumbnail: gameDetails.gameThumbnail || '',
+        HoursSpent: playtest.fields?.HoursSpent || 0,
+        // Rating data for completed playtests
+        funScore: playtest.fields['Fun Score'] || 0,
+        artScore: playtest.fields['Art Score'] || 0,
+        creativityScore: playtest.fields['Creativity Score'] || 0,
+        audioScore: playtest.fields['Audio Score'] || 0,
+        moodScore: playtest.fields['Mood Score'] || 0,
+        feedback: playtest.fields['Feedback'] || 0,
+        playtimeSeconds: playtest.fields['Playtime Seconds'] || 0,
       };
     })
   );

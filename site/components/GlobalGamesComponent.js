@@ -21,7 +21,7 @@ function ShaderToyBackground() {
   );
 }
 
-export default function GlobalGamesComponent({ token }) {
+export default function GlobalGamesComponent({ token, playtestMode, setPlaytestMode, setSelectedPlaytestGame }) {
   const [posts, setPosts] = useState([]);
   const [playtests, setPlaytests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -145,7 +145,7 @@ export default function GlobalGamesComponent({ token }) {
   if (loading) return (
     <div style={{ width: '100vw', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       <ShaderToyBackground />
-      <p style={{ position: 'relative', zIndex: 1, opacity: 0.6, textAlign: 'center', marginTop: '50vh' }}>Loading…</p>
+      <p style={{ position: 'relative', color: "#fff", zIndex: 1, opacity: 0.6, textAlign: 'center', marginTop: '50vh' }}>Loading…</p>
     </div>
   );
   if (error) return (
@@ -315,7 +315,23 @@ export default function GlobalGamesComponent({ token }) {
                 }}
               >
                 {playtests.map((playtest, idx) => (
-                  <PlaytestTicket key={playtest.id || idx} playtest={playtest} />
+                  <PlaytestTicket 
+                    key={playtest.id || idx} 
+                    playtest={playtest} 
+                    onPlaytestClick={(playtest) => {
+                      if (setPlaytestMode && setSelectedPlaytestGame) {
+                        setSelectedPlaytestGame({
+                          gameName: playtest.gameName,
+                          gameLink: playtest.gameLink,
+                          gameThumbnail: playtest.gameThumbnail,
+                          playtestId: playtest.playtestId,
+                          instructions: playtest.instructions,
+                          HoursSpent: playtest.HoursSpent
+                        });
+                        setPlaytestMode(true);
+                      }
+                    }}
+                  />
                 ))}
               </div>
             ) : (

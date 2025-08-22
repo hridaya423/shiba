@@ -40,6 +40,7 @@ export default async function handler(req, res) {
           HackatimeProjects: Array.isArray(rec.fields?.['Hackatime Projects'])
             ? rec.fields['Hackatime Projects'].filter(Boolean).join(', ')
             : (typeof rec.fields?.['Hackatime Projects'] === 'string' ? rec.fields['Hackatime Projects'] : ''),
+          HoursSpent: rec.fields?.HoursSpent || 0,
           posts,
         };
       })
