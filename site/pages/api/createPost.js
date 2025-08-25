@@ -107,6 +107,7 @@ export default async function handler(req, res) {
                 size: a?.size 
               })).filter((a) => a.url)
             : [],
+          badges: Array.isArray(latest.fields?.Badges) ? latest.fields.Badges : [],
         }
       : null;
 

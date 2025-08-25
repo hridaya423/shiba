@@ -187,6 +187,7 @@ async function fetchPostsForGame(gameId) {
           size: a?.size,
         })).filter((a) => a.url)
       : [],
+    badges: Array.isArray(rec.fields?.Badges) ? rec.fields.Badges : [],
   }));
 }
 

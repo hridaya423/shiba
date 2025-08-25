@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 
 const PlayGameComponent = dynamic(() => import("@/components/utils/playGameComponent"), { ssr: false });
 
-export default function PostAttachmentRenderer({ content, attachments, playLink, gameName, thumbnailUrl, slackId, createdAt, token, onPlayCreated }) {
+export default function PostAttachmentRenderer({ content, attachments, playLink, gameName, thumbnailUrl, slackId, createdAt, token, onPlayCreated, badges }) {
   const [slackProfile, setSlackProfile] = useState(null);
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +73,7 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {slackId ? (
+      {(slackId || (Array.isArray(badges) && badges.includes('Speedy Shiba Shipper'))) ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div
             style={{
@@ -88,18 +88,87 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
             }}
           />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, fontSize: 12 }}>
-              <strong>{slackProfile?.displayName || slackId}</strong>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, justifyContent: 'center' }}>
+              <strong>{slackProfile?.displayName || slackId || 'User'}</strong>
+              {Array.isArray(badges) && badges.includes('Speedy Shiba Shipper') && (
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <img 
+                    src="/SpeedyShibaShipper.svg" 
+                    alt="Speedy Shiba Shipper" 
+                    style={{ 
+                      width: 20, 
+                      height: 20,
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      const popup = e.target.nextSibling;
+                      if (popup) {
+                        popup.style.display = 'block';
+                        // Trigger animation after display is set
+                        setTimeout(() => {
+                          popup.style.opacity = '1';
+                          popup.style.transform = 'translateX(-50%) scale(1)';
+                        }, 10);
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      const popup = e.target.nextSibling;
+                      if (popup) {
+                        popup.style.opacity = '0';
+                        popup.style.transform = 'translateX(-50%) scale(0)';
+                        // Hide after animation completes
+                        setTimeout(() => {
+                          popup.style.display = 'none';
+                        }, 200);
+                      }
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '100%',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      backgroundColor: '#FFD1A3',
+                      border: '1px solid #F5994B',
+                      borderRadius: '4px',
+                      padding: '4px 6px',
+                      fontSize: '6px',
+                      fontWeight: 'bold',
+                      color: '#333',
+                      whiteSpace: 'nowrap',
+                      zIndex: 1000,
+                      display: 'none',
+                      marginBottom: '0px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      opacity: 0,
+                      transformOrigin: 'center bottom',
+                      transition: 'all 0.2s ease-out'
+                    }}
+                  >
+                    Speedy Shiba Shipper
+                  </div>
+                </div>
+              )}
               {gameName ? <em style={{ opacity: 0.8 }}>(making {gameName})</em> : null}
             </div>
             {createdAt ? (
-              <span style={{ fontSize: 11, opacity: 0.6 }}>
-                {new Date(createdAt).toLocaleTimeString('en-US', { 
-                  hour: 'numeric', 
-                  minute: '2-digit',
-                  hour12: true 
-                })}
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: 8, fontSize: 11, opacity: 0.6, marginTop: 2 }}>
+                <span>
+                  {new Date(createdAt).toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true 
+                  })}
+                </span>
+                <span>
+                  {new Date(createdAt).toLocaleDateString('en-US', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: '2-digit'
+                  })}
+                </span>
+              </div>
             ) : null}
           </div>
         </div>

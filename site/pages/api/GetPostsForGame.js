@@ -117,6 +117,7 @@ async function fetchPostsForGame(gameId) {
       Content: fields.Content || '',
       PostID: fields.PostID || '',
       GameThumbnail: gameThumbnail,
+      Badges: Array.isArray(fields.Badges) ? fields.Badges : [],
     };
   });
 }
