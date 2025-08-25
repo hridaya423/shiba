@@ -1,6 +1,11 @@
 import { safeEscapeFormulaString } from '../utils/security.js';
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+
+// Simple in-memory rate limiting (in production, use Redis or similar)
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per minute per IP
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
 const AIRTABLE_GAMES_TABLE = process.env.AIRTABLE_GAMES_TABLE || 'Games';
@@ -17,15 +22,58 @@ export default async function handler(req, res) {
     return res.status(500).json({ message: 'Server configuration error' });
   }
 
+  // Rate limiting
+  const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW;
+  
+  if (!rateLimitMap.has(clientIP)) {
+    rateLimitMap.set(clientIP, []);
+  }
+  
+  const requests = rateLimitMap.get(clientIP);
+  const recentRequests = requests.filter(timestamp => timestamp > windowStart);
+  
+  if (recentRequests.length >= RATE_LIMIT_MAX_REQUESTS) {
+    return res.status(429).json({ message: 'Rate limit exceeded. Please try again later.' });
+  }
+  
+  recentRequests.push(now);
+  rateLimitMap.set(clientIP, recentRequests);
+
   try {
     const { slackId, gameName } = req.body || {};
     
+    // Input validation and sanitization
     if (!slackId || !gameName) {
       return res.status(400).json({ message: 'Missing required fields: slackId, gameName' });
     }
 
+    // Validate input types and lengths
+    if (typeof slackId !== 'string' || typeof gameName !== 'string') {
+      return res.status(400).json({ message: 'Invalid input types' });
+    }
+
+    // Sanitize and validate input lengths
+    const sanitizedSlackId = slackId.trim();
+    const sanitizedGameName = gameName.trim();
+
+    if (sanitizedSlackId.length === 0 || sanitizedGameName.length === 0) {
+      return res.status(400).json({ message: 'Empty input values' });
+    }
+
+    // Validate Slack ID format (basic validation)
+    if (!/^[A-Z0-9]+$/.test(sanitizedSlackId)) {
+      return res.status(400).json({ message: 'Invalid Slack ID format' });
+    }
+
+    // Limit input lengths to prevent abuse
+    if (sanitizedSlackId.length > 20 || sanitizedGameName.length > 200) {
+      return res.status(400).json({ message: 'Input too long' });
+    }
+
     // Find the specific game by slackId and game name directly in Games table
-    const targetGame = await findGameBySlackIdAndName(slackId, gameName);
+    const targetGame = await findGameBySlackIdAndName(sanitizedSlackId, sanitizedGameName);
 
     if (!targetGame) {
       return res.status(404).json({ message: 'Game not found for this user' });
@@ -34,7 +82,15 @@ export default async function handler(req, res) {
     // Fetch posts for this game
     const posts = await fetchPostsForGame(targetGame.id);
 
-    // Format the game data
+    // Explicitly select only the fields we want to expose (defense in depth)
+    const allowedFields = [
+      'Name', 'Description', 'Thumbnail', 'Playable URL', 'GitHubURL', 'GithubURL',
+      'Hackatime Projects', 'HoursSpent', 'AveragePlaytestSeconds', 'AverageFunScore',
+      'AverageArtScore', 'AverageCreativityScore', 'AverageAudioScore', 'AverageMoodScore',
+      'numberComplete', 'Feedback', 'Last Updated'
+    ];
+
+    // Format the game data with explicit field selection
     const game = {
       id: targetGame.id,
       name: targetGame.fields?.Name || '',
