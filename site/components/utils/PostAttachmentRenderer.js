@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 
 const PlayGameComponent = dynamic(() => import("@/components/utils/playGameComponent"), { ssr: false });
 
-export default function PostAttachmentRenderer({ content, attachments, playLink, gameName, thumbnailUrl, slackId, createdAt, token, onPlayCreated, badges }) {
+export default function PostAttachmentRenderer({ content, attachments, playLink, gameName, thumbnailUrl, slackId, createdAt, token, onPlayCreated, badges, HoursSpent, gamePageUrl }) {
   const [slackProfile, setSlackProfile] = useState(null);
   useEffect(() => {
     let cancelled = false;
@@ -167,10 +167,36 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
                   </div>
                 </div>
               )}
-              {gameName ? <em style={{ opacity: 0.8 }}>(making {gameName})</em> : null}
+              {gameName ? (
+                gamePageUrl ? (
+                  <a 
+                    href={gamePageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ 
+                      opacity: 0.8, 
+                      textDecoration: 'underline',
+                      color: 'inherit',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    (making {gameName})
+                  </a>
+                ) : (
+                  <em style={{ opacity: 0.8 }}>(making {gameName})</em>
+                )
+              ) : null}
             </div>
             {createdAt ? (
-              <div style={{ display: 'flex', flexDirection: 'row', gap: 8, fontSize: 11, opacity: 0.6, marginTop: 2 }}>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: 8, fontSize: 11, opacity: 0.6, marginTop: 2, alignItems: 'center', justifyContent: 'flex-start' }}>
+                {HoursSpent && HoursSpent > 0 && Math.floor((HoursSpent % 1) * 60) > 0 && (
+                  <>
+                    <span>
+                      {Math.floor(HoursSpent) > 0 ? `${Math.floor(HoursSpent)}hr ` : ''}{Math.floor((HoursSpent % 1) * 60)}min logged
+                    </span>
+                    <span style={{ fontSize: 8 }}>●</span>
+                  </>
+                )}
                 <span>
                   {new Date(createdAt).toLocaleTimeString('en-US', { 
                     hour: 'numeric', 
@@ -198,6 +224,7 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
           thumbnailUrl={thumbnailUrl} 
           token={token}
           onPlayCreated={onPlayCreated}
+          gamePageUrl={gamePageUrl}
         />
       ) : null}
       {Array.isArray(attachments) && attachments.length > 0 && (() => {

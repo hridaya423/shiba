@@ -11,7 +11,7 @@ import React, { useState, useRef } from "react";
  * - apiBase: string (optional) override API base URL; defaults to NEXT_PUBLIC_API_BASE or same-origin
  * - style: React.CSSProperties (optional)
  */
-export default function PlayGameComponent({ gameId, width = "100%", apiBase, style, gameName, thumbnailUrl, token, onPlayCreated, onGameStart }) {
+export default function PlayGameComponent({ gameId, width = "100%", apiBase, style, gameName, thumbnailUrl, token, onPlayCreated, onGameStart, gamePageUrl }) {
   const base = apiBase || process.env.NEXT_PUBLIC_API_BASE || "";
   const normalizedWidth = typeof width === "number" ? `${width}` : width;
   const [started, setStarted] = useState(false);
@@ -39,7 +39,8 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(url);
+      const linkToCopy = gamePageUrl || url;
+      await navigator.clipboard.writeText(linkToCopy);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000); // Reset after 2 seconds
     } catch (err) {
