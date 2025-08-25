@@ -247,6 +247,7 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
                     createdAt={p.createdAt}
                     token={token}
                     badges={p.badges}
+                    gamePageUrl={`https://shiba.hackclub.com/games/${p.slackId}/${encodeURIComponent(p.gameName || '')}`}
                     onPlayCreated={(play) => {
                       console.log('Play created:', play);
                     }}

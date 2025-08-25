@@ -1374,6 +1374,32 @@ function DetailView({
           game. There must be an index.html file in the ZIP. Or upload a .html
           file that contains your entire game.
         </p>
+        <p
+          style={{
+            fontSize: 11,
+            opacity: 0.6,
+            fontStyle: "italic",
+            marginTop: 8,
+            marginBottom: 8,
+          }}
+        >
+          <strong>Extra demo upload debugging tips #1, 2 & 3:</strong> If you get 404 then reupload with these tips:
+        </p>
+        <ul
+          style={{
+            fontSize: 11,
+            opacity: 0.6,
+            fontStyle: "italic",
+            marginTop: 4,
+            marginBottom: 8,
+            marginLeft: 16,
+            paddingLeft: 8,
+          }}
+        >
+          <li>Make sure you're uploading from Chrome</li>
+          <li>You're uploading a zip of the files, not a zip of the folder. So there was issue in past where if you zip the folder and not the files, it wouldn't upload properly. If you're on mac select the files and then right click compress instead of selecting the folder itself.</li>
+          <li>It's named index.html inside of the folder, not the nameOfYourGame.html</li>
+        </ul>
         <div style={{ marginTop: 16 }}>
           <div
             className={`moments-composer${isDragActive ? " drag-active" : ""}`}
@@ -1950,6 +1976,7 @@ function DetailView({
                     slackId={SlackId}
                     createdAt={p.createdAt}
                     badges={p.badges}
+                    gamePageUrl={`https://shiba.hackclub.com/games/${SlackId}/${encodeURIComponent(game?.name || '')}`}
                     onPlayCreated={(play) => {
                       console.log("Play created:", play);
                     }}
