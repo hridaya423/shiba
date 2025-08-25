@@ -80,6 +80,7 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
                 content: p.Content || '',
                 postId: p.PostID || '',
                 gameThumbnail: p.GameThumbnail || '',
+                badges: Array.isArray(p.Badges) ? p.Badges : [],
               }))
             : [];
           setPosts(normalized);
@@ -245,6 +246,7 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
                     slackId={p.slackId}
                     createdAt={p.createdAt}
                     token={token}
+                    badges={p.badges}
                     onPlayCreated={(play) => {
                       console.log('Play created:', play);
                     }}

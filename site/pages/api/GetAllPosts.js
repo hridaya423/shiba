@@ -94,6 +94,7 @@ export default async function handler(req, res) {
         Content: fields.Content || '',
         PostID: fields.PostID || '',
         GameThumbnail: gameThumbnail,
+        Badges: Array.isArray(fields.Badges) ? fields.Badges : [],
       };
     });
 

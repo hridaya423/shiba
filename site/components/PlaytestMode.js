@@ -445,6 +445,7 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                     slackId={post['slack id']}
                     createdAt={post['Created At']}
                     token={token}
+                    badges={Array.isArray(post.Badges) ? post.Badges : []}
                     onPlayCreated={(play) => {
                       console.log('Play created:', play);
                     }}
