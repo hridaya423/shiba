@@ -98,9 +98,21 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
                     style={{ 
                       width: 20, 
                       height: 20,
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s ease-out, border 0.2s ease-out, background-color 0.2s ease-out',
+                      border: '1px dotted transparent',
+                      borderRadius: '4px',
+                      backgroundColor: 'transparent'
                     }}
                     onMouseEnter={(e) => {
+                      // Add gentle bounce effect
+                      e.target.style.transform = 'scale(1.1)';
+                      e.target.style.border = '1px dotted #999';
+                      e.target.style.backgroundColor = 'white';
+                      setTimeout(() => {
+                        e.target.style.transform = 'scale(1)';
+                      }, 200);
+                      
                       const popup = e.target.nextSibling;
                       if (popup) {
                         popup.style.display = 'block';
@@ -112,6 +124,11 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
                       }
                     }}
                     onMouseLeave={(e) => {
+                      // Reset transform and border
+                      e.target.style.transform = 'scale(1)';
+                      e.target.style.border = '1px dotted transparent';
+                      e.target.style.backgroundColor = 'transparent';
+                      
                       const popup = e.target.nextSibling;
                       if (popup) {
                         popup.style.opacity = '0';
