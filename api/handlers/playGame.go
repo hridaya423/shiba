@@ -25,10 +25,8 @@ func MainGamePlayHandler(srv *structs.Server) http.HandlerFunc {
 		log.Printf("Serving game %s from %s", gameId, filepath)
 
 		// check if the file is present
-		// if not, return 404
 		if _, err := os.Stat(filepath); os.IsNotExist(err) {
 			println("File does not exist:", filepath)
-			// Trigger a fetch for the game from the sync manager using a goroutine
 			go func() {
 				err := sync.FetchGameFromR2(srv, gameId)
 				if err != nil {
@@ -37,7 +35,6 @@ func MainGamePlayHandler(srv *structs.Server) http.HandlerFunc {
 					log.Printf("Successfully fetched game %s", gameId)
 				}
 			}()
-			// Send a message saying to wait for the game to be fetched
 			http.Error(w, "Game not found. The server will try to download it asap. Please try again later.", http.StatusNotFound)
 		}
 
