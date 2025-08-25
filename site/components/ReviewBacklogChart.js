@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -18,39 +18,13 @@ ChartJS.register(
   Legend
 );
 
-export default function ReviewBacklogChart() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+export default function ReviewBacklogChart({ data = [] }) {
   const canvasRef = useRef(null);
   const chartInstance = useRef(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/analytics/getReviewBacklog');
-        const result = await response.json();
-
-        if (result.success) {
-          setData(result.data);
-        } else {
-          setError(result.error || 'Failed to fetch data');
-        }
-      } catch (err) {
-        setError('Failed to fetch review backlog data');
-        console.error('Error fetching review backlog data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
   // Initialize chart when data is available
   useEffect(() => {
-    if (data && canvasRef.current && !chartInstance.current) {
+    if (data && data.length > 0 && canvasRef.current && !chartInstance.current) {
       const totalRecords = data.reduce((sum, item) => sum + item.value, 0);
       
       console.log('ReviewBacklogChart data:', data);
@@ -153,42 +127,6 @@ export default function ReviewBacklogChart() {
       }
     };
   }, [data]);
-
-  if (loading) {
-    return (
-      <div style={{ 
-        width: '100%', 
-        backgroundColor: '#f5f5f5', 
-        border: '1px solid #333', 
-        borderRadius: '8px', 
-        padding: '15px',
-        height: '120px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <p style={{ color: '#666', fontSize: '14px' }}>Loading review backlog data...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ 
-        width: '100%', 
-        backgroundColor: '#f5f5f5', 
-        border: '1px solid #333', 
-        borderRadius: '8px', 
-        padding: '15px',
-        height: '120px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <p style={{ color: '#ff6b6b', fontSize: '14px' }}>Error: {error}</p>
-      </div>
-    );
-  }
 
   if (!data || data.length === 0) {
     return (

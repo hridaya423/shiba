@@ -4,7 +4,7 @@ import SignupCountComponent from "../components/SignupCountComponent";
 import HoursPerDayChart from "../components/HoursPerDayChart";
 import ReviewBacklogChart from "../components/ReviewBacklogChart";
 
-export default function AnalyticsPage({ funnelData, signupData, hoursPerDayData }) {
+export default function AnalyticsPage({ funnelData, signupData, hoursPerDayData, reviewBacklogData }) {
   useEffect(() => {
     // Disable the animated background for this page
     const animatedBackground = document.querySelector('[style*="backgroundImage"]');
@@ -52,7 +52,7 @@ export default function AnalyticsPage({ funnelData, signupData, hoursPerDayData 
             <SignupCountComponent {...signupData} />
           </div>
           <div style={{ flex: '1', minWidth: '300px' }}>
-            <ReviewBacklogChart />
+            <ReviewBacklogChart data={reviewBacklogData} />
           </div>
         </div>
         
@@ -69,6 +69,10 @@ export async function getServerSideProps() {
   const AIRTABLE_POSTS_TABLE = process.env.AIRTABLE_POSTS_TABLE || 'Posts';
   const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
 
+  // Import Airtable for review backlog data
+  const Airtable = require('airtable');
+  const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID);
+
   if (!AIRTABLE_API_KEY) {
     console.error('Missing AIRTABLE_API_KEY');
     return {
@@ -76,6 +80,7 @@ export async function getServerSideProps() {
         funnelData: { signedUp: 0, onboarded: 0, connectedHackatime: 0, slack: 0, logged10Hours: 0, logged20Hours: 0, logged30Hours: 0, logged40Hours: 0, logged50Hours: 0, logged60Hours: 0, logged70Hours: 0, logged80Hours: 0, logged90Hours: 0, logged100Hours: 0 },
         signupData: { totalSignups: 0, hackClubCommunity: 0, referrals: 0 },
         hoursPerDayData: [],
+        reviewBacklogData: [],
       },
     };
   }
@@ -248,11 +253,66 @@ export async function getServerSideProps() {
       referrals
     };
 
+    // Fetch review backlog data
+    const reviewStatuses = {
+      'Needs Review': 0,
+      'Needs Rereview': 0,
+      'Reviewed': 0
+    };
+
+    let allReviewRecords = [];
+    let reviewOffset = null;
+
+    // Fetch all records from Active YSWS Record table (100 at a time)
+    do {
+      const params = {
+        pageSize: 100,
+        fields: ['ReviewStatus']
+      };
+
+      if (reviewOffset) {
+        params.offset = reviewOffset;
+      }
+
+      const response = await base('Active YSWS Record').select(params).firstPage();
+      
+      allReviewRecords = allReviewRecords.concat(response);
+      reviewOffset = response.offset;
+    } while (reviewOffset);
+
+    // Count ReviewStatus values
+    allReviewRecords.forEach(record => {
+      const status = record.get('ReviewStatus');
+      if (status && reviewStatuses.hasOwnProperty(status)) {
+        reviewStatuses[status]++;
+      }
+    });
+
+    // Format data for chart
+    const reviewBacklogData = [
+      {
+        label: 'Needs Review',
+        value: reviewStatuses['Needs Review'],
+        color: '#ff6b6b'
+      },
+      {
+        label: 'Needs Rereview',
+        value: reviewStatuses['Needs Rereview'],
+        color: '#ffa726'
+      },
+      {
+        label: 'Reviewed',
+        value: reviewStatuses['Reviewed'],
+        color: '#66bb6a'
+      }
+    ];
+
     return {
       props: {
         funnelData,
         signupData,
         hoursPerDayData: hoursPerDayArray,
+        reviewBacklogData,
       },
     };
   } catch (error) {
@@ -282,6 +342,7 @@ export async function getServerSideProps() {
           referrals: 400
         },
         hoursPerDayData: [],
+        reviewBacklogData: [],
       },
     };
   }
