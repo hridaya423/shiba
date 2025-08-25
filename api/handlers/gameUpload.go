@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"unicode"
 
 	"shiba-api/structs"
 	"shiba-api/sync"
@@ -33,23 +32,6 @@ func validateZipFilePath(filePath, destDir string) bool {
 	return strings.HasPrefix(absFilePath, absDestDir+string(os.PathSeparator))
 }
 
-func isAllowedFileType(fileName string) bool {
-	// Allow everything - no file type restrictions
-	return true
-}
-
-func sanitizeForAirtableFormula(input string) string {
-	input = strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) {
-			return -1
-		}
-		return r
-	}, input)
-	input = strings.ReplaceAll(input, `\`, `\\`)
-	input = strings.ReplaceAll(input, `"`, `\"`)
-	return input
-}
-
 func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -61,56 +43,6 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 			http.Error(w, "Failed to parse form: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		// check if the auth bearer is a valid user token in airtable
-		// TEMPORARILY DISABLED - Airtable auth check commented out
-
-		/*
-		authHeader := r.Header.Get("Authorization")
-
-		if authHeader == "" {
-			http.Error(w, "Authorization header is missing", http.StatusUnauthorized)
-			return
-		}
-
-		// Check if it's a Bearer token
-		if strings.HasPrefix(authHeader, "Bearer ") {
-			authHeader = strings.TrimPrefix(authHeader, "Bearer ")
-		}
-
-		log.Printf("Authorization header received: %s", authHeader)
-
-		sanitizedHeader := sanitizeForAirtableFormula(authHeader)
-
-		log.Printf("Attempting to validate token: %s", sanitizedHeader)
-
-		// Try different field names for token
-		var records, err = srv.AirtableBaseTable.GetRecords().WithFilterFormula(
-			`{token} = "`+sanitizedHeader+`"`,
-		).MaxRecords(1).ReturnFields("Email", "user_id", "token").Do()
-
-		// If no records found, try alternative field names
-		if err == nil && len(records.Records) == 0 {
-			log.Printf("No records found with 'token' field, trying 'Token' field")
-			records, err = srv.AirtableBaseTable.GetRecords().WithFilterFormula(
-				`{Token} = "`+sanitizedHeader+`"`,
-			).MaxRecords(1).ReturnFields("Email", "user_id", "Token").Do()
-		}
-
-		if err != nil {
-			log.Printf("Airtable query error: %v", err)
-			http.Error(w, "Failed to validate token..", http.StatusInternalServerError)
-			return
-		}
-
-		log.Printf("Found %d records for token", len(records.Records))
-
-		if len(records.Records) == 0 {
-			log.Printf("No records found for token: %s", sanitizedHeader)
-			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
-			return
-		}
-		*/
 
 		file, _, err := r.FormFile("file")
 		if err != nil {
@@ -155,25 +87,28 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 			return
 		}
 
+		rootPrefix := getSingleRootPrefix(zr.File)
+
 		for _, f := range zr.File {
-			// Don't do it if file is in a __MACOSX directory
+			// Skip macOS junk
 			if strings.HasPrefix(f.Name, "__MACOSX/") {
 				continue
 			}
 
-			// Validate file path for path traversal
-			if !validateZipFilePath(f.Name, destDir) {
+			name := f.Name
+			if rootPrefix != "" && strings.HasPrefix(name, rootPrefix) {
+				name = strings.TrimPrefix(name, rootPrefix)
+				if name == "" {
+					continue
+				}
+			}
+
+			if !validateZipFilePath(name, destDir) {
 				http.Error(w, "Invalid file path in zip: "+f.Name, http.StatusBadRequest)
 				return
 			}
 
-			// Check if file type is allowed
-			if !isAllowedFileType(f.Name) {
-				http.Error(w, "File type not allowed: "+f.Name, http.StatusBadRequest)
-				return
-			}
-
-			fpath := filepath.Join(destDir, f.Name)
+			fpath := filepath.Join(destDir, name)
 
 			if f.FileInfo().IsDir() {
 				os.MkdirAll(fpath, f.Mode())
@@ -190,23 +125,20 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 				http.Error(w, "Failed to open file in zip: "+err.Error(), http.StatusInternalServerError)
 				return
 			}
+			defer rc.Close()
 
-			// write locally first
 			outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
-				rc.Close()
 				http.Error(w, "Failed to create file: "+err.Error(), http.StatusInternalServerError)
 				return
 			}
 
-			_, err = io.Copy(outFile, rc)
-			outFile.Close()
-			rc.Close()
-			if err != nil {
+			if _, err := io.Copy(outFile, rc); err != nil {
+				outFile.Close()
 				http.Error(w, "Failed to write file: "+err.Error(), http.StatusInternalServerError)
 				return
 			}
-
+			outFile.Close()
 		}
 
 		log.Printf("User successfully uploaded a new game snapshot!")
@@ -216,8 +148,6 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 				log.Printf("Failed to sync folder %s to R2: %v", folder, err)
 			}
 		}(destDir, srv)
-
-		// return a okay response + the game slug/id
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
@@ -239,4 +169,26 @@ func GameUploadHandler(srv *structs.Server) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func getSingleRootPrefix(files []*zip.File) string {
+	var root string
+	for _, f := range files {
+		if strings.HasPrefix(f.Name, "__MACOSX/") {
+			continue
+		}
+		parts := strings.SplitN(f.Name, "/", 2)
+		if len(parts) < 2 {
+			return ""
+		}
+		if root == "" {
+			root = parts[0]
+		} else if parts[0] != root {
+			return ""
+		}
+	}
+	if root != "" {
+		return root + "/"
+	}
+	return ""
 }
