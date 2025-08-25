@@ -1,0 +1,454 @@
+require('dotenv').config();
+
+// Test script for thomas@serenidad.app user only
+async function testThomasUser() {
+  console.log('🧪 Testing spans and post hours functionality for thomas@serenidad.app');
+  
+  // First, let's find the Slack ID for thomas@serenidad.app
+  const email = 'losdos2341@gmail.com';
+  const slackId = await findSlackIdByEmail(email);
+  
+  if (!slackId) {
+    console.log('❌ Could not find Slack ID for thomas@serenidad.app');
+    return;
+  }
+  
+  console.log(`✅ Found Slack ID: ${slackId}`);
+  
+  // Get all games for this user
+  const games = await fetchGamesForUser(slackId);
+  console.log(`📊 Found ${games.length} games for ${email}`);
+  
+  if (games.length === 0) {
+    console.log('❌ No games found for this user');
+    return;
+  }
+  
+  // Fetch Hackatime data for this user
+  console.log('🔄 Fetching Hackatime data...');
+  const hackatimeData = await fetchHackatimeData(slackId);
+  console.log(`📈 Found ${hackatimeData.projects.length} projects in Hackatime`);
+  
+  // Fetch spans data
+  console.log('🔄 Fetching spans data...');
+  const spansData = await fetchHackatimeSpans(slackId);
+  console.log(`⏱️ Found spans for ${Object.keys(spansData).length} projects`);
+  
+  // Process each game
+  for (let i = 0; i < games.length; i++) {
+    const game = games[i];
+    const gameName = game.fields?.Name || 'Unknown Game';
+    const projects = game.fields?.['Hackatime Projects'];
+    
+    console.log(`\n🎮 Processing game ${i + 1}/${games.length}: ${gameName}`);
+    console.log(`📋 Projects: ${projects}`);
+    
+    if (!projects) {
+      console.log('⚠️ No Hackatime projects found, skipping...');
+      continue;
+    }
+    
+    // Calculate total seconds for this game
+    const totalSeconds = calculateProjectSeconds(hackatimeData, projects);
+    console.log(`⏱️ Total seconds: ${totalSeconds}`);
+    
+    // Update game's HackatimeSeconds
+    try {
+      await updateGameHackatimeSeconds(game.id, totalSeconds);
+      console.log(`✅ Updated game HackatimeSeconds`);
+    } catch (error) {
+      console.error(`❌ Failed to update game:`, error.message);
+    }
+    
+    // Process posts for this game
+    try {
+      await processGamePosts(game, spansData, projects);
+      console.log(`✅ Processed posts for game`);
+    } catch (error) {
+      console.error(`❌ Failed to process posts:`, error.message);
+    }
+  }
+  
+  console.log('\n🎉 Test completed!');
+}
+
+// Helper functions
+async function findSlackIdByEmail(email) {
+  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+  const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+  const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
+  const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
+  
+  try {
+    const params = new URLSearchParams();
+    params.set('filterByFormula', `{Email} = '${email}'`);
+    
+    const response = await fetch(`${AIRTABLE_API_BASE}/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_USERS_TABLE)}?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const records = data.records || [];
+    
+    if (records.length > 0) {
+      return records[0].fields?.['slack id'];
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error finding Slack ID:', error.message);
+    return null;
+  }
+}
+
+async function fetchGamesForUser(slackId) {
+  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+  const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+  const AIRTABLE_GAMES_TABLE = process.env.AIRTABLE_GAMES_TABLE || 'Games';
+  const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
+  
+  try {
+    const params = new URLSearchParams();
+    params.set('filterByFormula', `{slack id} = '${slackId}'`);
+    
+    const response = await fetch(`${AIRTABLE_API_BASE}/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_GAMES_TABLE)}?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.records || [];
+  } catch (error) {
+    console.error('Error fetching games:', error.message);
+    return [];
+  }
+}
+
+async function fetchHackatimeData(slackId) {
+  if (!slackId) throw new Error('Missing slackId');
+  
+  const start_date = process.env.HACKATIME_START_DATE || '2025-08-18';
+  const end_date = process.env.HACKATIME_END_DATE || (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0, 10);
+  })();
+  const url = `https://hackatime.hackclub.com/api/v1/users/${encodeURIComponent(slackId)}/stats?features=projects&start_date=${start_date}&end_date=${end_date}`;
+  
+  const headers = { Accept: 'application/json' };
+  if (process.env.RACK_ATTACK_BYPASS) {
+    headers['Rack-Attack-Bypass'] = process.env.RACK_ATTACK_BYPASS;
+  }
+  
+  const response = await fetch(url, { headers });
+  
+  if (response.status === 429) {
+    throw new Error('429: Rate limit exceeded');
+  }
+  
+  if (!response.ok) {
+    throw new Error(`Hackatime API error ${response.status}: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  const projects = Array.isArray(data?.data?.projects) ? data.data.projects : [];
+  const total_seconds = data?.data?.total_seconds || 0;
+  
+  return { projects, total_seconds };
+}
+
+async function fetchHackatimeSpans(slackId) {
+  if (!slackId) throw new Error('Missing slackId');
+  
+  const start_date = process.env.HACKATIME_START_DATE || '2025-08-18';
+  
+  // Get all projects for this user first
+  const hackatimeData = await fetchHackatimeData(slackId);
+  const projects = hackatimeData.projects || [];
+  
+  const allSpans = {};
+  
+  // Fetch spans for each project
+  for (const project of projects) {
+    if (!project.name) continue;
+    
+    const url = `https://hackatime.hackclub.com/api/v1/users/${encodeURIComponent(slackId)}/heartbeats/spans?start_date=${start_date}&project=${encodeURIComponent(project.name)}`;
+    
+    console.log(`  📊 Fetching spans for project "${project.name}"...`);
+    const headers = { Accept: 'application/json' };
+    if (process.env.RACK_ATTACK_BYPASS) {
+      headers['Rack-Attack-Bypass'] = process.env.RACK_ATTACK_BYPASS;
+    }
+    
+    try {
+      const response = await fetch(url, { headers });
+      
+      if (response.status === 429) {
+        console.log(`  ⚠️ Rate limited for project "${project.name}", skipping...`);
+        continue;
+      }
+      
+      if (!response.ok) {
+        console.log(`  ❌ Failed to fetch spans for project "${project.name}": ${response.status}`);
+        continue;
+      }
+      
+      const data = await response.json();
+      const spans = Array.isArray(data?.spans) ? data.spans : [];
+      allSpans[project.name] = spans;
+      
+      console.log(`  ✅ Found ${spans.length} spans for "${project.name}"`);
+      
+      // Small delay between project requests
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+    } catch (error) {
+      console.error(`  ❌ Error fetching spans for project "${project.name}":`, error.message);
+    }
+  }
+  
+  return allSpans;
+}
+
+function calculateProjectSeconds(hackatimeData, gameProjectsField) {
+  let totalSeconds = 0;
+  
+  if (!gameProjectsField || !hackatimeData.projects.length) {
+    return totalSeconds;
+  }
+  
+  const projectNames = Array.isArray(gameProjectsField) 
+    ? gameProjectsField.filter(Boolean)
+    : (typeof gameProjectsField === 'string' ? gameProjectsField.split(',').map(p => p.trim()) : []);
+  
+  for (const projectName of projectNames) {
+    if (!projectName) continue;
+    
+    const projectNameLower = projectName.toLowerCase();
+    const matchingProject = hackatimeData.projects.find(p => 
+      p.name && p.name.toLowerCase() === projectNameLower
+    );
+    
+    if (matchingProject) {
+      totalSeconds += matchingProject.total_seconds || 0;
+      console.log(`    📊 Project "${projectName}": ${matchingProject.total_seconds}s`);
+    } else {
+      console.log(`    ⚠️ Project "${projectName}": NOT FOUND`);
+    }
+  }
+  
+  return totalSeconds;
+}
+
+async function updateGameHackatimeSeconds(gameId, seconds) {
+  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+  const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+  const AIRTABLE_GAMES_TABLE = process.env.AIRTABLE_GAMES_TABLE || 'Games';
+  const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
+  
+  const url = `${AIRTABLE_API_BASE}/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_GAMES_TABLE)}/${gameId}`;
+  
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      fields: {
+        HackatimeSeconds: seconds
+      }
+    })
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    throw new Error(`Failed to update game ${gameId}: ${response.status} ${errorText}`);
+  }
+  
+  return true;
+}
+
+async function fetchPostsForGame(gameId) {
+  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+  const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+  const AIRTABLE_POSTS_TABLE = process.env.AIRTABLE_POSTS_TABLE || 'Posts';
+  const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
+  
+  let allRecords = [];
+  let offset;
+  
+  do {
+    const params = new URLSearchParams();
+    params.set('pageSize', '100');
+    params.set('sort[0][field]', 'Created At');
+    params.set('sort[0][direction]', 'asc');
+    if (offset) params.set('offset', offset);
+    
+    const response = await fetch(`${AIRTABLE_API_BASE}/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_POSTS_TABLE)}?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const pageRecords = data?.records || [];
+    allRecords = allRecords.concat(pageRecords);
+    offset = data?.offset;
+    
+  } while (offset);
+  
+  // Filter posts that are linked to this game
+  const postsForGame = allRecords.filter((rec) => {
+    const linkedGameIds = normalizeLinkedIds(rec?.fields?.Game);
+    return linkedGameIds.includes(gameId);
+  });
+  
+  return postsForGame;
+}
+
+function normalizeLinkedIds(value) {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return [];
+    if (typeof value[0] === 'string') return value;
+    if (typeof value[0] === 'object' && value[0] && typeof value[0].id === 'string') {
+      return value.map((v) => v.id);
+    }
+  }
+  return [];
+}
+
+async function processGamePosts(game, spansData, gameProjects) {
+  const gameId = game.id;
+  const gameName = game.fields?.Name || 'Unknown Game';
+  
+  // Get project names for this game
+  const projectNames = Array.isArray(gameProjects) 
+    ? gameProjects.filter(Boolean)
+    : (typeof gameProjects === 'string' ? gameProjects.split(',').map(p => p.trim()) : []);
+  
+  if (projectNames.length === 0) {
+    console.log('    ⚠️ No projects found, skipping post processing');
+    return;
+  }
+  
+  // Fetch all posts for this game
+  const posts = await fetchPostsForGame(gameId);
+  console.log(`    📝 Found ${posts.length} posts for game ${gameName}`);
+  
+  if (posts.length === 0) {
+    return;
+  }
+  
+  // Sort posts by creation time (oldest first)
+  posts.sort((a, b) => {
+    const aTime = new Date(a.fields?.['Created At'] || a.createdTime || 0).getTime() / 1000;
+    const bTime = new Date(b.fields?.['Created At'] || b.createdTime || 0).getTime() / 1000;
+    return aTime - bTime;
+  });
+  
+  // Calculate hours spent for each post
+  for (let i = 0; i < posts.length; i++) {
+    const post = posts[i];
+    const postId = post.id;
+    const createdAt = new Date(post.fields?.['Created At'] || post.createdTime || 0).getTime() / 1000;
+    
+    let hoursSpent = 0;
+    
+    if (i === 0) {
+      // First post: calculate hours from start of tracking to this post
+      const startDate = new Date(process.env.HACKATIME_START_DATE || '2025-08-18').getTime() / 1000;
+      hoursSpent = calculateHoursFromSpans(spansData, projectNames, startDate, createdAt);
+    } else {
+      // Subsequent posts: calculate hours between this post and the previous post
+      const previousPost = posts[i - 1];
+      const previousCreatedAt = new Date(previousPost.fields?.['Created At'] || previousPost.createdTime || 0).getTime() / 1000;
+      hoursSpent = calculateHoursFromSpans(spansData, projectNames, previousCreatedAt, createdAt);
+    }
+    
+    // Update the post with calculated hours
+    try {
+      await updatePostHoursSpent(postId, hoursSpent);
+      console.log(`    ✅ Updated post ${i + 1}/${posts.length}: ${hoursSpent.toFixed(2)} hours`);
+    } catch (error) {
+      console.error(`    ❌ Failed to update post ${postId}:`, error.message);
+    }
+  }
+}
+
+function calculateHoursFromSpans(spansData, projectNames, startTime, endTime) {
+  let totalSeconds = 0;
+  
+  for (const projectName of projectNames) {
+    const projectSpans = spansData[projectName] || [];
+    
+    for (const span of projectSpans) {
+      const spanStart = span.start_time;
+      const spanEnd = span.end_time;
+      
+      // Check if span overlaps with our time range
+      if (spanStart < endTime && spanEnd > startTime) {
+        // Calculate overlap
+        const overlapStart = Math.max(spanStart, startTime);
+        const overlapEnd = Math.min(spanEnd, endTime);
+        const overlapDuration = overlapEnd - overlapStart;
+        
+        if (overlapDuration > 0) {
+          totalSeconds += overlapDuration;
+        }
+      }
+    }
+  }
+  
+  return totalSeconds / 3600; // Convert to hours
+}
+
+async function updatePostHoursSpent(postId, hoursSpent) {
+  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+  const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+  const AIRTABLE_POSTS_TABLE = process.env.AIRTABLE_POSTS_TABLE || 'Posts';
+  const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
+  
+  const url = `${AIRTABLE_API_BASE}/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_POSTS_TABLE)}/${postId}`;
+  
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      fields: {
+        HoursSpent: hoursSpent
+      }
+    })
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    throw new Error(`Failed to update post ${postId}: ${response.status} ${errorText}`);
+  }
+  
+  return true;
+}
+
+// Run the test
+testThomasUser().catch(console.error);
