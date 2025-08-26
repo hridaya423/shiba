@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         code,
         client_id: process.env.SLACK_ID || "",
         client_secret: process.env.SLACK_SECRET || "",
-        redirect_uri: "https://shiba.hackclub.com",
+        redirect_uri: "https://shiba.hackclub.dev",
       }),
     });
 
