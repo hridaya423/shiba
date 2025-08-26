@@ -88,7 +88,7 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
             }}
           />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
               <strong>{slackProfile?.displayName || slackId || 'User'}</strong>
               {Array.isArray(badges) && badges.includes('Speedy Shiba Shipper') && (
                 <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -188,7 +188,7 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
               ) : null}
             </div>
             {createdAt ? (
-              <div style={{ display: 'flex', flexDirection: 'row', gap: 8, fontSize: 11, opacity: 0.6, marginTop: 2, alignItems: 'center', justifyContent: 'flex-start' }}>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: 8, fontSize: 11, opacity: 0.6, marginTop: 2, alignItems: 'center' }}>
                 {HoursSpent && HoursSpent > 0 && Math.floor((HoursSpent % 1) * 60) > 0 && (
                   <>
                     <span>

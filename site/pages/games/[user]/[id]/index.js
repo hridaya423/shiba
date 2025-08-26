@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import Head from 'next/head';
 
 const PlayGameComponent = dynamic(() => import('@/components/utils/playGameComponent.js'), { ssr: false });
 const PostAttachmentRenderer = dynamic(() => import('@/components/utils/PostAttachmentRenderer'), { ssr: false });
@@ -39,124 +40,161 @@ export default function GamesPage({ gameData, error }) {
 
   if (error) {
     return (
-      <div style={{width: '100%', alignItems: "center", height: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'center'}}>
-        <p>Error: {error}</p>
-      </div>
+      <>
+        <Head>
+          <title>Game Not Found - Shiba Arcade</title>
+          <meta name="description" content="The requested game could not be found." />
+        </Head>
+        <div style={{width: '100%', alignItems: "center", height: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'center'}}>
+          <p>Error: {error}</p>
+        </div>
+      </>
     );
   }
 
   if (!gameData) {
     return (
-      <div style={{width: '100%', alignItems: "center", height: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'center'}}>
-        <p>Loading...</p>
-      </div>
+      <>
+        <Head>
+          <title>Loading Game - Shiba Arcade</title>
+          <meta name="description" content="Loading game details..." />
+        </Head>
+        <div style={{width: '100%', alignItems: "center", height: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'center'}}>
+          <p>Loading...</p>
+        </div>
+      </>
     );
   }
 
-
+  // Generate meta tags based on game data
+  const gameTitle = gameData?.name || id;
+  const gameDescription = gameData?.description || `Play ${gameTitle} on Shiba Arcade`;
+  const gameImage = gameData?.thumbnailUrl || 'https://shiba.hackclub.com/shiba.png';
+  const pageTitle = `${gameTitle} by ${slackProfile?.displayName || user} - Shiba Arcade`;
+  const pageDescription = gameDescription.length > 160 ? gameDescription.substring(0, 157) + '...' : gameDescription;
 
   return (
-    <div style={{width: '100%', alignItems: "center", height: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fff'}}>
-      <div style={{width: "100%", maxWidth: 800}}>
-        <p style={{width: "100%", textAlign: "center", marginBottom: 16, marginTop: 16}}>Shiba Games</p>
-        <div style={{ width: '100%', maxWidth: '1152px' }}>
-          {gameData?.playableURL && (() => {
-            let gameId = '';
-            try {
-              // Handle both string and array formats
-              const playableURL = Array.isArray(gameData.playableURL) ? gameData.playableURL[0] : gameData.playableURL;
-              if (!playableURL) return null;
-              
-              const path = playableURL.startsWith('http') ? new URL(playableURL).pathname : playableURL;
-              const m = /\/play\/([^\/?#]+)/.exec(path);
-              gameId = m && m[1] ? decodeURIComponent(m[1]) : '';
-            } catch (_) {
-              gameId = '';
-            }
-            return gameId ? (
-              <PlayGameComponent 
-                gameId={gameId}
-                gameName={gameData?.name || id}
-                thumbnailUrl={gameData?.thumbnailUrl || ''}
-                width="100%"
-                gamePageUrl={`https://shiba.hackclub.com/games/${user}/${encodeURIComponent(gameData?.name || id)}`}
-              />
-            ) : (
-              <div style={{ aspectRatio: '16 / 9', border: "1px solid #000", width: '100%', maxWidth: '1152px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                No playable URL available
-              </div>
-            );
-          })()}
-        </div>
-        <p style={{marginTop: 16, marginBottom: 4}}>{gameData?.name || 'Game Name'}</p>
-        {gameData?.description && (
-          <p style={{marginTop: 0, marginBottom: 8}}>{gameData.description}</p>
-        )}
-
-        <div style={{display: "flex", alignItems: "center", gap: 8, flexDirection: "row"}}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 8,
-              border: '1px solid rgba(0,0,0,0.18)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundColor: '#fff',
-              backgroundImage: slackProfile?.image ? `url(${slackProfile.image})` : 'none',
-            }}
-          />
-          <div style={{display: "flex", flexDirection: "column", gap: 2}}>
-            <p><strong>{slackProfile?.displayName || user}</strong></p>
-            <p style={{fontSize: 10}}>
-              Last Updated: {gameData?.lastUpdatedFormatted || 'Unknown'}
-            </p>
-          </div>
-        </div>
-
-        <p style={{marginTop: 16, marginBottom: 4}}>
-          Devlogs
-          {Array.isArray(gameData?.posts) && gameData.posts.length > 0 && (() => {
-            const totalHours = gameData.posts.reduce((sum, post) => sum + (post.HoursSpent || 0), 0);
-            return totalHours > 0 ? ` (${totalHours.toFixed(2)} hours logged total)` : '';
-          })()}
-        </p>
-        {Array.isArray(gameData?.posts) && gameData.posts.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {gameData.posts.map((p, pIdx) => (
-              <div key={p.id || pIdx} className="moment-card" style={{ 
-                position: "relative",
-                border: "1px solid rgba(0, 0, 0, 0.18)",
-                borderRadius: "10px",
-                background: "rgba(255, 255, 255, 0.8)",
-                padding: "12px"
-              }}>
-                <PostAttachmentRenderer
-                  content={p.content}
-                  attachments={p.attachments}
-                  playLink={p.PlayLink}
-                  gameName={gameData?.name || ""}
-                  thumbnailUrl={gameData?.thumbnailUrl || ""}
-                  token={null}
-                  slackId={user}
-                  createdAt={p.createdAt}
-                  badges={p.badges}
-                  HoursSpent={p.HoursSpent}
+    <>
+      <Head>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`https://shiba.hackclub.com/games/${user}/${encodeURIComponent(id)}`} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:image" content={gameImage} />
+        
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={`https://shiba.hackclub.com/games/${user}/${encodeURIComponent(id)}`} />
+        <meta property="twitter:title" content={pageTitle} />
+        <meta property="twitter:description" content={pageDescription} />
+        <meta property="twitter:image" content={gameImage} />
+      </Head>
+      <div style={{width: '100%', alignItems: "center", height: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fff'}}>
+        <div style={{width: "100%", maxWidth: 800}}>
+          <p style={{width: "100%", textAlign: "center", marginBottom: 16, marginTop: 16}}>Shiba Games</p>
+          <div style={{ width: '100%', maxWidth: '1152px' }}>
+            {gameData?.playableURL && (() => {
+              let gameId = '';
+              try {
+                // Handle both string and array formats
+                const playableURL = Array.isArray(gameData.playableURL) ? gameData.playableURL[0] : gameData.playableURL;
+                if (!playableURL) return null;
+                
+                const path = playableURL.startsWith('http') ? new URL(playableURL).pathname : playableURL;
+                const m = /\/play\/([^\/?#]+)/.exec(path);
+                gameId = m && m[1] ? decodeURIComponent(m[1]) : '';
+              } catch (_) {
+                gameId = '';
+              }
+              return gameId ? (
+                <PlayGameComponent 
+                  gameId={gameId}
+                  gameName={gameData?.name || id}
+                  thumbnailUrl={gameData?.thumbnailUrl || ''}
+                  width="100%"
                   gamePageUrl={`https://shiba.hackclub.com/games/${user}/${encodeURIComponent(gameData?.name || id)}`}
-                  onPlayCreated={(play) => {
-                    console.log("Play created:", play);
-                  }}
                 />
-              </div>
-            ))}
+              ) : (
+                <div style={{ aspectRatio: '16 / 9', border: "1px solid #000", width: '100%', maxWidth: '1152px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  No playable URL available
+                </div>
+              );
+            })()}
           </div>
-        ) : (
-          <div style={{width: "100%", border: "1px solid #000", padding: 16}}>
-            <p>No posts yet</p>
+          <p style={{marginTop: 16, marginBottom: 4}}>{gameData?.name || 'Game Name'}</p>
+          {gameData?.description && (
+            <p style={{marginTop: 0, marginBottom: 8}}>{gameData.description}</p>
+          )}
+
+          <div style={{display: "flex", alignItems: "center", gap: 8, flexDirection: "row"}}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 8,
+                border: '1px solid rgba(0,0,0,0.18)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundColor: '#fff',
+                backgroundImage: slackProfile?.image ? `url(${slackProfile.image})` : 'none',
+              }}
+            />
+            <div style={{display: "flex", flexDirection: "column", gap: 2}}>
+              <p><strong>{slackProfile?.displayName || user}</strong></p>
+              <p style={{fontSize: 10}}>
+                Last Updated: {gameData?.lastUpdatedFormatted || 'Unknown'}
+              </p>
+            </div>
           </div>
-        )}
+
+          <p style={{marginTop: 16, marginBottom: 4}}>
+            Devlogs
+            {Array.isArray(gameData?.posts) && gameData.posts.length > 0 && (() => {
+              const totalHours = gameData.posts.reduce((sum, post) => sum + (post.HoursSpent || 0), 0);
+              return totalHours > 0 ? ` (${totalHours.toFixed(2)} hours logged total)` : '';
+            })()}
+          </p>
+          {Array.isArray(gameData?.posts) && gameData.posts.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {gameData.posts.map((p, pIdx) => (
+                <div key={p.id || pIdx} className="moment-card" style={{ 
+                  position: "relative",
+                  border: "1px solid rgba(0, 0, 0, 0.18)",
+                  borderRadius: "10px",
+                  background: "rgba(255, 255, 255, 0.8)",
+                  padding: "12px"
+                }}>
+                  <PostAttachmentRenderer
+                    content={p.content}
+                    attachments={p.attachments}
+                    playLink={p.PlayLink}
+                    gameName={gameData?.name || ""}
+                    thumbnailUrl={gameData?.thumbnailUrl || ""}
+                    token={null}
+                    slackId={user}
+                    createdAt={p.createdAt}
+                    badges={p.badges}
+                    HoursSpent={p.HoursSpent}
+                    gamePageUrl={`https://shiba.hackclub.com/games/${user}/${encodeURIComponent(gameData?.name || id)}`}
+                    onPlayCreated={(play) => {
+                      console.log("Play created:", play);
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{width: "100%", border: "1px solid #000", padding: 16}}>
+              <p>No posts yet</p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
