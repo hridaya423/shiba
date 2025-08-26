@@ -48,6 +48,17 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
     }
   };
 
+  const handleRestart = () => {
+    if (iframeRef.current) {
+      // Force reload the iframe by updating its src
+      const currentSrc = iframeRef.current.src;
+      iframeRef.current.src = '';
+      setTimeout(() => {
+        iframeRef.current.src = currentSrc;
+      }, 10);
+    }
+  };
+
   // Calculate button size based on screen size (small and relative)
   const getButtonSize = () => {
     const screenWidth =
@@ -370,6 +381,46 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
             }}
             allow="autoplay; fullscreen; cross-origin-isolated"
           />
+          <div
+            style={{
+              position: "absolute",
+              top: "8px",
+              left: "8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              zIndex: 10,
+            }}
+          >
+            <button
+              onClick={handleRestart}
+              style={{
+                width: `${getButtonSize()}px`,
+                height: `${getButtonSize()}px`,
+                background: "rgba(0, 0, 0, 0.6)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                borderRadius: "4px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontSize: `${Math.max(12, getButtonSize() * 0.4)}px`,
+                backdropFilter: "blur(4px)",
+                transition: "all 0.2s ease",
+              }}
+              title="Restart game"
+            >
+              <svg
+                width="60%"
+                height="60%"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+              </svg>
+            </button>
+          </div>
           <div
             style={{
               position: "absolute",

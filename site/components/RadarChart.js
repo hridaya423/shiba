@@ -102,7 +102,6 @@ const RadarChart = ({
           font: {
             size: isMiniature ? 8 : 12
           },
-          stepSize: 1,
           min: 0,
           max: 5,
           beginAtZero: true

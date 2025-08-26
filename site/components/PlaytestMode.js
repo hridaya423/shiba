@@ -102,16 +102,16 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
         onClick();
       }}
       style={{
-        padding: "1vw 2vw",
-        fontSize: "clamp(1vw, 2vw, 3vw)",
+        padding: "0.75rem 1.5rem",
+        fontSize: "clamp(0.875rem, 1.25rem, 1.5rem)",
         fontWeight: "bold",
         color: "white",
         background: "black",
         border: "2px solid white",
         borderRadius: "0",
         cursor: "pointer",
-        minWidth: "6vw",
-        minHeight: "4vw",
+        minWidth: "6rem",
+        minHeight: "3rem",
         transition: "all 0.2s ease",
         ...style
       }}
@@ -175,8 +175,8 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
   return (
     <div
       style={{
-        width: "100vw",
-        height: "100vh",
+        width: "100%",
+        height: "100%",
         backgroundColor: "black",
         display: "flex",
         flexDirection: "column",
@@ -190,8 +190,8 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
     >
       <div style={{ 
         textAlign: "center",
-        maxWidth: "90vw",
-        marginBottom: buttonsVisible ? "2vw" : "0",
+        maxWidth: "90%",
+        marginBottom: buttonsVisible ? "2rem" : "0",
         transition: "margin-bottom 0.5s ease"
       }}>
         {textVisible && currentStage === 0 && (
@@ -214,7 +214,7 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                         animation: textVisible ? `letterFadeIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) ${globalIndex * 0.05}s forwards` : "none",
                         display: "inline-block",
                         color: "white",
-                        fontSize: "clamp(3vw, 6vw, 8vw)",
+                        fontSize: "clamp(2rem, 4rem, 6rem)",
                         fontWeight: "bold",
                         lineHeight: 1.2,
                         textShadow: `
@@ -241,9 +241,9 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                       transform: "translateY(20px) scale(0.8)",
                       animation: textVisible ? `letterFadeIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) ${(stage0Message.split(' ').slice(0, wordIndex).join(' ').length + wordIndex + word.length) * 0.05}s forwards` : "none",
                       display: "inline-block",
-                      color: "white",
-                      fontSize: "clamp(3vw, 6vw, 8vw)",
-                      fontWeight: "bold",
+                                              color: "white",
+                        fontSize: "clamp(2rem, 4rem, 6rem)",
+                        fontWeight: "bold",
                       lineHeight: 1.2,
                       width: "0.3em",
                     }}
@@ -262,17 +262,17 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
         <div style={{ 
           width: "100%",
           maxWidth: "1200px",
-          maxHeight: "100vh",
+          maxHeight: "100%",
           margin: "0 auto",
-          padding: "0 2vw",
+          padding: "0 2rem",
           display: "flex",
           flexDirection: "column"
         }}>
           {/* Title */}
           <div style={{ 
             textAlign: "center",
-            marginBottom: "4vw",
-            marginTop: "2vw",
+            marginBottom: "2rem",
+            marginTop: "1rem",
             flexShrink: 0
           }}>
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
@@ -294,7 +294,7 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                           animation: textVisible ? `letterFadeIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) ${globalIndex * 0.05}s forwards` : "none",
                           display: "inline-block",
                           color: "white",
-                          fontSize: "clamp(1.5vw, 3vw, 4vw)", // Half the size of stage 0
+                          fontSize: "clamp(1rem, 2rem, 3rem)", // Half the size of stage 0
                           fontWeight: "bold",
                           lineHeight: 1.2,
                           textShadow: `
@@ -322,7 +322,7 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                         animation: textVisible ? `letterFadeIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) ${(stage1Message.split(' ').slice(0, wordIndex).join(' ').length + wordIndex + word.length) * 0.05}s forwards` : "none",
                         display: "inline-block",
                         color: "white",
-                        fontSize: "clamp(1.5vw, 3vw, 4vw)", // Half the size of stage 0
+                        fontSize: "clamp(1rem, 2rem, 3rem)", // Half the size of stage 0
                         fontWeight: "bold",
                         lineHeight: 1.2,
                         width: "0.3em",
@@ -349,17 +349,17 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                 }, 100);
               }}
               style={{
-                marginTop: "3vw",
-                padding: "1vw 2vw",
-                fontSize: "clamp(1vw, 2vw, 3vw)",
+                marginTop: "1.5rem",
+                padding: "0.75rem 1.5rem",
+                fontSize: "clamp(0.875rem, 1.25rem, 1.5rem)",
                 fontWeight: "bold",
                 color: "white",
                 background: "black",
                 border: "2px solid white",
                 borderRadius: "0",
                 cursor: "pointer",
-                minWidth: "8vw",
-                minHeight: "4vw",
+                minWidth: "8rem",
+                minHeight: "3rem",
                 opacity: 0,
                 animation: textVisible ? `fadeInButtons 2s ease-in-out 2s forwards` : "none",
                 transform: "translateY(10px)",
@@ -373,10 +373,10 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
           {postsLoading ? (
             <div style={{ 
               textAlign: "center", 
-              padding: "4vw",
+              padding: "2rem",
               color: "white",
               
-              fontSize: "clamp(1vw, 2vw, 3vw)",
+              fontSize: "clamp(0.875rem, 1.25rem, 1.5rem)",
               flex: 1,
               overflowY: "auto"
             }}>
@@ -386,8 +386,8 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
             <div style={{
               display: "grid",
               gridTemplateColumns: "repeat(2, 1fr)",
-              gap: "1vw",
-              padding: "2vw",
+              gap: "0.5rem",
+              padding: "1rem",
               marginBottom: "20px",
               flex: 1,
               overflowY: "auto",
@@ -425,9 +425,9 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
           ) : (
             <div style={{ 
               textAlign: "center", 
-              padding: "4vw",
+              padding: "2rem",
               color: "white",
-              fontSize: "clamp(1vw, 2vw, 3vw)"
+              fontSize: "clamp(0.875rem, 1.25rem, 1.5rem)"
             }}>
               No posts found for this developer's journey.
             </div>
@@ -439,7 +439,7 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
       {buttonsVisible && currentStage === 0 && (
                 <div style={{ 
           display: "flex",
-          gap: "4vw",
+          gap: "2rem",
           justifyContent: "center",
           opacity: 0,
           animation: "fadeInButtons 2s ease-in-out forwards"
@@ -477,9 +477,9 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
         <div style={{ 
           width: "100%",
           maxWidth: "1200px",
-          maxHeight: "100vh",
+          maxHeight: "100%",
           margin: "0 auto",
-          padding: "0 2vw",
+          padding: "0 2rem",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -488,8 +488,8 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
           {/* Title */}
           <div style={{ 
             textAlign: "center",
-            marginBottom: "2vw",
-            marginTop: "2vw",
+            marginBottom: "1rem",
+            marginTop: "1rem",
             flexShrink: 0
           }}>
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
@@ -558,14 +558,14 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
             width: "100%",
             maxWidth: "800px",
             margin: "0 auto",
-            marginTop: "4vw",
+            marginTop: "2rem",
             opacity: 0,
             animation: `fadeInButtons 2s ease-in-out 4s forwards`,
           }}>
             {Object.entries(ratings).map(([category, rating]) => (
               <div key={category} style={{
-                marginBottom: "3vw",
-                padding: "2vw",
+                marginBottom: "1.5rem",
+                padding: "1rem",
                 border: "1px solid rgba(255,255,255,0.3)",
                 borderRadius: "8px",
                 background: "rgba(255,255,255,0.1)"
@@ -574,11 +574,11 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  marginBottom: "1vw"
+                  marginBottom: "0.5rem"
                 }}>
                   <span style={{
                     color: "white",
-                    fontSize: "clamp(1.5vw, 2.5vw, 3.5vw)",
+                    fontSize: "clamp(1rem, 1.5rem, 2rem)",
                     fontWeight: "bold",
                     textTransform: "capitalize"
                   }}>
@@ -586,7 +586,7 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                   </span>
                   <div style={{
                     display: "flex",
-                    gap: "1vw",
+                    gap: "0.5rem",
                     alignItems: "center"
                   }}>
                     {[0, 1, 2, 3, 4, 5].map((score) => (
@@ -594,11 +594,11 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
-                        gap: "0.5vw"
+                        gap: "0.25rem"
                       }}>
                         <span style={{
                           color: "white",
-                          fontSize: "clamp(0.8vw, 1.2vw, 1.6vw)",
+                          fontSize: "clamp(0.75rem, 1rem, 1.25rem)",
                           opacity: 0.8
                         }}>
                           {score}
@@ -609,8 +609,8 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                             setRatings(prev => ({ ...prev, [category]: score }));
                           }}
                           style={{
-                            width: "clamp(2vw, 3vw, 4vw)",
-                            height: "clamp(2vw, 3vw, 4vw)",
+                            width: "clamp(1.5rem, 2rem, 2.5rem)",
+                            height: "clamp(1.5rem, 2rem, 2.5rem)",
                             borderRadius: "50%",
                             border: "2px solid white",
                             background: rating === score ? "white" : "transparent",
@@ -624,11 +624,11 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                 </div>
                 <p style={{
                   color: "white",
-                  fontSize: "clamp(1vw, 1.5vw, 2vw)",
+                  fontSize: "clamp(0.875rem, 1.125rem, 1.375rem)",
                   lineHeight: 1.4,
                   opacity: 0.9,
                   margin: 0,
-                  paddingTop: "1vw",
+                  paddingTop: "0.5rem",
                   borderTop: "1px solid rgba(255,255,255,0.2)"
                 }}>
                   {ratingDescriptions[category][rating]}
@@ -640,9 +640,9 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
           {/* Button Container */}
           <div style={{
             display: "flex",
-            gap: "2vw",
-            marginTop: "4vw",
-            marginBottom: "4vw",
+            gap: "1rem",
+            marginTop: "2rem",
+            marginBottom: "2rem",
             justifyContent: "center"
           }}>
             {/* Back Button */}
@@ -658,16 +658,16 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                 }, 100);
               }}
               style={{
-                padding: "1vw 2vw",
-                fontSize: "clamp(1vw, 2vw, 3vw)",
+                padding: "0.75rem 1.5rem",
+                fontSize: "clamp(0.875rem, 1.25rem, 1.5rem)",
                 fontWeight: "bold",
                 color: "white",
                 background: "black",
                 border: "2px solid white",
                 borderRadius: "0",
                 cursor: "pointer",
-                minWidth: "8vw",
-                minHeight: "4vw",
+                minWidth: "8rem",
+                minHeight: "3rem",
                 opacity: 0,
                 animation: `fadeInButtons 2s ease-in-out 3s forwards`,
                 transform: "translateY(10px)",
@@ -689,16 +689,16 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                 }, 100);
               }}
               style={{
-                padding: "1vw 2vw",
-                fontSize: "clamp(1vw, 2vw, 3vw)",
+                padding: "0.75rem 1.5rem",
+                fontSize: "clamp(0.875rem, 1.25rem, 1.5rem)",
                 fontWeight: "bold",
                 color: "white",
                 background: "black",
                 border: "2px solid white",
                 borderRadius: "0",
                 cursor: "pointer",
-                minWidth: "12vw",
-                minHeight: "4vw",
+                minWidth: "12rem",
+                minHeight: "3rem",
                 opacity: 0,
                 animation: `fadeInButtons 2s ease-in-out 3s forwards`,
                 transform: "translateY(10px)",
@@ -716,7 +716,7 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
           width: "100%",
           maxWidth: "1200px",
           margin: "0 auto",
-          padding: "0 2vw",
+          padding: "0 2rem",
           display: "flex",
           flexDirection: "column",
           alignItems: "center"
@@ -724,8 +724,8 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
           {/* Title */}
           <div style={{ 
             textAlign: "center",
-            marginBottom: "4vw",
-            marginTop: "2vw",
+            marginBottom: "2rem",
+            marginTop: "1rem",
             flexShrink: 0
           }}>
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
@@ -842,17 +842,17 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                 }, 100);
               }}
               style={{
-                marginTop: "4vw",
-                padding: "1vw 2vw",
-                fontSize: "clamp(1vw, 2vw, 3vw)",
+                marginTop: "2rem",
+                padding: "0.75rem 1.5rem",
+                fontSize: "clamp(0.875rem, 1.25rem, 1.5rem)",
                 fontWeight: "bold",
                 color: "white",
                 background: "black",
                 border: "2px solid white",
                 borderRadius: "0",
                 cursor: "pointer",
-                minWidth: "12vw",
-                minHeight: "4vw",
+                minWidth: "12rem",
+                minHeight: "3rem",
                 opacity: 0,
                 animation: `fadeInButtons 2s ease-in-out 3s forwards`,
                 transform: "translateY(10px)",
@@ -869,9 +869,9 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
         <div style={{ 
           width: "100%",
           maxWidth: "1200px",
-          maxHeight: "100vh",
+          maxHeight: "100%",
           margin: "0 auto",
-          padding: "0 2vw",
+          padding: "0 2rem",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -880,8 +880,8 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
           {/* Title */}
           <div style={{ 
             textAlign: "center",
-            marginBottom: "4vw",
-            marginTop: "2vw",
+            marginBottom: "2rem",
+            marginTop: "1rem",
             flexShrink: 0
           }}>
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
@@ -973,16 +973,16 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
           
           {/* Feedback Text Area */}
           <div style={{
-            marginTop: '4vw',
+            marginTop: '2rem',
             width: '100%',
             maxWidth: '600px',
-            margin: '4vw auto 0'
+            margin: '2rem auto 0'
           }}>
             <h3 style={{
               color: 'white',
-              fontSize: 'clamp(1.5vw, 2.5vw, 3.5vw)',
+              fontSize: 'clamp(1rem, 1.5rem, 2rem)',
               fontWeight: 'bold',
-              marginBottom: '2vw',
+              marginBottom: '1rem',
               textAlign: 'center'
             }}>
               Feedback to the creator
@@ -1009,11 +1009,11 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
           
           {/* Buttons */}
           <div style={{
-            marginTop: '4vw',
-            marginBottom: '4vw',
+            marginTop: '2rem',
+            marginBottom: '2rem',
             display: 'flex',
             justifyContent: 'center',
-            gap: '2vw'
+            gap: '1rem'
           }}>
             <NavigationButton
               onClick={() => {
