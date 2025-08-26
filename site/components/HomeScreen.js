@@ -4,6 +4,7 @@ import GameCarousel from "@/components/GameCarousel";
 import GameDetails from "@/components/GameDetails";
 import useAudioManager from "@/components/useAudioManager";
 import OnboardingModal from "@/components/OnboardingModal";
+import MatchaModal from "@/components/MatchaModal";
 
 // Cookie utility functions
 const getCookie = (name) => {
@@ -668,6 +669,8 @@ function EventsModal({ isOpen, onClose, token }) {
     </div>
   );
 }
+
+
 function ProfileModal({
   isOpen,
   onClose,
@@ -1319,6 +1322,10 @@ function ProfileModal({
           transform: translateY(6px) scale(0.98);
           opacity: 0;
         }
+        .fade-in.visible {
+          opacity: 1 !important;
+          transform: translateY(0) !important;
+        }
       `}</style>
     </div>
   );
@@ -1340,6 +1347,7 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
   const [hasOpenedEventsNotification, setHasOpenedEventsNotification] = useState(false);
   const [hasOnboarded, setHasOnboarded] = useState(true);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [openMatchaModal, setOpenMatchaModal] = useState(false);
 
   // Preload SFX and game clip audios for instant playback
   const sfxFiles = ["next.mp3", "prev.mp3", "shiba-bark.mp3"];
@@ -1424,15 +1432,45 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
     }
   }, [autoOpenProfile]);
 
-  // Check onboarding status when profile is loaded
+  // Check onboarding status and trigger MatchaModal when profile is loaded
   useEffect(() => {
-    if (profile && profile.hasOnboarded === false) {
-      setHasOnboarded(false);
-      setIsOnboardingOpen(true);
-    } else if (profile) {
-      setHasOnboarded(true);
+    if (profile) {
+      if (profile.hasOnboarded === false) {
+        setHasOnboarded(false);
+        setIsOnboardingOpen(true);
+        setOpenMatchaModal(false); // Don't show MatchaModal if not onboarded
+      } else {
+        setHasOnboarded(true);
+        // Check if user has any Hackatime projects connected by fetching their games
+        if (token && SlackId && SlackId.trim() !== '') {
+          fetch('/api/GetMyGames', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+          })
+          .then(res => res.json())
+          .then(games => {
+            if (Array.isArray(games)) {
+              // Check if any game has Hackatime projects
+              const hasHackatimeProjects = games.some(game => 
+                game.HackatimeProjects && game.HackatimeProjects.trim() !== ''
+              );
+              setOpenMatchaModal(!hasHackatimeProjects); // Show modal if no Hackatime projects
+            } else {
+              setOpenMatchaModal(true); // Show modal if games fetch fails
+            }
+          })
+          .catch(error => {
+            console.error('Failed to fetch games for MatchaModal check:', error);
+            setOpenMatchaModal(true); // Show modal if games fetch fails
+          });
+        } else {
+          // Don't show modal if no SlackId (user needs to connect Slack first)
+          setOpenMatchaModal(false);
+        }
+      }
     }
-  }, [profile]);
+  }, [profile, token]);
 
   return (
     <>
@@ -1752,6 +1790,17 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
           setHasOnboarded(true);
           setIsOnboardingOpen(false);
         }}
+      />
+      <MatchaModal
+        isOpen={openMatchaModal && !isOnboardingOpen}
+        playSound={playSound}
+        playClip={playClip}
+        stopAll={stopAll}
+        isMuted={isMuted}
+        token={token}
+        SlackId={SlackId}
+        profile={profile}
+        onClose={() => setOpenMatchaModal(false)}
       />
     </>
   );
