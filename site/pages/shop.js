@@ -68,7 +68,11 @@ export default function ShopPage() {
         onBack={goHome}
       />
       <div style={{ paddingTop: 64 }}>
-        <ShopComponent />
+        <ShopComponent 
+          profile={profile}
+          token={token}
+          setProfile={setProfile}
+        />
       </div>
     </div>
   );
