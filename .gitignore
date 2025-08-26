@@ -4,6 +4,8 @@
 # Dependencies
 node_modules/
 
+./playtestScript
+
 # Next.js
 .next/
 out/

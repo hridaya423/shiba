@@ -23,40 +23,8 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Single audio instance for Dream.mp3
-  const dreamAudioRef = useRef(null);
-
-  // Initialize audio once
-  useEffect(() => {
-    if (!dreamAudioRef.current) {
-      dreamAudioRef.current = new Audio("/Dream.mp3");
-      dreamAudioRef.current.loop = true;
-    }
-  }, []);
-
-  // Audio effect for Dream.mp3 when not on game stage
-  useEffect(() => {
-    if (!dreamAudioRef.current) return;
-    
-    if (currentStage !== 2) {
-      // Play Dream.mp3 when not on game stage
-      dreamAudioRef.current.play().catch(() => {
-        // Ignore autoplay policy errors
-      });
-    } else {
-      // Pause Dream.mp3 when on game stage
-      dreamAudioRef.current.pause();
-    }
-  }, [currentStage]);
-
-  // Cleanup audio when component unmounts
-  useEffect(() => {
-    return () => {
-      if (dreamAudioRef.current) {
-        dreamAudioRef.current.pause();
-      }
-    };
-  }, []);
+  // Audio state management
+  const [audioFinished, setAudioFinished] = useState(false);
 
   useEffect(() => {
     // Reset stage when component mounts
@@ -371,6 +339,7 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
             <button
               onClick={() => {
                 playSound?.("next.mp3");
+                setAudioFinished(true); // Permanently disable audio
                 setCurrentStage(2);
                 setTextVisible(false);
                 setButtonsVisible(false);
@@ -1143,6 +1112,16 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
           }
         }
       `}</style>
+      
+      {/* Conditional Audio Element */}
+      {!audioFinished && (
+        <audio
+          src="/Dream.mp3"
+          loop
+          autoPlay
+          style={{ display: 'none' }}
+        />
+      )}
     </div>
   );
 }
