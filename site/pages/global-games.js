@@ -4,12 +4,15 @@ import Head from "next/head";
 import StartScreen from "@/components/StartScreen";
 import GlobalGamesComponent from "@/components/GlobalGamesComponent";
 import TopBar from "@/components/TopBar";
+import PlaytestMode from "@/components/PlaytestMode";
 
 export default function GlobalGamesPage() {
   const router = useRouter();
   const [token, setToken] = useState(null);
   const [profile, setProfile] = useState(null);
   const [disableTopBar, setDisableTopBar] = useState(false);
+  const [playtestMode, setPlaytestMode] = useState(false);
+  const [selectedPlaytestGame, setSelectedPlaytestGame] = useState(null);
 
   // Scroll to top when page loads
   useEffect(() => {
@@ -61,6 +64,21 @@ export default function GlobalGamesPage() {
     return <StartScreen setToken={setToken} setProfile={setProfile} />;
   }
 
+  // Render playtest mode if active
+  if (playtestMode) {
+    return (
+      <PlaytestMode 
+        onExit={() => {
+          setPlaytestMode(false);
+          setSelectedPlaytestGame(null);
+        }}
+        profile={profile}
+        playtestGame={selectedPlaytestGame}
+        token={token}
+      />
+    );
+  }
+
   return (
     <>
       <Head>
@@ -84,6 +102,8 @@ export default function GlobalGamesPage() {
             goHome={goHome}
             token={token}
             SlackId={profile?.slackId || null}
+            setPlaytestMode={setPlaytestMode}
+            setSelectedPlaytestGame={setSelectedPlaytestGame}
           />
         </div>
       </div>
