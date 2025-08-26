@@ -101,8 +101,7 @@ export default function PurchaseModal({ isOpen, onClose, item, token, profile, s
       const requestBody = {
         token,
         shopItemId: item?.id,
-        shippingInfo: formData,
-        amountSpent: parseFloat(item?.price) || 0
+        shippingInfo: formData
       };
       
       console.log('Request body:', requestBody);
