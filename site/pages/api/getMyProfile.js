@@ -57,6 +57,8 @@ export default async function handler(req, res) {
     }
 
     const f = user.fields || {};
+    console.log('All user fields:', Object.keys(f));
+    console.log('All field values:', f);
     const profile = normalizeProfileFields(f);
     return res.status(200).json({ ok: true, profile });
   } catch (e) {
@@ -158,9 +160,27 @@ function normalizeProfileFields(f) {
   
   // Get SSS Balance, default to 0 if not set
   let sssBalance = 0;
-  if (f['SSS Balance'] !== undefined) {
-    sssBalance = typeof f['SSS Balance'] === 'number' ? f['SSS Balance'] : 0;
+  
+  // Check for different possible field names
+  const possibleFieldNames = ['SSS Balance', 'SSS Balance', 'sssBalance', 'SSSBalance', 'Balance', 'SSS'];
+  let foundField = null;
+  
+  for (const fieldName of possibleFieldNames) {
+    if (f[fieldName] !== undefined) {
+      foundField = fieldName;
+      break;
+    }
   }
+  
+  console.log('Found SSS Balance field:', foundField);
+  console.log('Raw SSS Balance value:', f[foundField]);
+  console.log('SSS Balance type:', typeof f[foundField]);
+  
+  if (foundField && f[foundField] !== undefined) {
+    sssBalance = typeof f[foundField] === 'number' ? f[foundField] : 0;
+  }
+  
+  console.log('Final sssBalance:', sssBalance);
   
   return {
     email: typeof f.Email === 'string' ? f.Email : '',
