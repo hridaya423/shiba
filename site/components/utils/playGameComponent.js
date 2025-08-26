@@ -171,6 +171,7 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
                 filter: "blur(12px) brightness(0.3)",
                 transform: "scale(1.1)",
                 zIndex: 0,
+                imageRendering: "pixelated",
               }}
             />
           )}
@@ -196,6 +197,7 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
                       backgroundImage: `url(${thumbnailUrl})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
+                      imageRendering: "pixelated",
                     }
                   : undefined
               }
@@ -220,13 +222,20 @@ export default function PlayGameComponent({ gameId, width = "100%", apiBase, sty
               height: 180px;
               border-radius: 100%;
               border: 1px solid grey;
-              background: radial-gradient(
-                circle at 40% 40%,
-                #f0f0f0 0%,
-                #d9d9d9 40%,
-                #c7c7c7 70%,
-                #bdbdbd 100%
-              );
+              background: 
+                radial-gradient(
+                  circle at 40% 40%,
+                  #f0f0f0 0%,
+                  #d9d9d9 40%,
+                  #c7c7c7 70%,
+                  #bdbdbd 100%
+                ),
+                repeating-conic-gradient(
+                  from 0deg,
+                  transparent 0deg,
+                  rgba(0, 0, 0, 0.03) 1deg,
+                  transparent 2deg
+                );
               transform-origin: center;
               transform-style: preserve-3d;
               will-change: transform;
