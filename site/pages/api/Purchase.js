@@ -24,15 +24,13 @@ export default async function handler(req, res) {
   const { 
     token, 
     shopItemId, 
-    shippingInfo,
-    amountSpent
+    shippingInfo
   } = req.body || {};
 
   console.log('Extracted data:');
   console.log('- token:', token ? 'present' : 'missing');
   console.log('- shopItemId:', shopItemId);
   console.log('- shippingInfo:', shippingInfo ? 'present' : 'missing');
-  console.log('- amountSpent:', amountSpent);
 
   if (!token || !shopItemId || !shippingInfo) {
     const missingFields = [];
@@ -62,37 +60,20 @@ export default async function handler(req, res) {
 
     console.log('User found:', { id: user.id, email: user.fields?.email });
 
-    // Check if user has enough SSS balance
-    const userSSSBalance = user.fields?.['SSS Balance'] || 0;
-    const purchaseAmount = parseFloat(amountSpent);
-    
-    console.log('SSS Balance check:');
-    console.log('- User SSS Balance:', userSSSBalance);
-    console.log('- Purchase Amount:', purchaseAmount);
-    
-    if (userSSSBalance < purchaseAmount) {
-      console.error('Insufficient SSS balance for purchase');
-      return res.status(400).json({ 
-        message: 'Insufficient SSS balance',
-        userBalance: userSSSBalance,
-        requiredAmount: purchaseAmount,
-        shortfall: purchaseAmount - userSSSBalance
-      });
-    }
-    
-    console.log('SSS balance check passed');
-
-    // Check if shop item is in stock
-    console.log('Checking shop item stock...');
+    // Check if shop item exists and get its price
+    console.log('Checking shop item...');
     const shopItem = await getShopItemById(shopItemId);
     if (!shopItem) {
       console.error('Shop item not found:', shopItemId);
       return res.status(400).json({ message: 'Shop item not found' });
     }
 
+    const itemPrice = parseFloat(shopItem.fields?.Price || 0);
     const inStock = shopItem.fields?.['In Stock'] || 0;
-    console.log('Shop item stock check:');
+    
+    console.log('Shop item details:');
     console.log('- Item:', shopItem.fields?.Name || 'Unknown');
+    console.log('- Price:', itemPrice);
     console.log('- In Stock:', inStock);
 
     if (inStock <= 0) {
@@ -106,6 +87,25 @@ export default async function handler(req, res) {
 
     console.log('Stock check passed');
 
+    // Check if user has enough SSS balance
+    const userSSSBalance = user.fields?.['SSS Balance'] || 0;
+    
+    console.log('SSS Balance check:');
+    console.log('- User SSS Balance:', userSSSBalance);
+    console.log('- Purchase Amount:', itemPrice);
+    
+    if (userSSSBalance < itemPrice) {
+      console.error('Insufficient SSS balance for purchase');
+      return res.status(400).json({ 
+        message: 'Insufficient SSS balance',
+        userBalance: userSSSBalance,
+        requiredAmount: itemPrice,
+        shortfall: itemPrice - userSSSBalance
+      });
+    }
+    
+    console.log('SSS balance check passed');
+
     // Generate 9-digit OrderID
     const orderId = generateOrderId();
     console.log('Generated OrderID:', orderId);
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
         'Status': 'Unfulfilled', // Default status
         'Spent By': [user.id], // Linked record to Users table
         'Shop Item': [shopItemId], // Linked record to Shop Items table
-        'Amount Spent': amountSpent || 0, // Amount spent from shop item cost
+        'Amount Spent': itemPrice, // Amount spent from shop item cost
         'street address': shippingInfo.street1 || '',
         'street address #2': shippingInfo.street2 || '',
         'city': shippingInfo.city || '',
