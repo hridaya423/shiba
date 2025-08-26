@@ -1272,19 +1272,19 @@ function DetailView({
             justifyContent: "flex-start",
             marginBottom: 16
           }}>
-            <RadarChart
-              data={[
-                game?.AverageFunScore || 0,
-                game?.AverageArtScore || 0,
-                game?.AverageCreativityScore || 0,
-                game?.AverageAudioScore || 0,
-                game?.AverageMoodScore || 0
-              ]}
-              labels={["Fun", "Art", "Creativity", "Audio", "Mood"]}
-              width={300}
-              height={300}
-              isMiniature={true}
-            />
+                      <RadarChart
+            data={[
+              Math.round(game?.AverageFunScore || 0),
+              Math.round(game?.AverageArtScore || 0),
+              Math.round(game?.AverageCreativityScore || 0),
+              Math.round(game?.AverageAudioScore || 0),
+              Math.round(game?.AverageMoodScore || 0)
+            ]}
+            labels={["Fun", "Art", "Creativity", "Audio", "Mood"]}
+            width={300}
+            height={300}
+            isMiniature={true}
+          />
           </div>
           <div style={{ 
             textAlign: "left",
