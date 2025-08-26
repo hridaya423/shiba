@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import HomeScreen from "@/components/HomeScreen";
 import StartScreen from "@/components/StartScreen";
 import MyGamesComponent from "@/components/MyGamesComponent";
@@ -195,62 +196,90 @@ export default function Home() {
       );
     }
 
-    if (appOpen === "Home") {
-      return (
-        <HomeScreen
-          games={games}
-          appOpen={appOpen}
-          setAppOpen={setAppOpen}
-          selectedGame={selectedGame}
-          setSelectedGame={setSelectedGame}
-          SlackId={profile?.slackId || null}
-          token={token}
-          profile={profile}
-          setProfile={setProfile}
-          autoOpenProfile={autoOpenProfile}
-        />
-      );
-    }
+  }
 
-    const componentsMap = {
-      "My Games": MyGamesComponent,
-      "Global Games": GlobalGamesComponent,
-      Shop: ShopComponent,
-      Help: HelpComponent,
-    };
-
-    const SelectedComponent = componentsMap[appOpen];
-    if (SelectedComponent) {
-      return (
-        <div style={{ position: "relative", minHeight: "100vh" }}>
-          {!disableTopBar && (
-            <TopBar
-              backgroundColor={games[selectedGame].bgColor}
-              title={games[selectedGame].name}
-              image={games[selectedGame].backgroundImage}
-              onBack={() => setAppOpen("Home")}
-            />
-          )}
-          <div style={{ paddingTop: disableTopBar ? 0 : 64 }}>
-            <SelectedComponent
-              disableTopBar={disableTopBar}
-              setDisableTopBar={setDisableTopBar}
-              goHome={goHome}
-              token={token}
+  return (
+    <>
+      <Head>
+        <title>Shiba Arcade</title>
+        <meta name="description" content="Make a game, build an arcade in Tokyo Japan from November 5th - 12th." />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://shiba.hackclub.com" />
+        <meta property="og:title" content="Shiba Arcade" />
+        <meta property="og:description" content="Make a game, build an arcade in Tokyo Japan from November 5th - 12th." />
+        <meta property="og:image" content="https://shiba.hackclub.com/bg.gif" />
+        <meta property="og:image:type" content="image/gif" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://shiba.hackclub.com" />
+        <meta property="twitter:title" content="Shiba Arcade" />
+        <meta property="twitter:description" content="Make a game, build an arcade in Tokyo Japan from November 5th - 12th." />
+        <meta property="twitter:image" content="https://shiba.hackclub.com/bg.gif" />
+      </Head>
+      {(() => {
+        if (appOpen === "Home") {
+          return (
+            <HomeScreen
+              games={games}
+              appOpen={appOpen}
+              setAppOpen={setAppOpen}
+              selectedGame={selectedGame}
+              setSelectedGame={setSelectedGame}
               SlackId={profile?.slackId || null}
+              token={token}
               profile={profile}
               setProfile={setProfile}
-              setPlaytestMode={setPlaytestMode}
-              setSelectedPlaytestGame={setSelectedPlaytestGame}
-              onOpenProfile={appOpen === "My Games" ? () => {
-                setAutoOpenProfile(true);
-                setDisableTopBar(false);
-                setAppOpen("Home");
-              } : undefined}
+              autoOpenProfile={autoOpenProfile}
             />
-          </div>
-        </div>
-      );
-    }
-  }
+          );
+        }
+
+        const componentsMap = {
+          "My Games": MyGamesComponent,
+          "Global Games": GlobalGamesComponent,
+          Shop: ShopComponent,
+          Help: HelpComponent,
+        };
+
+        const SelectedComponent = componentsMap[appOpen];
+        if (SelectedComponent) {
+          return (
+            <div style={{ position: "relative", minHeight: "100vh" }}>
+              {!disableTopBar && (
+                <TopBar
+                  backgroundColor={games[selectedGame].bgColor}
+                  title={games[selectedGame].name}
+                  image={games[selectedGame].backgroundImage}
+                  onBack={() => setAppOpen("Home")}
+                />
+              )}
+              <div style={{ paddingTop: disableTopBar ? 0 : 64 }}>
+                <SelectedComponent
+                  disableTopBar={disableTopBar}
+                  setDisableTopBar={setDisableTopBar}
+                  goHome={goHome}
+                  token={token}
+                  SlackId={profile?.slackId || null}
+                  profile={profile}
+                  setProfile={setProfile}
+                  setPlaytestMode={setPlaytestMode}
+                  setSelectedPlaytestGame={setSelectedPlaytestGame}
+                  onOpenProfile={appOpen === "My Games" ? () => {
+                    setAutoOpenProfile(true);
+                    setDisableTopBar(false);
+                    setAppOpen("Home");
+                  } : undefined}
+                />
+              </div>
+            </div>
+          );
+        }
+      })()}
+    </>
+  );
 }
