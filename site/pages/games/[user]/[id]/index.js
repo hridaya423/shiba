@@ -70,7 +70,7 @@ export default function GamesPage({ gameData, error }) {
   const gameTitle = gameData?.name || id;
   const gameDescription = gameData?.description || `Play ${gameTitle} on Shiba Arcade`;
   const gameImage = gameData?.thumbnailUrl || 'https://shiba.hackclub.com/shiba.png';
-  const pageTitle = `${gameTitle} by ${slackProfile?.displayName || user} - Shiba Arcade`;
+  const pageTitle = `${gameTitle} - Shiba Arcade`;
   const pageDescription = gameDescription.length > 160 ? gameDescription.substring(0, 157) + '...' : gameDescription;
 
   return (
