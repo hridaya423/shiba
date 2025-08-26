@@ -133,8 +133,8 @@ export async function getServerSideProps() {
     const signedUp = allUsers.length;
     const onboarded = allUsers.filter(user => user.fields?.hasOnboarded === true).length;
     const connectedHackatime = allUsers.filter(user => {
-      const hoursSpent = user.fields?.['Hours Spent'];
-      return typeof hoursSpent === 'number' && hoursSpent > 0.0;
+      const hackatimeProjects = user.fields?.['Hackatime Projects'];
+      return hackatimeProjects && hackatimeProjects.length > 0;
     }).length;
     const slack = allUsers.filter(user => {
       const slackId = user.fields?.['slack id'];

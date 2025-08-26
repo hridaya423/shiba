@@ -20,10 +20,10 @@ export default async function handler(req, res) {
     // Count users who have onboarded
     const onboarded = allUsers.filter(user => user.fields?.hasOnboarded === true).length;
     
-    // Count users who have Hours Spent > 0.0 (they have hackatime)
+    // Count users who have Hackatime Projects (they have hackatime)
     const connectedHackatime = allUsers.filter(user => {
-      const hoursSpent = user.fields?.['Hours Spent'];
-      return typeof hoursSpent === 'number' && hoursSpent > 0.0;
+      const hackatimeProjects = user.fields?.['Hackatime Projects'];
+      return hackatimeProjects && hackatimeProjects.length > 0;
     }).length;
 
     // Count users who have connected Slack (non-empty slack id)
