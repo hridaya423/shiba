@@ -89,7 +89,7 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	srv := NewServer(s3Client, "/games", "games")
+	srv := NewServer(s3Client, "./local_storage/games", "games")
 
 	srv.AirtableBaseTable = srv.AirtableClient.GetTable(os.Getenv("AIRTABLE_BASE_ID"), "Users")
 	if srv.AirtableBaseTable == nil {
