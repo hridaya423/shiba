@@ -67,10 +67,13 @@ export default async function handler(req, res) {
       body: JSON.stringify(payload),
     });
     const rec = created?.records?.[0];
-    // Optionally upload multiple attachments (<= 5MB each as base64) to Attachements field
+    
+    // Optionally upload multiple attachments to Attachements field
     if (rec && Array.isArray(attachmentsUpload) && attachmentsUpload.length > 0) {
       for (const item of attachmentsUpload) {
-        const { fileBase64, contentType, filename } = item || {};
+        const { fileBase64, url, contentType, filename, id, size } = item || {};
+        
+        // Handle base64 uploads (legacy approach)
         if (fileBase64 && contentType && filename) {
           try {
             await airtableContentUpload({
@@ -85,8 +88,39 @@ export default async function handler(req, res) {
             console.error('createPost attachment upload failed:', e);
           }
         }
+        
+        // Handle URL-based attachments (new S3 approach)
+        if (url && contentType && filename) {
+          try {
+            // Get current post to see existing attachment links
+            const currentPost = await airtableRequest(`${encodeURIComponent(AIRTABLE_POSTS_TABLE)}/${encodeURIComponent(rec.id)}`, { method: 'GET' });
+            const existingLinks = currentPost?.fields?.AttachementLinks || '';
+            const linksArray = existingLinks ? existingLinks.split(',').map(link => link.trim()).filter(link => link) : [];
+            
+            // Add the new URL to the list
+            if (!linksArray.includes(url)) {
+              linksArray.push(url);
+            }
+            
+            // Update the post record with the new attachment links
+            const updatePayload = {
+              fields: {
+                AttachementLinks: linksArray.join(', ')
+              }
+            };
+            
+            await airtableRequest(`${encodeURIComponent(AIRTABLE_POSTS_TABLE)}/${encodeURIComponent(rec.id)}`, {
+              method: 'PATCH',
+              body: JSON.stringify(updatePayload),
+            });
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error('createPost S3 attachment links failed:', e);
+          }
+        }
       }
     }
+    
     // Fetch latest post to include uploaded attachments
     const latest = await airtableRequest(`${encodeURIComponent(AIRTABLE_POSTS_TABLE)}/${encodeURIComponent(rec.id)}`, { method: 'GET' });
     const result = latest
@@ -97,16 +131,61 @@ export default async function handler(req, res) {
           PostID: latest.fields?.PostID || postId,
           createdAt: latest.fields?.['Created At'] || latest.createdTime || new Date().toISOString(),
           PlayLink: typeof latest.fields?.PlayLink === 'string' ? latest.fields.PlayLink : '',
-          attachments: Array.isArray(latest.fields?.Attachements)
-            ? latest.fields.Attachements.map((a) => ({ 
-                url: a?.url, 
-                type: a?.type, 
-                contentType: a?.type, // Add contentType for compatibility
-                filename: a?.filename, 
-                id: a?.id, 
-                size: a?.size 
-              })).filter((a) => a.url)
-            : [],
+          attachments: (() => {
+            const airtableAttachments = Array.isArray(latest.fields?.Attachements)
+              ? latest.fields.Attachements.map((a) => ({ 
+                  url: a?.url, 
+                  type: a?.type, 
+                  contentType: a?.type, // Add contentType for compatibility
+                  filename: a?.filename, 
+                  id: a?.id, 
+                  size: a?.size 
+                })).filter((a) => a.url)
+              : [];
+            
+            // Add S3 attachment links
+            const attachmentLinks = latest.fields?.AttachementLinks || '';
+            const s3Attachments = attachmentLinks
+              ? attachmentLinks.split(',').map(link => link.trim()).filter(link => link).map(url => {
+                  const filename = url.split('/').pop() || 'attachment';
+                  let ext = '';
+                  
+                  // Try to get extension from filename first
+                  if (filename.includes('.')) {
+                    ext = filename.split('.').pop().toLowerCase();
+                  } 
+                  // If no extension in filename, try to get it from the URL path
+                  else {
+                    const urlPath = new URL(url).pathname;
+                    const pathParts = urlPath.split('.');
+                    if (pathParts.length > 1) {
+                      ext = pathParts[pathParts.length - 1].toLowerCase();
+                    }
+                  }
+                  
+                  // Determine content type from file extension
+                  let contentType = 'application/octet-stream';
+                  if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) {
+                    contentType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+                  } else if (['mp4', 'webm', 'mov', 'm4v', 'avi', 'mkv', 'mpg', 'mpeg'].includes(ext)) {
+                    contentType = `video/${ext}`;
+                  } else if (['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext)) {
+                    contentType = `audio/${ext}`;
+                  }
+                  
+                  return {
+                    url: url,
+                    type: contentType,
+                    contentType: contentType,
+                    filename: filename.includes('.') ? filename : `attachment.${ext}`,
+                    id: `s3-${Date.now()}`,
+                    size: 0
+                  };
+                })
+              : [];
+            
+            return [...airtableAttachments, ...s3Attachments];
+          })(),
           badges: Array.isArray(latest.fields?.Badges) ? latest.fields.Badges : [],
         }
       : null;
