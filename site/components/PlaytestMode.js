@@ -20,6 +20,14 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
     audio: 0,
     mood: 0
   });
+  const [ratingFeedback, setRatingFeedback] = useState({
+    fun: '',
+    art: '',
+    creativity: '',
+    audio: '',
+    mood: ''
+  });
+  const [additionalFeedback, setAdditionalFeedback] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -633,6 +641,45 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                 }}>
                   {ratingDescriptions[category][rating]}
                 </p>
+                
+                {/* Required feedback input */}
+                <div style={{
+                  marginTop: "1rem",
+                  paddingTop: "0.5rem",
+                  borderTop: "1px solid rgba(255,255,255,0.2)"
+                }}>
+                  <label style={{
+                    color: "white",
+                    fontSize: "clamp(0.875rem, 1.125rem, 1.375rem)",
+                    fontWeight: "bold",
+                    display: "block",
+                    marginBottom: "0.5rem"
+                  }}>
+                    Explain your answer *
+                  </label>
+                  <textarea
+                    value={ratingFeedback[category]}
+                    onChange={(e) => setRatingFeedback(prev => ({
+                      ...prev,
+                      [category]: e.target.value
+                    }))}
+                    placeholder={`Explain why you gave ${category} a score of ${rating}...`}
+                    required
+                    style={{
+                      width: "100%",
+                      minHeight: "80px",
+                      padding: "12px",
+                      fontSize: "14px",
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      border: "2px solid rgba(255, 255, 255, 0.3)",
+                      borderRadius: "6px",
+                      color: "white",
+                      resize: "vertical",
+                      fontFamily: "inherit",
+                      lineHeight: "1.4"
+                    }}
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -679,6 +726,23 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
             {/* Finalize Review Button */}
             <button
               onClick={() => {
+                // Check if all required feedback fields are filled
+                const allFeedbackFilled = Object.values(ratingFeedback).every(feedback => feedback.trim() !== '');
+                const allRatingsSelected = Object.values(ratings).every(rating => rating >= 0);
+                
+                if (!allRatingsSelected) {
+                  alert('Please select a rating for all categories before proceeding.');
+                  return;
+                }
+                
+                if (!allFeedbackFilled) {
+                  alert('Please explain your answer for all rating categories before proceeding.');
+                  return;
+                }
+                
+                // Set the additional feedback state to empty for user to fill in
+                setAdditionalFeedback('');
+                
                 playSound?.("next.mp3");
                 setCurrentStage(4);
                 setTextVisible(false);
@@ -988,9 +1052,9 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
               Feedback to the creator
             </h3>
             <textarea
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Share your thoughts about the game..."
+              value={additionalFeedback}
+              onChange={(e) => setAdditionalFeedback(e.target.value)}
+              placeholder="Share any additional thoughts about the game..."
               style={{
                 width: '100%',
                 minHeight: '200px',
@@ -1036,6 +1100,9 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                     return;
                   }
                   
+                  // Combine all feedback into final format
+                  const finalFeedback = `Additional Feedback: ${additionalFeedback}\n\nFun: ${ratingFeedback.fun}\n\nArt: ${ratingFeedback.art}\n\nCreativity: ${ratingFeedback.creativity}\n\nAudio: ${ratingFeedback.audio}\n\nMood: ${ratingFeedback.mood}`;
+                  
                   const response = await fetch('/api/submitPlaytest', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1047,7 +1114,7 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                       creativityScore: ratings.creativity,
                       audioScore: ratings.audio,
                       moodScore: ratings.mood,
-                      feedback,
+                      feedback: finalFeedback,
                       playtimeSeconds: Math.round(playTime * 60) // Convert minutes to seconds
                     })
                   });
