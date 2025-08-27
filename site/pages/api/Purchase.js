@@ -68,12 +68,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'Shop item not found' });
     }
 
-    const itemPrice = parseFloat(shopItem.fields?.Price || 0);
+    const itemPrice = parseFloat(shopItem.fields?.Cost || 0);
     const inStock = shopItem.fields?.['In Stock'] || 0;
     
     console.log('Shop item details:');
     console.log('- Item:', shopItem.fields?.Name || 'Unknown');
-    console.log('- Price:', itemPrice);
+    console.log('- Cost:', itemPrice);
     console.log('- In Stock:', inStock);
 
     if (inStock <= 0) {

@@ -1917,55 +1917,65 @@ function DetailView({
             >
               {game.posts.map((p, pIdx) => (
                 <div key={p.id || pIdx} className="moment-card" style={{ position: "relative" }}>
-                  <button
-                    style={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      fontSize: 12,
-                      cursor: "pointer",
-                      color: "#b00020",
-                      background: "none",
-                      border: "none",
-                      padding: "4px 8px",
-                      borderRadius: "4px",
-                      opacity: 0.7,
-                      transition: "opacity 0.2s ease",
-                      zIndex: 1,
-                    }}
-                    onMouseEnter={(e) => (e.target.style.opacity = "1")}
-                    onMouseLeave={(e) => (e.target.style.opacity = "0.7")}
-                    onClick={async () => {
-                      const confirmText = `DELETE POST`;
-                      const input = window.prompt(
-                        `Type "${confirmText}" to confirm deletion`,
-                      );
-                      if (input !== confirmText) return;
-
-                      try {
-                        const res = await fetch("/api/deletePost", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ token, postId: p.id }),
-                        });
-                        const data = await res.json().catch(() => ({}));
-                        if (res.ok && data?.ok) {
-                          // Remove the post from local state
-                          const updatedPosts = game.posts.filter(
-                            (_, index) => index !== pIdx,
+                  {(() => {
+                    // Check if post was created within the last 24 hours
+                    const postDate = new Date(p.createdAt);
+                    const now = new Date();
+                    const hoursDiff = (now - postDate) / (1000 * 60 * 60);
+                    const isWithin24Hours = hoursDiff <= 24;
+                    
+                    return isWithin24Hours ? (
+                      <button
+                        style={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          fontSize: 12,
+                          cursor: "pointer",
+                          color: "#b00020",
+                          background: "none",
+                          border: "none",
+                          padding: "4px 8px",
+                          borderRadius: "4px",
+                          opacity: 0.7,
+                          transition: "opacity 0.2s ease",
+                          zIndex: 1,
+                        }}
+                        onMouseEnter={(e) => (e.target.style.opacity = "1")}
+                        onMouseLeave={(e) => (e.target.style.opacity = "0.7")}
+                        onClick={async () => {
+                          const confirmText = `DELETE POST`;
+                          const input = window.prompt(
+                            `Type "${confirmText}" to confirm deletion`,
                           );
-                          onUpdated?.({ id: game.id, posts: updatedPosts });
-                        } else {
-                          alert("Failed to delete post");
-                        }
-                      } catch (e) {
-                        console.error(e);
-                        alert("Failed to delete post");
-                      }
-                    }}
-                  >
-                    Delete
-                  </button>
+                          if (input !== confirmText) return;
+
+                          try {
+                            const res = await fetch("/api/deletePost", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ token, postId: p.id }),
+                            });
+                            const data = await res.json().catch(() => ({}));
+                            if (res.ok && data?.ok) {
+                              // Remove the post from local state
+                              const updatedPosts = game.posts.filter(
+                                (_, index) => index !== pIdx,
+                              );
+                              onUpdated?.({ id: game.id, posts: updatedPosts });
+                            } else {
+                              alert("Failed to delete post");
+                            }
+                          } catch (e) {
+                            console.error(e);
+                            alert("Failed to delete post");
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    ) : null;
+                  })()}
                   <PostAttachmentRenderer
                     content={p.content}
                     attachments={p.attachments}
