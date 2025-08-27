@@ -45,7 +45,16 @@ export default function GamesPage({ gameData, error }) {
           <title>Game Not Found - Shiba Arcade</title>
           <meta name="description" content="The requested game could not be found." />
         </Head>
-        <div style={{width: '100%', alignItems: "center", height: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'center'}}>
+        <div style={{
+          width: '100%', 
+          alignItems: "center", 
+          height: '100%', 
+          minHeight: '100vh', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          background: 'linear-gradient(180deg, #FFA500 0px, #FFB347 100px, #FFD700 200px, #FFE4B5 300px, #fff 400px, #fff 100%)',
+          justifyContent: 'center'
+        }}>
           <p>Error: {error}</p>
         </div>
       </>
@@ -59,7 +68,16 @@ export default function GamesPage({ gameData, error }) {
           <title>Loading Game - Shiba Arcade</title>
           <meta name="description" content="Loading game details..." />
         </Head>
-        <div style={{width: '100%', alignItems: "center", height: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'center'}}>
+        <div style={{
+          width: '100%', 
+          alignItems: "center", 
+          height: '100%', 
+          minHeight: '100vh', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          background: 'linear-gradient(180deg, #FFA500 0px, #FFB347 100px, #FFD700 200px, #FFE4B5 300px, #fff 400px, #fff 100%)',
+          justifyContent: 'center'
+        }}>
           <p>Loading...</p>
         </div>
       </>
@@ -93,10 +111,115 @@ export default function GamesPage({ gameData, error }) {
         <meta property="twitter:description" content={pageDescription} />
         <meta property="twitter:image" content={gameImage} />
       </Head>
-      <div style={{width: '100%', alignItems: "center", height: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fff'}}>
-        <div style={{width: "100%", maxWidth: 800}}>
-          <p style={{width: "100%", textAlign: "center", marginBottom: 16, marginTop: 16}}>Shiba Games</p>
-          <div style={{ width: '100%', maxWidth: '1152px' }}>
+      <div style={{
+        width: '100%', 
+        alignItems: "center", 
+        height: '100%', 
+        minHeight: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        background: 'linear-gradient(180deg, #FFA500 0px, #FFB347 100px, #FFD700 200px, #FFE4B5 300px, #fff 400px, #fff 100%)',
+        position: 'relative'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundImage: 'url(/comicbg.jpg)',
+          backgroundSize: '100%',
+          imageRendering: 'pixelated',
+          backgroundRepeat: 'repeat',
+          mixBlendMode: 'color-burn',
+          pointerEvents: 'none',
+          zIndex: 1
+        }} />
+                <div style={{ position: 'relative', zIndex: 2, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{width: "100%", maxWidth: 800}}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 16,
+              marginTop: 16,
+              marginLeft: "auto",
+              marginRight: "auto",
+              padding: "6px 12px",
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              borderRadius: "8px",
+              border: "1px solid #666",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+              flexWrap: "wrap",
+              gap: "8px",
+              width: "fit-content",
+              fontSize: "14px"
+            }}>
+              <a 
+                href="https://shiba.hackclub.com/"
+                style={{
+                  textDecoration: "none",
+                  color: "inherit",
+                  cursor: "pointer",
+                  borderBottom: "1px solid #ccc"
+                }}
+              >
+                <span>Shiba Games</span>
+              </a>
+              <span style={{ color: "#666" }}>/</span>
+              <a 
+                href={`https://hackclub.slack.com/team/${user}`}
+                style={{
+                  textDecoration: "none",
+                  color: "inherit",
+                  cursor: "pointer"
+                }}
+              >
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}>
+                  <div
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 6,
+                      border: '1px solid rgba(0,0,0,0.18)',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundColor: '#fff',
+                      backgroundImage: slackProfile?.image ? `url(${slackProfile.image})` : 'none',
+                    }}
+                  />
+                  <span style={{ borderBottom: "1px solid #ccc" }}>{slackProfile?.displayName || user}</span>
+                </div>
+              </a>
+              <span style={{ color: "#666" }}>/</span>
+              <a 
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.reload();
+                }}
+                style={{
+                  textDecoration: "none",
+                  color: "inherit",
+                  cursor: "pointer",
+                  borderBottom: "1px solid #ccc"
+                }}
+              >
+                <span>{gameData?.name || 'Game Name'}</span>
+              </a>
+            </div>
+            <div style={{ 
+              width: '100%', 
+              maxWidth: '1152px',
+              border: "3px solid #fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              overflow: "hidden"
+            }}>
             {gameData?.playableURL && (() => {
               let gameId = '';
               try {
@@ -125,41 +248,38 @@ export default function GamesPage({ gameData, error }) {
               );
             })()}
           </div>
-          <p style={{marginTop: 16, marginBottom: 4}}>{gameData?.name || 'Game Name'}</p>
           {gameData?.description && (
-            <p style={{marginTop: 0, marginBottom: 8}}>{gameData.description}</p>
+            <p style={{marginTop: 16, marginBottom: 8}}>{gameData.description}</p>
           )}
 
-          <div style={{display: "flex", alignItems: "center", gap: 8, flexDirection: "row"}}>
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 8,
-                border: '1px solid rgba(0,0,0,0.18)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundColor: '#fff',
-                backgroundImage: slackProfile?.image ? `url(${slackProfile.image})` : 'none',
-              }}
-            />
-            <div style={{display: "flex", flexDirection: "column", gap: 2}}>
-              <p><strong>{slackProfile?.displayName || user}</strong></p>
-              <p style={{fontSize: 10}}>
-                Last Updated: {gameData?.lastUpdatedFormatted || 'Unknown'}
-              </p>
-            </div>
-          </div>
-
-          <p style={{marginTop: 16, marginBottom: 4}}>
-            Devlogs
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginTop: 16,
+            marginBottom: 16,
+            marginLeft: "auto",
+            marginRight: "auto",
+            padding: "6px 12px",
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            border: "1px solid #666",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+            width: "fit-content",
+            fontSize: "14px"
+          }}>
+            <span>Devlogs</span>
             {Array.isArray(gameData?.posts) && gameData.posts.length > 0 && (() => {
               const totalHours = gameData.posts.reduce((sum, post) => sum + (post.HoursSpent || 0), 0);
-              return totalHours > 0 ? ` (${totalHours.toFixed(2)} hours logged total)` : '';
+                          return totalHours > 0 ? (
+              <span style={{ marginLeft: "8px", color: "#666" }}>
+                ({totalHours.toFixed(2)} hours)
+              </span>
+            ) : null;
             })()}
-          </p>
+          </div>
           {Array.isArray(gameData?.posts) && gameData.posts.length > 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: "32px" }}>
               {gameData.posts.map((p, pIdx) => (
                 <div key={p.id || pIdx} className="moment-card" style={{ 
                   position: "relative",
@@ -192,6 +312,7 @@ export default function GamesPage({ gameData, error }) {
               <p>No posts yet</p>
             </div>
           )}
+        </div>
         </div>
       </div>
     </>
