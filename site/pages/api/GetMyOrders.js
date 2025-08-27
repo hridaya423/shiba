@@ -4,7 +4,7 @@ const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
 const AIRTABLE_ORDERS_TABLE = process.env.AIRTABLE_ORDERS_TABLE || 'Orders';
-const AIRTABLE_SHOP_ITEMS_TABLE = process.env.AIRTABLE_SHOP_ITEMS_TABLE || 'Shop Items';
+const AIRTABLE_SHOP_ITEMS_TABLE = process.env.AIRTABLE_SHOP_ITEMS_TABLE || 'Shop';
 const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
 
 export default async function handler(req, res) {
@@ -151,6 +151,12 @@ async function getOrdersForUser(userId) {
         }
       }
       
+      // Check if we already have the shop item cost from a lookup field
+      let shopItemCost = 0;
+      if (order.fields['ShopItemCost'] && Array.isArray(order.fields['ShopItemCost'])) {
+        shopItemCost = order.fields['ShopItemCost'][0] || 0;
+      }
+      
       console.log('Order fields:', JSON.stringify(order.fields, null, 2));
       
       return {
@@ -159,7 +165,7 @@ async function getOrdersForUser(userId) {
         status: order.fields.Status || 'Unfulfilled',
         shopItemName: shopItemName,
         shopItemThumbnail: shopItemThumbnail,
-        amountSpent: order.fields['Amount Spent'] || 0,
+        amountSpent: shopItemCost || order.fields['Amount Spent'] || 0,
         createdAt: order.fields['Created At'] || order.createdTime,
       };
     })
