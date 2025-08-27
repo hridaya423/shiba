@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"shiba-api/structs"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,6 +22,13 @@ func ServeMiscFileHandler(srv *structs.Server) http.HandlerFunc {
 			http.Error(w, "File ID is required", http.StatusBadRequest)
 			return
 		}
+		
+		// Extract file extension from the URL path
+		path := r.URL.Path
+		ext := ""
+		if idx := strings.LastIndex(path, "."); idx != -1 {
+			ext = path[idx:] // Include the dot
+		}
 
 		// Get bucket name from environment
 		bucket := os.Getenv("R2_BUCKET")
@@ -28,30 +36,9 @@ func ServeMiscFileHandler(srv *structs.Server) http.HandlerFunc {
 			bucket = "shiba-arcade" // fallback
 		}
 
-		// Construct the key - we need to include the file extension
-		// For now, let's try to find the file by listing all misc-files and matching the fileId
-		prefix := "misc-files/" + fileId
-		listInput := &s3.ListObjectsV2Input{
-			Bucket: aws.String(bucket),
-			Prefix: aws.String(prefix),
-		}
-		
-		listResp, err := srv.S3Client.ListObjectsV2(context.Background(), listInput)
-		if err != nil {
-			log.Printf("Failed to list objects in R2: %v", err)
-			http.Error(w, "Failed to find file", http.StatusInternalServerError)
-			return
-		}
-		
-		if len(listResp.Contents) == 0 {
-			log.Printf("No files found with prefix %s", prefix)
-			http.Error(w, "File not found", http.StatusNotFound)
-			return
-		}
-		
-		// Use the first (and should be only) file found
-		key := *listResp.Contents[0].Key
-		log.Printf("Found file: %s", key)
+		// Construct the key with the file extension
+		key := "misc-files/" + fileId + ext
+		log.Printf("Looking for file with key: %s", key)
 
 		// Get the object from R2
 		log.Printf("Attempting to get file from R2: bucket=%s, key=%s", bucket, key)

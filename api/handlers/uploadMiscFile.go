@@ -102,8 +102,8 @@ func UploadMiscFileHandler(srv *structs.Server) http.HandlerFunc {
 		}
 		log.Printf("Successfully uploaded file to R2: %s", key)
 
-		// Generate URL pointing to our API endpoint
-		url := fmt.Sprintf("https://tc8ckgo4kskk48s0o8cwc0g8.a.selfhosted.hackclub.com/misc-file/%s", id.String())
+		// Generate URL pointing to our API endpoint (include file extension)
+		url := fmt.Sprintf("https://tc8ckgo4kskk48s0o8cwc0g8.a.selfhosted.hackclub.com/misc-file/%s%s", id.String(), ext)
 
 		// Return response
 		w.Header().Set("Content-Type", "application/json")
