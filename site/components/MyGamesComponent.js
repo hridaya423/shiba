@@ -5,6 +5,7 @@ import useAudioManager from "@/components/useAudioManager";
 import TopBar from "@/components/TopBar";
 import RadarChart from "@/components/RadarChart";
 import { uploadGame as uploadGameUtil } from "@/components/utils/uploadGame";
+import { uploadMiscFile } from "@/components/utils/uploadMiscFile";
 
 const PostAttachmentRenderer = dynamic(() => import('@/components/utils/PostAttachmentRenderer'), { ssr: false });
 
@@ -658,11 +659,14 @@ function DetailView({
   const [isPosting, setIsPosting] = useState(false);
   const [postMessage, setPostMessage] = useState("");
   const [postFiles, setPostFiles] = useState([]);
+  const [uploadedFiles, setUploadedFiles] = useState([]); // Store uploaded file results
+  const [uploadProgress, setUploadProgress] = useState({}); // Track upload progress
+  const [isUploading, setIsUploading] = useState(false);
   const [postType, setPostType] = useState("moment"); // 'moment' | 'ship' (visual only for now)
   const [isDragging, setIsDragging] = useState(false);
   const [slackProfile, setSlackProfile] = useState(null);
   const [isDragActive, setIsDragActive] = useState(false);
-  const MAX_TOTAL_BYTES = 5 * 1024 * 1024;
+  const MAX_TOTAL_BYTES = 50 * 1024 * 1024; // 50MB limit for misc files
   const totalAttachmentBytes = useMemo(
     () =>
       (postFiles || []).reduce(
@@ -693,6 +697,71 @@ function DetailView({
     setFileInputKey((prev) => prev + 1);
   };
 
+  // Function to upload files to S3 when selected
+  const uploadFilesToS3 = async (files) => {
+    if (!files || files.length === 0) return;
+    
+    setIsUploading(true);
+    const newUploadedFiles = [];
+    const newProgress = {};
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+      
+      try {
+        // Set initial progress
+        newProgress[fileKey] = 0;
+        setUploadProgress({ ...newProgress });
+        
+        // Simulate progress updates during upload
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => {
+            const current = prev[fileKey] || 0;
+            if (current < 90) {
+              return { ...prev, [fileKey]: current + Math.random() * 10 };
+            }
+            return prev;
+          });
+        }, 200);
+        
+        // Upload file to S3
+        const apiBase = process.env.NEXT_PUBLIC_API_BASE || "";
+        const uploadResult = await uploadMiscFile({
+          file: file,
+          apiBase: apiBase,
+        });
+        
+        // Clear progress interval
+        clearInterval(progressInterval);
+        
+        if (uploadResult.ok) {
+          newUploadedFiles.push({
+            ...uploadResult,
+            originalFile: file,
+            fileKey: fileKey
+          });
+          
+          // Set progress to 100%
+          newProgress[fileKey] = 100;
+          setUploadProgress({ ...newProgress });
+        } else {
+          console.error(`Upload failed for ${file.name}:`, uploadResult.error);
+          // Set progress to error state
+          newProgress[fileKey] = -1; // -1 indicates error
+          setUploadProgress({ ...newProgress });
+        }
+      } catch (error) {
+        console.error(`Upload error for ${file.name}:`, error);
+        newProgress[fileKey] = -1; // -1 indicates error
+        setUploadProgress({ ...newProgress });
+      }
+    }
+    
+    setUploadedFiles(newUploadedFiles);
+    setIsUploading(false);
+  };
+
   useEffect(() => {
     setName(game?.name || "");
     setDescription(game?.description || "");
@@ -707,6 +776,9 @@ function DetailView({
     // Clear file inputs when switching games
     setBuildFile(null);
     setPostFiles([]);
+    setUploadedFiles([]);
+    setUploadProgress({});
+    setIsUploading(false);
     clearFileInputs();
   }, [game?.id]);
 
@@ -1353,7 +1425,7 @@ function DetailView({
         <br />
         <p style={{ fontSize: 12, opacity: 0.7 }}>
           Every 3–4 hours: post a Shiba Moment. Add a short note of what you
-          added and a screenshot/GIF/video.
+          added and a screenshot/GIF/video (up to 50MB).
         </p>
         <br />
         <p style={{ fontSize: 12, opacity: 0.7 }}>
@@ -1414,7 +1486,7 @@ function DetailView({
               e.preventDefault();
               setIsDragActive(false);
             }}
-            onDrop={(e) => {
+            onDrop={async (e) => {
               e.preventDefault();
               setIsDragActive(false);
               const incomingAll = Array.from(e.dataTransfer?.files || []);
@@ -1429,6 +1501,7 @@ function DetailView({
                 );
               });
               if (incoming.length === 0) return;
+              
               setPostFiles((prev) => {
                 const byKey = new Map();
                 const addAll = (arr) => {
@@ -1441,6 +1514,9 @@ function DetailView({
                 addAll(incoming);
                 return Array.from(byKey.values());
               });
+              
+              // Upload new files to S3
+              await uploadFilesToS3(incoming);
             }}
           >
             <textarea
@@ -1495,6 +1571,9 @@ function DetailView({
                       addAll([file]);
                       return Array.from(byKey.values());
                     });
+                    
+                    // Upload the pasted file to S3
+                    await uploadFilesToS3([file]);
                   }
                 }
                 // For non-image items, let the default paste behavior happen
@@ -1504,11 +1583,17 @@ function DetailView({
             {Array.isArray(postFiles) && postFiles.length > 0 && (
               <div className="moments-previews">
                 {postFiles.map((file, idx) => {
-                  const url = URL.createObjectURL(file);
+                  const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+                  const progress = uploadProgress[fileKey] || 0;
+                  const uploadedFile = uploadedFiles.find(uf => uf.fileKey === fileKey);
+                  const url = uploadedFile?.url || URL.createObjectURL(file);
                   const type = (file.type || "").split("/")[0];
+                  const isUploading = progress > 0 && progress < 100;
+                  const hasError = progress === -1;
+                  
                   return (
                     <div
-                      key={`${file.name}-${file.size}-${file.lastModified}`}
+                      key={fileKey}
                       className="moments-preview-item"
                     >
                       {type === "video" ? (
@@ -1525,6 +1610,22 @@ function DetailView({
                           className="moments-preview-media"
                         />
                       )}
+                      
+                      {/* Upload Progress Overlay */}
+                      {isUploading && (
+                        <div className="upload-progress-overlay">
+                          <div className="upload-progress-bar">
+                            <div 
+                              className="upload-progress-fill"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <div className="upload-progress-text">
+                            {Math.round(progress)}%
+                          </div>
+                        </div>
+                      )}
+                      
                       <button
                         type="button"
                         className="moments-remove-btn"
@@ -1533,7 +1634,17 @@ function DetailView({
                           setPostFiles((prev) =>
                             prev.filter((_, i) => i !== idx),
                           );
-                          URL.revokeObjectURL(url);
+                          setUploadedFiles((prev) =>
+                            prev.filter(uf => uf.fileKey !== fileKey)
+                          );
+                          setUploadProgress((prev) => {
+                            const newProgress = { ...prev };
+                            delete newProgress[fileKey];
+                            return newProgress;
+                          });
+                          if (!uploadedFile) {
+                            URL.revokeObjectURL(url);
+                          }
                         }}
                       >
                         ×
@@ -1598,7 +1709,7 @@ function DetailView({
                     type="file"
                     accept="image/*,video/*,audio/*,.mp3,.mp4,.gif,.mov,.wav,.ogg,.m4a,.aac"
                     style={{ display: "none" }}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const f = (e.target.files && e.target.files[0]) || null;
                       console.log("Moments file selected:", f?.name);
 
@@ -1618,6 +1729,14 @@ function DetailView({
                       }
 
                       setPostFiles(f ? [f] : []);
+                      setUploadedFiles([]); // Clear previous uploads
+                      setUploadProgress({}); // Clear progress
+                      
+                      // Upload file to S3 if selected
+                      if (f) {
+                        await uploadFilesToS3([f]);
+                      }
+                      
                       e.target.value = "";
                     }}
                   />
@@ -1675,7 +1794,10 @@ function DetailView({
               <button
                 className="moments-post-btn"
                 disabled={
-                  isPosting || (postType === "ship" && !isProfileComplete)
+                  isPosting || 
+                  isUploading || 
+                  (postType === "moment" && postFiles.length > 0 && uploadedFiles.length === 0) ||
+                  (postType === "ship" && !isProfileComplete)
                 }
                 onClick={async () => {
                   if (!token || !game?.id || !postContent.trim()) return;
@@ -1737,29 +1859,27 @@ function DetailView({
                         : uploadResp.playUrl;
                       var playLink = absolutePlayUrl;
                     }
-                    // For moments, attach any media file (<=5MB) via Airtable content endpoint
+                    // For moments, use the already uploaded files
                     if (postType === "moment" && postFiles.length) {
                       const f = postFiles[0];
-                      if (
-                        typeof f.size === "number" &&
-                        f.size > 5 * 1024 * 1024
-                      ) {
-                        setPostMessage("File must be <= 5MB");
+                      const fileKey = `${f.name}-${f.size}-${f.lastModified}`;
+                      const uploadedFile = uploadedFiles.find(uf => uf.fileKey === fileKey);
+                      
+                      if (!uploadedFile) {
+                        setPostMessage("Please wait for file upload to complete");
                         setIsPosting(false);
                         return;
                       }
-                      const base64 = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () =>
-                          resolve(String(reader.result).split(",")[1] || "");
-                        reader.onerror = (err) => reject(err);
-                        reader.readAsDataURL(f);
-                      });
+                      
+                      // Use the uploaded file URL as an attachment
                       attachmentsUpload = [
                         {
-                          fileBase64: base64,
+                          url: uploadedFile.url,
+                          type: f.type || "application/octet-stream",
                           contentType: f.type || "application/octet-stream",
                           filename: f.name || "attachment",
+                          id: uploadedFile.fileId,
+                          size: f.size
                         },
                       ];
                     }
@@ -1851,17 +1971,19 @@ function DetailView({
                   ? postType === "ship"
                     ? "Shipping…"
                     : "Posting…"
-                  : overTotalLimit
-                    ? "Screenshots exceed 5MB"
-                    : postType === "ship"
-                      ? "Ship"
-                      : "Post"}
+                  : isUploading
+                    ? "Uploading…"
+                    : overTotalLimit
+                      ? "Files exceed 50MB"
+                      : postType === "ship"
+                        ? "Ship"
+                        : "Post"}
               </button>
             </div>
           </div>
           {overTotalLimit ? (
             <p style={{ marginTop: 8, color: "#b00020" }}>
-              Total screenshots must be under 5MB. Try removing some files or
+              Total files must be under 50MB. Try removing some files or
               using smaller ones.
             </p>
           ) : null}
@@ -2143,6 +2265,41 @@ function DetailView({
           cursor: not-allowed;
           background: #ccc;
         }
+        .upload-progress-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          z-index: 10;
+        }
+        .upload-progress-bar {
+          width: 80%;
+          height: 8px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 4px;
+          overflow: hidden;
+          margin-bottom: 8px;
+          border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .upload-progress-fill {
+          height: 100%;
+          background: #ff6fa5;
+          transition: width 0.3s ease;
+        }
+        .upload-progress-text {
+          font-size: 11px;
+          font-weight: normal;
+          margin-top: 4px;
+          opacity: 0.9;
+        }
+
         .nice-input {
           padding: 10px;
           border-radius: 10px;

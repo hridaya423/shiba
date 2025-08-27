@@ -39,11 +39,55 @@ export default async function handler(req, res) {
       const fields = rec.fields || {};
       const createdAt = fields['Created At'] || rec.createdTime || '';
       const playLink = typeof fields.PlayLink === 'string' ? fields.PlayLink : '';
-      const attachments = Array.isArray(fields.Attachements)
-        ? fields.Attachements
-            .map((a) => ({ url: a?.url, type: a?.type, filename: a?.filename, id: a?.id, size: a?.size }))
-            .filter((a) => a.url)
-        : [];
+      const attachments = (() => {
+        const airtableAttachments = Array.isArray(fields.Attachements)
+          ? fields.Attachements
+              .map((a) => ({ url: a?.url, type: a?.type, filename: a?.filename, id: a?.id, size: a?.size }))
+              .filter((a) => a.url)
+          : [];
+        
+        // Add S3 attachment links
+        const attachmentLinks = fields.AttachementLinks || '';
+        const s3Attachments = attachmentLinks
+          ? attachmentLinks.split(',').map(link => link.trim()).filter(link => link).map(url => {
+              const filename = url.split('/').pop() || 'attachment';
+              let ext = '';
+              
+              // Try to get extension from filename first
+              if (filename.includes('.')) {
+                ext = filename.split('.').pop().toLowerCase();
+              } 
+              // If no extension in filename, try to get it from the URL path
+              else {
+                const urlPath = new URL(url).pathname;
+                const pathParts = urlPath.split('.');
+                if (pathParts.length > 1) {
+                  ext = pathParts[pathParts.length - 1].toLowerCase();
+                }
+              }
+              
+              // Determine content type from file extension
+              let contentType = 'application/octet-stream';
+              if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) {
+                contentType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+              } else if (['mp4', 'webm', 'mov', 'm4v', 'avi', 'mkv', 'mpg', 'mpeg'].includes(ext)) {
+                contentType = `video/${ext}`;
+              } else if (['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext)) {
+                contentType = `audio/${ext}`;
+              }
+              
+              return {
+                url: url,
+                type: contentType,
+                filename: filename.includes('.') ? filename : `attachment.${ext}`,
+                id: `s3-${Date.now()}`,
+                size: 0
+              };
+            })
+          : [];
+        
+        return [...airtableAttachments, ...s3Attachments];
+      })();
 
       // Get game info
       const linkedGameIds = normalizeLinkedIds(fields.Game);

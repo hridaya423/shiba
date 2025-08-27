@@ -50,24 +50,42 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
     const rawType = String(att?.type || att?.contentType || '').toLowerCase();
     const filename = String(att?.filename || '');
     let ext = '';
+    
+    // First try to get extension from filename
     if (filename && filename.includes('.')) {
       ext = filename.split('.').pop().toLowerCase();
-    } else if (att?.url) {
+    } 
+    // If no filename extension, try to get it from the URL
+    else if (att?.url) {
       try {
         const u = new URL(att.url, 'https://dummy');
         const p = u.pathname || '';
-        if (p.includes('.')) ext = p.split('.').pop().toLowerCase();
+        if (p.includes('.')) {
+          ext = p.split('.').pop().toLowerCase();
+        }
       } catch (_) {
         // ignore
       }
     }
+    
+    // For S3 attachments, the type might be 'application/octet-stream'
+    // so we need to rely more heavily on file extensions
     const imageExts = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg']);
-    const videoExts = new Set(['mp4', 'webm', 'mov', 'm4v', 'avi', 'mkv']);
-    const audioExts = new Set(['mp3', 'wav', 'ogg', 'm4a', 'aac']);
+    const videoExts = new Set(['mp4', 'webm', 'mov', 'm4v', 'avi', 'mkv', 'mpg', 'mpeg']);
+    const audioExts = new Set(['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac']);
 
+    // Check MIME type first
     if (rawType.startsWith('image/') || imageExts.has(ext)) return 'image';
     if (rawType.startsWith('video/') || videoExts.has(ext)) return 'video';
     if (rawType.startsWith('audio/') || audioExts.has(ext)) return 'audio';
+    
+    // If MIME type is generic (like application/octet-stream), rely on extension
+    if (rawType === 'application/octet-stream' || !rawType) {
+      if (imageExts.has(ext)) return 'image';
+      if (videoExts.has(ext)) return 'video';
+      if (audioExts.has(ext)) return 'audio';
+    }
+    
     return 'other';
   };
 
