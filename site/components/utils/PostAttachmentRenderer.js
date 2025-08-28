@@ -50,11 +50,11 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
     const rawType = String(att?.type || att?.contentType || '').toLowerCase();
     const filename = String(att?.filename || '');
     let ext = '';
-    
+
     // First try to get extension from filename
     if (filename && filename.includes('.')) {
       ext = filename.split('.').pop().toLowerCase();
-    } 
+    }
     // If no filename extension, try to get it from the URL
     else if (att?.url) {
       try {
@@ -67,7 +67,7 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
         // ignore
       }
     }
-    
+
     // For S3 attachments, the type might be 'application/octet-stream'
     // so we need to rely more heavily on file extensions
     const imageExts = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg']);
@@ -78,14 +78,14 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
     if (rawType.startsWith('image/') || imageExts.has(ext)) return 'image';
     if (rawType.startsWith('video/') || videoExts.has(ext)) return 'video';
     if (rawType.startsWith('audio/') || audioExts.has(ext)) return 'audio';
-    
+
     // If MIME type is generic (like application/octet-stream), rely on extension
     if (rawType === 'application/octet-stream' || !rawType) {
       if (imageExts.has(ext)) return 'image';
       if (videoExts.has(ext)) return 'video';
       if (audioExts.has(ext)) return 'audio';
     }
-    
+
     return 'other';
   };
 
@@ -106,15 +106,15 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
             }}
           />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 12 }}>
               <strong>{slackProfile?.displayName || slackId || 'User'}</strong>
               {Array.isArray(badges) && badges.includes('Speedy Shiba Shipper') && (
                 <div style={{ position: 'relative', display: 'inline-block' }}>
-                  <img 
-                    src="/SpeedyShibaShipper.svg" 
-                    alt="Speedy Shiba Shipper" 
-                    style={{ 
-                      width: 20, 
+                  <img
+                    src="/SpeedyShibaShipper.png"
+                    alt="Speedy Shiba Shipper"
+                    style={{
+                      width: 20,
                       height: 20,
                       cursor: 'pointer',
                       transition: 'transform 0.2s ease-out, border 0.2s ease-out, background-color 0.2s ease-out',
@@ -130,7 +130,7 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
                       setTimeout(() => {
                         e.target.style.transform = 'scale(1)';
                       }, 200);
-                      
+
                       const popup = e.target.nextSibling;
                       if (popup) {
                         popup.style.display = 'block';
@@ -146,7 +146,7 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
                       e.target.style.transform = 'scale(1)';
                       e.target.style.border = '1px dotted transparent';
                       e.target.style.backgroundColor = 'transparent';
-                      
+
                       const popup = e.target.nextSibling;
                       if (popup) {
                         popup.style.opacity = '0';
@@ -187,11 +187,11 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
               )}
               {Array.isArray(badges) && badges.includes('Super Subtle Shiba') && (
                 <div style={{ position: 'relative', display: 'inline-block' }}>
-                  <img 
-                    src="/SuperSubtleShiba.png" 
-                    alt="Super Subtle Shiba" 
-                    style={{ 
-                      width: 20, 
+                  <img
+                    src="/SuperSubtleShiba.png"
+                    alt="Super Subtle Shiba"
+                    style={{
+                      width: 20,
                       height: 20,
                       cursor: 'pointer',
                       transition: 'transform 0.2s ease-out, border 0.2s ease-out, background-color 0.2s ease-out',
@@ -207,7 +207,7 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
                       setTimeout(() => {
                         e.target.style.transform = 'scale(1)';
                       }, 200);
-                      
+
                       const popup = e.target.nextSibling;
                       if (popup) {
                         popup.style.display = 'block';
@@ -223,7 +223,7 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
                       e.target.style.transform = 'scale(1)';
                       e.target.style.border = '1px dotted transparent';
                       e.target.style.backgroundColor = 'transparent';
-                      
+
                       const popup = e.target.nextSibling;
                       if (popup) {
                         popup.style.opacity = '0';
@@ -264,12 +264,12 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
               )}
               {gameName ? (
                 gamePageUrl ? (
-                  <a 
+                  <a
                     href={gamePageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ 
-                      opacity: 0.8, 
+                    style={{
+                      opacity: 0.8,
                       textDecoration: 'underline',
                       color: 'inherit',
                       cursor: 'pointer'
@@ -293,10 +293,10 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
                   </>
                 )}
                 <span>
-                  {new Date(createdAt).toLocaleTimeString('en-US', { 
-                    hour: 'numeric', 
+                  {new Date(createdAt).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
                     minute: '2-digit',
-                    hour12: true 
+                    hour12: true
                   })}
                 </span>
                 <span>
@@ -313,10 +313,10 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
       ) : null}
       <div style={{ whiteSpace: 'pre-wrap' }}>{content || ''}</div>
       {gameId ? (
-        <PlayGameComponent 
-          gameId={gameId} 
-          gameName={gameName} 
-          thumbnailUrl={thumbnailUrl} 
+        <PlayGameComponent
+          gameId={gameId}
+          gameName={gameName}
+          thumbnailUrl={thumbnailUrl}
           token={token}
           onPlayCreated={onPlayCreated}
           gamePageUrl={gamePageUrl}
@@ -398,5 +398,3 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
     </div>
   );
 }
-
-
