@@ -499,24 +499,25 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
                 textAlign: "center"
               }}
             >
-              You were entered into the raffle. Here's your referral link to invite your friends to join too:
+              You were entered into the raffle.
+              {profile?.referralCode && " Here's your referral link to invite your friends to join too:"}
             </p>
             
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: "1px solid rgba(0,0,0,0.18)",
-                background: "rgba(255,255,255,0.8)",
-                cursor: "pointer",
-                transition: "background-color 0.2s ease",
-                marginBottom: "20px",
-              }}
-              onClick={() => {
-                if (profile?.referralCode) {
+            {profile?.referralCode && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(0,0,0,0.18)",
+                  background: "rgba(255,255,255,0.8)",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s ease",
+                  marginBottom: "20px",
+                }}
+                onClick={() => {
                   const baseUrl = window.location.origin;
                   const referralUrl = `${baseUrl}?sentby=${profile.referralCode}`;
                   
@@ -543,45 +544,45 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
                   }).catch(err => {
                     console.error('Failed to copy: ', err);
                   });
-                }
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = "rgba(255,255,255,0.95)";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = "rgba(255,255,255,0.8)";
-              }}
-            >
-              <span 
-                className="matcha-referral-copy-text"
-                style={{ 
-                  flex: 1, 
-                  fontSize: "14px",
-                  color: profile?.referralCode ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.4)",
-                  fontFamily: "monospace",
-                  fontWeight: "600"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "rgba(255,255,255,0.95)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "rgba(255,255,255,0.8)";
                 }}
               >
-                {profile?.referralCode || "No referral code"}
-              </span>
-              <svg 
-                width="16" 
-                height="16" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-                style={{ 
-                  color: "rgba(0,0,0,0.6)",
-                  flexShrink: 0
-                }}
-              >
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-            </div>
+                <span 
+                  className="matcha-referral-copy-text"
+                  style={{ 
+                    flex: 1, 
+                    fontSize: "14px",
+                    color: "rgba(0,0,0,0.8)",
+                    fontFamily: "monospace",
+                    fontWeight: "600"
+                  }}
+                >
+                  {profile.referralCode}
+                </span>
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  style={{ 
+                    color: "rgba(0,0,0,0.6)",
+                    flexShrink: 0
+                  }}
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </div>
+            )}
             
             <button
               style={{
