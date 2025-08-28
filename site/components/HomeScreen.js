@@ -670,6 +670,175 @@ function EventsModal({ isOpen, onClose, token }) {
   );
 }
 
+function SSSExplainerModal({ isOpen, onClose }) {
+  const [shouldRender, setShouldRender] = useState(Boolean(isOpen));
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose?.();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      requestAnimationFrame(() => setIsExiting(false));
+    } else if (shouldRender) {
+      setIsExiting(true);
+      const t = setTimeout(() => {
+        setShouldRender(false);
+        setIsExiting(false);
+      }, 260);
+      return () => clearTimeout(t);
+    }
+  }, [isOpen, shouldRender]);
+
+  if (!shouldRender) return null;
+
+  return (
+    <div
+      className={`modal-overlay ${isExiting ? "exit" : "enter"}`}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10000,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
+    >
+      <div
+        className={`modal-card ${isExiting ? "exit" : "enter"}`}
+        style={{
+          backgroundColor: "rgba(255, 255, 255, 0.92)",
+          padding: "20px",
+          borderRadius: 12,
+          width: "500px",
+          maxWidth: "calc(100vw - 40px)",
+          maxHeight: "calc(100vh - 40px)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          border: "1px solid rgba(0, 0, 0, 0.12)",
+          position: "relative",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}>
+            <h2 style={{ margin: 0, fontWeight: 600, color: "#2d5a27" }}>How to get SSS</h2>
+            <span style={{ fontWeight: 600, color: "#2d5a27" }}>(SSS =</span>
+            <img
+              src="/SSS.png"
+              alt="SSS"
+              style={{
+                width: "20px",
+                height: "20px",
+                objectFit: "contain"
+              }}
+            />
+            <span style={{ fontWeight: 600, color: "#2d5a27" }}>)</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="icon-btn"
+            aria-label="Close"
+            title="Close"
+            style={{
+              appearance: "none",
+              border: "1px solid rgba(0,0,0,0.12)",
+              background: "rgba(255,255,255,0.7)",
+              width: 32,
+              height: 32,
+              borderRadius: 9999,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color: "rgba(0,0,0,0.65)",
+              fontSize: 18,
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Content */}
+        <div style={{ lineHeight: 1.6, color: "#2d5a27" }}>
+          <p style={{ marginBottom: 16, fontSize: 14 }}>
+            You'll earn SSS from people playing your game and giving it a score. The maximum someone can give you is 25/25, which would result in 25 SSS from a single play of your game. They'll rate your game 1-5 on a scale of: Fun, Art, Creativity, Audio, and Mood.
+          </p>
+          <p style={{ fontSize: 14 }}>
+            People will play your game if you playtest other people's games. You'll earn playtest tickets by shipping your game (uploading a demo of your current working version) and getting approved for hours spent making your game (time logged in Hackatime).
+          </p>
+        </div>
+      </div>
+
+      {/* Styles */}
+      <style jsx>{`
+        .modal-overlay {
+          background-color: rgba(255, 255, 255, 0);
+          backdrop-filter: blur(0px);
+          -webkit-backdrop-filter: blur(0px);
+          transition:
+            backdrop-filter 240ms ease,
+            -webkit-backdrop-filter 240ms ease,
+            background-color 240ms ease;
+        }
+        .modal-overlay.enter {
+          background-color: rgba(255, 255, 255, 0.3);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+        }
+        .modal-overlay.exit {
+          background-color: rgba(255, 255, 255, 0);
+          backdrop-filter: blur(0px);
+          -webkit-backdrop-filter: blur(0px);
+        }
+        .modal-card {
+          transform: translateY(6px) scale(0.98);
+          opacity: 0;
+          transition:
+            transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+            opacity 220ms ease;
+        }
+        .modal-card.enter {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+        }
+        .modal-card.exit {
+          transform: translateY(6px) scale(0.98);
+          opacity: 0;
+        }
+      `}</style>
+    </div>
+  );
+}
 
 function ProfileModal({
   isOpen,
@@ -1326,6 +1495,16 @@ function ProfileModal({
           opacity: 1 !important;
           transform: translateY(0) !important;
         }
+        @keyframes scaleIn {
+          0% {
+            transform: scale(0);
+            opacity: 0;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
       `}</style>
     </div>
   );
@@ -1348,6 +1527,7 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
   const [hasOnboarded, setHasOnboarded] = useState(true);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [openMatchaModal, setOpenMatchaModal] = useState(false);
+  const [isSSSExplainerOpen, setIsSSSExplainerOpen] = useState(false);
 
   // Preload SFX and game clip audios for instant playback
   const sfxFiles = ["next.mp3", "prev.mp3", "shiba-bark.mp3"];
@@ -1508,84 +1688,129 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
             zIndex: 9999,
           }}
         >
-          <div
-            onClick={() => setIsProfileOpen(true)}
-            style={{
-              display: "flex",
-              height: 32,
-              width: 32,
-              aspectRatio: 1,
-              backgroundColor: "white",
-              border: "1px solid rgba(0, 0, 0, 0.3)",
-              overflow: "visible",
-              alignItems: "center",
-              borderRadius: 8,
-              justifyContent: "center",
-              cursor: "pointer",
-              position: "relative",
-            }}
-          >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div
+              onClick={() => setIsProfileOpen(true)}
               style={{
-                width: "100%",
-                height: "100%",
+                display: "flex",
+                height: 32,
+                width: 32,
+                aspectRatio: 1,
+                backgroundColor: "white",
+                border: "1px solid rgba(0, 0, 0, 0.3)",
+                overflow: "visible",
+                alignItems: "center",
                 borderRadius: 8,
-                overflow: "hidden",
+                justifyContent: "center",
+                cursor: "pointer",
+                position: "relative",
               }}
             >
-              {slackProfile.image ? (
-                <img
-                  src={slackProfile.image}
-                  alt={slackProfile.displayName || "Slack Avatar"}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : null}
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: 8,
+                  overflow: "hidden",
+                }}
+              >
+                {slackProfile.image ? (
+                  <img
+                    src={slackProfile.image}
+                    alt={slackProfile.displayName || "Slack Avatar"}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : null}
+              </div>
+              {(() => {
+                if (!profile) return null;
+
+                const missingFields = [
+                  !profile.firstName && "firstName",
+                  !profile.lastName && "lastName",
+                  !profile.email && "email",
+                  !profile.githubUsername && "githubUsername",
+                  !profile.birthday && "birthday",
+                  !profile.slackId && "slackId",
+                  !profile.address?.street1 && "street1",
+                  !profile.address?.city && "city",
+                  !profile.address?.zipcode && "zipcode",
+                  !profile.address?.country && "country",
+                ].filter(Boolean);
+
+                const missingCount = missingFields.length;
+
+                if (missingCount === 0) return null;
+
+                return (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -2,
+                      right: -2,
+                      width: 16,
+                      height: 16,
+                      backgroundColor: "#FF0000",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "white",
+                      fontSize: "10px",
+                      fontWeight: "bold",
+                      border: "1px solid white",
+                      pointerEvents: "none",
+                    }}
+                  >
+                    {missingCount > 9 ? "9+" : missingCount}
+                  </div>
+                );
+              })()}
             </div>
-            {(() => {
-              if (!profile) return null;
-
-              const missingFields = [
-                !profile.firstName && "firstName",
-                !profile.lastName && "lastName",
-                !profile.email && "email",
-                !profile.githubUsername && "githubUsername",
-                !profile.birthday && "birthday",
-                !profile.slackId && "slackId",
-                !profile.address?.street1 && "street1",
-                !profile.address?.city && "city",
-                !profile.address?.zipcode && "zipcode",
-                !profile.address?.country && "country",
-              ].filter(Boolean);
-
-              const missingCount = missingFields.length;
-
-              if (missingCount === 0) return null;
-
-              return (
-                <div
+            
+            {/* SSS Balance Display */}
+            {profile?.sssBalance !== undefined && profile?.sssBalance !== null && (
+              <div 
+                onClick={() => setIsSSSExplainerOpen(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "6px 10px",
+                  backgroundColor: "transparent",
+                  borderRadius: "8px",
+                  color: "#2d5a27",
+                  fontWeight: "700",
+                  fontSize: "14px",
+                  border: "2px dotted #2d5a27",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "rgba(255, 250, 180, 0.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "transparent";
+                }}
+              >
+                <span style={{
+                  animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
+                }}>
+                  {profile.sssBalance}
+                </span>
+                <img
+                  src="/SSS.png"
+                  alt="SSS"
                   style={{
-                    position: "absolute",
-                    top: -2,
-                    right: -2,
-                    width: 16,
-                    height: 16,
-                    backgroundColor: "#FF0000",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "white",
-                    fontSize: "10px",
-                    fontWeight: "bold",
-                    border: "1px solid white",
-                    pointerEvents: "none",
+                    width: "16px",
+                    height: "16px",
+                    objectFit: "contain",
                   }}
-                >
-                  {missingCount > 9 ? "9+" : missingCount}
-                </div>
-              );
-            })()}
+                />
+              </div>
+            )}
           </div>
+          
           <p style={{ fontFamily: "GT Maru", fontWeight: "bold" }}>
             Shiba Arcade
           </p>
@@ -1801,6 +2026,10 @@ export default function HomeScreen({ games, setAppOpen, selectedGame, setSelecte
         SlackId={SlackId}
         profile={profile}
         onClose={() => setOpenMatchaModal(false)}
+      />
+      <SSSExplainerModal
+        isOpen={isSSSExplainerOpen}
+        onClose={() => setIsSSSExplainerOpen(false)}
       />
     </>
   );
