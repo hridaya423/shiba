@@ -321,12 +321,34 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
                 fontSize: "16px", 
                 color: "#2E8B57", 
                 lineHeight: "1.5", 
-                marginBottom: "20px", 
+                marginBottom: "12px", 
                 textAlign: "left"
               }}
             >
               Select Hackatime projects to connect to {selectedGame?.name}. (You can select multiple)
             </p>
+            <div 
+              style={{ 
+                width: "100%", 
+                marginBottom: "20px",
+                borderRadius: "8px",
+                overflow: "hidden"
+              }}
+            >
+              <iframe
+                width="100%"
+                height="180"
+                src="https://www.youtube.com/embed/a938RgsBzNg?si=qHHBIWW7GsvoyheJ"
+                title="Hackatime Tutorial"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{
+                  borderRadius: "8px",
+                  border: "2px solid #2E8B57"
+                }}
+              ></iframe>
+            </div>
             {loadingProjects ? (
               <div style={{ textAlign: "center", color: "#2E8B57", fontSize: "16px" }}>
                 Loading Hackatime projects...
