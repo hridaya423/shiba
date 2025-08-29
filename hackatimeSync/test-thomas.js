@@ -358,16 +358,32 @@ async function processGamePosts(game, spansData, gameProjects) {
     return;
   }
   
+  // Filter out posts that already have TimeSpentOnAsset field populated
+  const postsToProcess = posts.filter(post => {
+    const timeSpentOnAsset = post.fields?.['TimeSpentOnAsset'];
+    if (timeSpentOnAsset !== null && timeSpentOnAsset !== undefined && timeSpentOnAsset !== '') {
+      console.log(`    ⏭️ Skipping post ${post.id} - TimeSpentOnAsset already populated: ${timeSpentOnAsset}`);
+      return false;
+    }
+    return true;
+  });
+  
+  console.log(`    🔄 Processing ${postsToProcess.length} posts (${posts.length - postsToProcess.length} skipped due to existing TimeSpentOnAsset)`);
+  
+  if (postsToProcess.length === 0) {
+    return;
+  }
+  
   // Sort posts by creation time (oldest first)
-  posts.sort((a, b) => {
+  postsToProcess.sort((a, b) => {
     const aTime = new Date(a.fields?.['Created At'] || a.createdTime || 0).getTime() / 1000;
     const bTime = new Date(b.fields?.['Created At'] || b.createdTime || 0).getTime() / 1000;
     return aTime - bTime;
   });
   
   // Calculate hours spent for each post
-  for (let i = 0; i < posts.length; i++) {
-    const post = posts[i];
+  for (let i = 0; i < postsToProcess.length; i++) {
+    const post = postsToProcess[i];
     const postId = post.id;
     const createdAt = new Date(post.fields?.['Created At'] || post.createdTime || 0).getTime() / 1000;
     
@@ -379,7 +395,7 @@ async function processGamePosts(game, spansData, gameProjects) {
       hoursSpent = calculateHoursFromSpans(spansData, projectNames, startDate, createdAt);
     } else {
       // Subsequent posts: calculate hours between this post and the previous post
-      const previousPost = posts[i - 1];
+      const previousPost = postsToProcess[i - 1];
       const previousCreatedAt = new Date(previousPost.fields?.['Created At'] || previousPost.createdTime || 0).getTime() / 1000;
       hoursSpent = calculateHoursFromSpans(spansData, projectNames, previousCreatedAt, createdAt);
     }
@@ -387,7 +403,7 @@ async function processGamePosts(game, spansData, gameProjects) {
     // Update the post with calculated hours
     try {
       await updatePostHoursSpent(postId, hoursSpent);
-      console.log(`    ✅ Updated post ${i + 1}/${posts.length}: ${hoursSpent.toFixed(2)} hours`);
+      console.log(`    ✅ Updated post ${i + 1}/${postsToProcess.length}: ${hoursSpent.toFixed(2)} hours`);
     } catch (error) {
       console.error(`    ❌ Failed to update post ${postId}:`, error.message);
     }
