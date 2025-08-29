@@ -21,7 +21,7 @@ function ShaderToyBackground() {
   );
 }
 
-export default function GlobalGamesComponent({ token, playtestMode, setPlaytestMode, setSelectedPlaytestGame }) {
+export default function GlobalGamesComponent({ token, playtestMode, setPlaytestMode, setSelectedPlaytestGame, profile, setProfile }) {
   const [posts, setPosts] = useState([]);
   const [playtests, setPlaytests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -380,6 +380,7 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
                     minutesSpent={p.minutesSpent}
                     posterShomatoSeeds={p.posterShomatoSeeds}
                     postId={p.postId}
+                    setProfile={setProfile}
                   />
                 </div>
               ))}

@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 
 const PlayGameComponent = dynamic(() => import("@/components/utils/playGameComponent"), { ssr: false });
 
-export default function PostAttachmentRenderer({ content, attachments, playLink, gameName, thumbnailUrl, slackId, createdAt, token, onPlayCreated, badges, HoursSpent, gamePageUrl, postType, timelapseVideoId, githubImageLink, timeScreenshotId, hoursSpent, minutesSpent, posterShomatoSeeds, postId }) {
+export default function PostAttachmentRenderer({ content, attachments, playLink, gameName, thumbnailUrl, slackId, createdAt, token, onPlayCreated, badges, HoursSpent, gamePageUrl, postType, timelapseVideoId, githubImageLink, timeScreenshotId, hoursSpent, minutesSpent, posterShomatoSeeds, postId, setProfile }) {
   const [slackProfile, setSlackProfile] = useState(null);
   const [localShomatoSeeds, setLocalShomatoSeeds] = useState(posterShomatoSeeds || 0);
   const [isSendingShomato, setIsSendingShomato] = useState(false);
@@ -114,6 +114,19 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
         setHasUserShomatoed(true);
         // Store in cookies
         addShomatoedPostToCookies(postId);
+        
+        // Update user's shomato balance in frontend state
+        if (setProfile) {
+          setProfile(prevProfile => {
+            if (prevProfile && typeof prevProfile.shomatoBalance === 'number') {
+              return {
+                ...prevProfile,
+                shomatoBalance: prevProfile.shomatoBalance - 1
+              };
+            }
+            return prevProfile;
+          });
+        }
       } else {
         // Show error message
         alert(data.message || 'Failed to send shomato');

@@ -1,4 +1,5 @@
 import Airtable from 'airtable';
+import { safeEscapeFormulaString } from './utils/security.js';
 
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
 
@@ -14,10 +15,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Token and playtestId are required' });
     }
 
-    // Find the user by token
+    // Find the user by token - SECURITY FIX: Escape the token to prevent formula injection
     const usersTable = base('Users');
+    const escapedToken = safeEscapeFormulaString(token);
     const userRecords = await usersTable.select({
-      filterByFormula: `{Token} = '${token}'`
+      filterByFormula: `{Token} = "${escapedToken}"`
     }).firstPage();
 
     if (!userRecords || userRecords.length === 0) {
@@ -26,15 +28,16 @@ export default async function handler(req, res) {
 
     const user = userRecords[0];
 
-    // Find the playtest record by playtestId
+    // Find the playtest record by playtestId - SECURITY FIX: Escape the playtestId
     const playtestTable = base('PlaytestTickets');
+    const escapedPlaytestId = safeEscapeFormulaString(playtestId);
     
     // Try to find the playtest record by PlaytestId field
     let playtestRecords = [];
     
     try {
       playtestRecords = await playtestTable.select({
-        filterByFormula: `{PlaytestId} = '${playtestId}'`
+        filterByFormula: `{PlaytestId} = "${escapedPlaytestId}"`
       }).firstPage();
     } catch (error) {
       console.log('Method 1 failed:', error.message);
@@ -44,7 +47,7 @@ export default async function handler(req, res) {
     if (playtestRecords.length === 0) {
       try {
         playtestRecords = await playtestTable.select({
-          filterByFormula: `{PlaytestID} = '${playtestId}'`
+          filterByFormula: `{PlaytestID} = "${escapedPlaytestId}"`
         }).firstPage();
       } catch (error) {
         console.log('Method 2 failed:', error.message);
