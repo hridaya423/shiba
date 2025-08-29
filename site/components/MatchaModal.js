@@ -152,7 +152,7 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
                 transition: "opacity 1s ease, transform 1s ease"
               }}
             >
-              🍵 Matcha Raffle
+              Connect Hackatime to your Shiba Game
             </h2>
             <p 
               className={`fade-in ${showDescription ? 'visible' : ''}`}
@@ -168,7 +168,7 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
                 transition: "opacity 1s ease, transform 1s ease"
               }}
             >
-              We're giving away a tin of Matcha to one Hack Clubber who connects their first Hackatime project within the next 24 hours to Shiba.
+              Connect your Hackatime projects to your Shiba games to track your development progress and share your work with the community.
             </p>
             <button
               className={`fade-in ${showButton ? 'visible' : ''}`}
@@ -202,7 +202,7 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
                 e.target.style.color = "#ffffff";
               }}
             >
-              Continue to Raffle
+              Continue to Connect
             </button>
             <p 
               className={`fade-in ${showCallToAction ? 'visible' : ''}`}
@@ -218,7 +218,7 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
                 transition: "opacity 1s ease, transform 1s ease"
               }}
             >
-              Connect a Hackatime project to Shiba for a chance to win.
+              Connect a Hackatime project to your Shiba game to get started.
             </p>
           </>
         )}
@@ -521,7 +521,7 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
                 textAlign: "center"
               }}
             >
-              You were entered into the raffle.
+              Your Hackatime projects have been successfully connected to your Shiba game.
               {profile?.referralCode && " Here's your referral link to invite your friends to join too:"}
             </p>
             
@@ -631,7 +631,7 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
                 e.target.style.background = "#2E8B57";
               }}
             >
-              Finalize Entry into Raffle
+              Complete Connection
             </button>
           </>
         )}
