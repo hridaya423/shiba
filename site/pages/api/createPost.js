@@ -18,9 +18,18 @@ export default async function handler(req, res) {
     return res.status(500).json({ message: 'Server configuration error' });
   }
 
-  const { token, gameId, content, attachmentsUpload, playLink } = req.body || {};
+  const { token, gameId, content, attachmentsUpload, playLink, postType, timelapseVideoId, githubImageLink, timeScreenshotId, hoursSpent, minutesSpent } = req.body || {};
   if (!token || !gameId || !content) {
     return res.status(400).json({ message: 'Missing required fields: token, gameId, content' });
+  }
+  
+  // Validate artlog-specific fields
+  if (postType === 'artlog') {
+    if (!timelapseVideoId || !githubImageLink || !timeScreenshotId || hoursSpent === undefined || minutesSpent === undefined) {
+      return res.status(400).json({ 
+        message: 'Artlog posts require timelapseVideoId, githubImageLink, timeScreenshotId, hoursSpent, and minutesSpent' 
+      });
+    }
   }
 
   const sanitized = String(content).trim().substring(0, 5000); // they really should not be this long
@@ -49,6 +58,14 @@ export default async function handler(req, res) {
       Game: [gameId],
       PostID: postId,
     };
+    
+    // Add artlog-specific fields
+    if (postType === 'artlog') {
+      fields.Timelapse = timelapseVideoId;
+      fields['Link to Github Asset'] = githubImageLink;
+      fields.TimeScreenshotFile = [{ url: timeScreenshotId }];
+      fields.HoursSpent = parseFloat(hoursSpent) + (parseFloat(minutesSpent) / 60);
+    }
 
     if (typeof playLink === 'string' && playLink.trim().length > 0) {
       const trimmed = playLink.trim().substring(0, 500);
@@ -123,6 +140,12 @@ export default async function handler(req, res) {
     
     // Fetch latest post to include uploaded attachments
     const latest = await airtableRequest(`${encodeURIComponent(AIRTABLE_POSTS_TABLE)}/${encodeURIComponent(rec.id)}`, { method: 'GET' });
+    
+    if (!latest) {
+      console.error('Failed to fetch latest post data');
+      return res.status(500).json({ message: 'Failed to fetch post data after creation' });
+    }
+    
     const result = latest
       ? {
           id: latest.id,
@@ -131,6 +154,12 @@ export default async function handler(req, res) {
           PostID: latest.fields?.PostID || postId,
           createdAt: latest.fields?.['Created At'] || latest.createdTime || new Date().toISOString(),
           PlayLink: typeof latest.fields?.PlayLink === 'string' ? latest.fields.PlayLink : '',
+          postType: latest.fields?.PostType || 'devlog',
+                        timelapseVideoId: latest.fields?.Timelapse || '',
+              githubImageLink: latest.fields?.['Link to Github Asset'] || '',
+              timeScreenshotId: latest.fields?.TimeScreenshotFile?.[0]?.url || '',
+              hoursSpent: latest.fields?.HoursSpent || 0,
+              minutesSpent: 0,
           attachments: (() => {
             const airtableAttachments = Array.isArray(latest.fields?.Attachements)
               ? latest.fields.Attachements.map((a) => ({ 
@@ -190,6 +219,7 @@ export default async function handler(req, res) {
         }
       : null;
 
+    console.log('createPost result:', result);
     return res.status(200).json({ ok: true, post: result });
   } catch (error) {
     // eslint-disable-next-line no-console

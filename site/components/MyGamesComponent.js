@@ -6,6 +6,7 @@ import TopBar from "@/components/TopBar";
 import RadarChart from "@/components/RadarChart";
 import { uploadGame as uploadGameUtil } from "@/components/utils/uploadGame";
 import { uploadMiscFile } from "@/components/utils/uploadMiscFile";
+import ArtlogPostForm from "@/components/ArtlogPostForm";
 
 const PostAttachmentRenderer = dynamic(() => import('@/components/utils/PostAttachmentRenderer'), { ssr: false });
 
@@ -662,10 +663,11 @@ function DetailView({
   const [uploadedFiles, setUploadedFiles] = useState([]); // Store uploaded file results
   const [uploadProgress, setUploadProgress] = useState({}); // Track upload progress
   const [isUploading, setIsUploading] = useState(false);
-  const [postType, setPostType] = useState("moment"); // 'moment' | 'ship' (visual only for now)
+  const [postType, setPostType] = useState("moment"); // 'moment' | 'ship' | 'artlog'
   const [isDragging, setIsDragging] = useState(false);
   const [slackProfile, setSlackProfile] = useState(null);
   const [isDragActive, setIsDragActive] = useState(false);
+  const artlogFormRef = useRef(null);
   const MAX_TOTAL_BYTES = 50 * 1024 * 1024; // 50MB limit for misc files
   const totalAttachmentBytes = useMemo(
     () =>
@@ -760,6 +762,68 @@ function DetailView({
     
     setUploadedFiles(newUploadedFiles);
     setIsUploading(false);
+  };
+
+  // Handle artlog post submission
+  const handleArtlogSubmit = async (postData) => {
+    if (!token || !game?.id) return;
+    
+    setIsPosting(true);
+    setPostMessage("");
+    
+    try {
+      const res = await fetch("/api/createPost", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                          token,
+                          gameId: game.id,
+                          content: postData.content,
+                          postType: 'artlog',
+                          timelapseVideoId: postData.timelapseVideoId,
+                          githubImageLink: postData.githubImageLink,
+                          timeScreenshotId: postData.timeScreenshotId,
+                          hoursSpent: postData.hoursSpent,
+                          minutesSpent: postData.minutesSpent
+                        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.ok) {
+        setPostContent("");
+        clearFileInputs();
+        setPostType("moment"); // Reset to default
+        
+        // Add the new post to the game's posts array
+        const newPost = {
+          id: data.post?.id || undefined,
+          postId: data.post?.PostID || undefined,
+          content: data.post?.content || "",
+          createdAt: data.post?.createdAt || new Date().toISOString(),
+          PlayLink: typeof data.post?.PlayLink === "string" ? data.post.PlayLink : "",
+          attachments: Array.isArray(data.post?.attachments) ? data.post.attachments : [],
+          badges: Array.isArray(data.post?.badges) ? data.post.badges : [],
+          postType: 'artlog',
+          timelapseVideoId: data.post?.timelapseVideoId || "",
+          githubImageLink: data.post?.githubImageLink || "",
+          timeScreenshotId: data.post?.timeScreenshotId || "",
+          hoursSpent: data.post?.hoursSpent || 0,
+          minutesSpent: data.post?.minutesSpent || 0
+        };
+        
+        onUpdated?.({
+          id: game.id,
+          posts: [newPost, ...(Array.isArray(game.posts) ? game.posts : [])],
+        });
+      } else {
+        setPostMessage(`❌ Failed to post artlog: ${data.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      setPostMessage(`❌ Failed to post artlog: ${error.message}`);
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   useEffect(() => {
@@ -1472,6 +1536,18 @@ function DetailView({
           <li>You're uploading a zip of the files, not a zip of the folder. So there was issue in past where if you zip the folder and not the files, it wouldn't upload properly. If you're on mac select the files and then right click compress instead of selecting the folder itself.</li>
           <li>It's named index.html inside of the folder, not the nameOfYourGame.html</li>
         </ul>
+
+        <p
+          style={{
+            fontSize: 11,
+            opacity: 0.6,
+            fontStyle: "italic",
+            marginTop: 8,
+            marginBottom: 8,
+          }}
+        >
+          <strong>Artlog?!</strong> Upload a timelapse video, a screenshot of the time (eg. procreate canvas), and a link to the art asset in your Github repo to count time for art!
+        </p>
         <div style={{ marginTop: 16 }}>
           <div
             className={`moments-composer${isDragActive ? " drag-active" : ""}`}
@@ -1701,6 +1777,17 @@ function DetailView({
                   </button>
                   <input type="hidden" value={uploadAuthToken} readOnly />
                 </>
+              ) : postType === "artlog" ? (
+                <ArtlogPostForm
+                  ref={artlogFormRef}
+                  onSubmit={handleArtlogSubmit}
+                  onCancel={() => setPostType("moment")}
+                  postContent={postContent}
+                  setPostContent={setPostContent}
+                  isPosting={isPosting}
+                  setIsPosting={setIsPosting}
+                  setPostMessage={setPostMessage}
+                />
               ) : (
                 <>
                   <input
@@ -1745,7 +1832,7 @@ function DetailView({
                     className="moments-attach-btn"
                     onClick={() => {
                       console.log(
-                        "Moments file button clicked, ref exists:",
+                        "Moments file clicked, ref exists:",
                         !!momentsFileInputRef.current,
                       );
                       momentsFileInputRef.current?.click();
@@ -1758,7 +1845,7 @@ function DetailView({
                 </>
               )}
               <div className="moments-footer-spacer" />
-              {/* Visual toggle: Shiba Moment vs Shiba Ship (no functionality yet) */}
+              {/* Visual toggle: Shiba Moment vs Shiba Ship vs Artlog */}
               <div
                 className="moment-type-toggle"
                 role="tablist"
@@ -1790,6 +1877,19 @@ function DetailView({
                 >
                   Demo
                 </button>
+                <button
+                  type="button"
+                  className={`moment-type-option${postType === "artlog" ? " active" : ""}`}
+                  aria-selected={postType === "artlog"}
+                  onClick={() => {
+                    setPostType("artlog");
+                    setBuildFile(null);
+                    setPostFiles([]);
+                    // Don't clear file inputs for artlog - let the form handle its own state
+                  }}
+                >
+                  Artlog
+                </button>
               </div>
               <button
                 className="moments-post-btn"
@@ -1797,7 +1897,8 @@ function DetailView({
                   isPosting || 
                   isUploading || 
                   (postType === "moment" && postFiles.length > 0 && uploadedFiles.length === 0) ||
-                  (postType === "ship" && !isProfileComplete)
+                  (postType === "ship" && !isProfileComplete) ||
+                  (postType === "artlog" && (!postContent.trim() || !artlogFormRef.current))
                 }
                 onClick={async () => {
                   if (!token || !game?.id || !postContent.trim()) return;
@@ -1805,6 +1906,22 @@ function DetailView({
                     alert(
                       "Add a media file (image/video/audio) of what you added in this update",
                     );
+                    return;
+                  }
+                  if (postType === "artlog") {
+                    // For artlog posts, validate the form and submit
+                    if (!artlogFormRef.current) {
+                      alert("Artlog form not ready");
+                      return;
+                    }
+                    
+                    const artlogData = artlogFormRef.current.getFormData();
+                    if (!artlogData) {
+                      return; // Validation errors will be shown by the form
+                    }
+                    
+                    // Submit the artlog post
+                    await handleArtlogSubmit(artlogData);
                     return;
                   }
                   if (postType === "ship") {
@@ -1827,6 +1944,7 @@ function DetailView({
                       return;
                     }
                   }
+                  
                   setIsPosting(true);
                   setPostMessage("");
                   try {
@@ -2112,6 +2230,12 @@ function DetailView({
                     onPlayCreated={(play) => {
                       console.log("Play created:", play);
                     }}
+                    postType={p.postType}
+                    timelapseVideoId={p.timelapseVideoId}
+                    githubImageLink={p.githubImageLink}
+                    timeScreenshotId={p.timeScreenshotId}
+                    hoursSpent={p.hoursSpent}
+                    minutesSpent={p.minutesSpent}
                   />
                 </div>
               ))}

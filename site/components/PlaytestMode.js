@@ -426,6 +426,12 @@ export default function PlaytestMode({ onExit, profile, playtestGame, playSound,
                     onPlayCreated={(play) => {
                       console.log('Play created:', play);
                     }}
+                    postType={post.postType}
+                    timelapseVideoId={post.timelapseVideoId}
+                    githubImageLink={post.githubImageLink}
+                    timeScreenshotId={post.timeScreenshotId}
+                    hoursSpent={post.hoursSpent}
+                    minutesSpent={post.minutesSpent}
                   />
                 </div>
               ))}
