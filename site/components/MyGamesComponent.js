@@ -663,6 +663,7 @@ function DetailView({
   const [uploadedFiles, setUploadedFiles] = useState([]); // Store uploaded file results
   const [uploadProgress, setUploadProgress] = useState({}); // Track upload progress
   const [isUploading, setIsUploading] = useState(false);
+  const [isArtlogUploading, setIsArtlogUploading] = useState(false);
   const [postType, setPostType] = useState("moment"); // 'moment' | 'ship' | 'artlog'
   const [isDragging, setIsDragging] = useState(false);
   const [slackProfile, setSlackProfile] = useState(null);
@@ -843,6 +844,7 @@ function DetailView({
     setUploadedFiles([]);
     setUploadProgress({});
     setIsUploading(false);
+    setIsArtlogUploading(false);
     clearFileInputs();
   }, [game?.id]);
 
@@ -1548,6 +1550,11 @@ function DetailView({
         >
           <strong>Artlog?!</strong> Upload a timelapse video, a screenshot of the time (eg. procreate canvas), and a link to the art asset in your Github repo to count time for art!
         </p>
+        {isArtlogUploading && (
+          <p style={{ fontSize: 11, color: "#1976d2", fontStyle: "italic", marginTop: 4, marginBottom: 8 }}>
+            ⏳ Artlog files uploading... Please wait before posting.
+          </p>
+        )}
         <div style={{ marginTop: 16 }}>
           <div
             className={`moments-composer${isDragActive ? " drag-active" : ""}`}
@@ -1787,6 +1794,14 @@ function DetailView({
                   isPosting={isPosting}
                   setIsPosting={setIsPosting}
                   setPostMessage={setPostMessage}
+                  onUploadStateChange={(isUploading) => {
+                    console.log('Artlog upload state changed:', isUploading);
+                    setIsArtlogUploading(isUploading);
+                    
+                    // Also log the current state for debugging
+                    console.log('Current artlog upload state:', isUploading);
+                    console.log('Post button should be disabled:', isPosting || isUploading || isArtlogUploading);
+                  }}
                 />
               ) : (
                 <>
@@ -1859,6 +1874,7 @@ function DetailView({
                     setPostType("moment");
                     setBuildFile(null);
                     setPostFiles([]);
+                    setIsArtlogUploading(false);
                     clearFileInputs();
                   }}
                 >
@@ -1872,6 +1888,7 @@ function DetailView({
                     setPostType("ship");
                     setBuildFile(null);
                     setPostFiles([]);
+                    setIsArtlogUploading(false);
                     clearFileInputs();
                   }}
                 >
@@ -1885,6 +1902,7 @@ function DetailView({
                     setPostType("artlog");
                     setBuildFile(null);
                     setPostFiles([]);
+                    setIsArtlogUploading(false);
                     // Don't clear file inputs for artlog - let the form handle its own state
                   }}
                 >
@@ -1896,6 +1914,7 @@ function DetailView({
                 disabled={
                   isPosting || 
                   isUploading || 
+                  isArtlogUploading ||
                   (postType === "moment" && postFiles.length > 0 && uploadedFiles.length === 0) ||
                   (postType === "ship" && !isProfileComplete) ||
                   (postType === "artlog" && (!postContent.trim() || !artlogFormRef.current))
@@ -2089,7 +2108,7 @@ function DetailView({
                   ? postType === "ship"
                     ? "Shipping…"
                     : "Posting…"
-                  : isUploading
+                  : isUploading || isArtlogUploading
                     ? "Uploading…"
                     : overTotalLimit
                       ? "Files exceed 50MB"
