@@ -317,6 +317,7 @@ export default function GamesPage({ gameData, error }) {
               </span>
             </button>
           </div>
+<<<<<<< HEAD
 
           {/* Devlogs View */}
           {selectedView === "Devlogs" && (
@@ -349,6 +350,40 @@ export default function GamesPage({ gameData, error }) {
                       />
                     </div>
                   ))}
+=======
+          {Array.isArray(gameData?.posts) && gameData.posts.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: "32px" }}>
+              {gameData.posts.map((p, pIdx) => (
+                <div key={p.id || pIdx} className="moment-card" style={{ 
+                  position: "relative",
+                  border: "1px solid rgba(0, 0, 0, 0.18)",
+                  borderRadius: "10px",
+                  background: "rgba(255, 255, 255, 0.8)",
+                  padding: "12px"
+                }}>
+                  <PostAttachmentRenderer
+                    content={p.content}
+                    attachments={p.attachments}
+                    playLink={p.PlayLink}
+                    gameName={gameData?.name || ""}
+                    thumbnailUrl={gameData?.thumbnailUrl || ""}
+                    token={null}
+                    slackId={user}
+                    createdAt={p.createdAt}
+                    badges={p.badges}
+                    HoursSpent={p.HoursSpent}
+                    gamePageUrl={`https://shiba.hackclub.com/games/${user}/${encodeURIComponent(gameData?.name || id)}`}
+                    onPlayCreated={(play) => {
+                      console.log("Play created:", play);
+                    }}
+                    postType={p.postType}
+                    timelapseVideoId={p.timelapseVideoId}
+                    githubImageLink={p.githubImageLink}
+                    timeScreenshotId={p.timeScreenshotId}
+                    hoursSpent={p.hoursSpent || p.HoursSpent || 0}
+                    minutesSpent={p.minutesSpent}
+                  />
+>>>>>>> 20047e6cbdbcba2ee0e44484b7c2a5b50e5dff9e
                 </div>
               ) : (
                 <div style={{width: "100%", border: "1px solid #000", padding: 16}}>
