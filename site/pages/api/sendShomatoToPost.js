@@ -57,14 +57,13 @@ export default async function handler(req, res) {
     // Add the post record ID to the SendShomatoToPost field
     const updatedShomatos = [...currentShomatoIds, postRecord.id];
     
-    // Get current SSS balance and reduce it by 1
-    const currentSSSBalance = user.fields?.sssBalance || 0;
-    const newSSSBalance = Math.max(0, currentSSSBalance - 1); // Ensure balance doesn't go below 0
+    // Calculate new ShomatoBalance (reduce by 1)
+    const newShomatoBalance = shomatoBalance - 1;
     
     const updatePayload = {
       fields: {
         SendShomatoToPost: updatedShomatos,
-        sssBalance: newSSSBalance
+        ShomatoBalance: newShomatoBalance
       }
     };
 
@@ -73,14 +72,14 @@ export default async function handler(req, res) {
       body: JSON.stringify(updatePayload),
     });
 
-    console.log(`Added shomato to post ${PostID} (record: ${postRecord.id}) for user ${user.id}, reduced SSS balance from ${currentSSSBalance} to ${newSSSBalance}`);
+    console.log(`Added shomato to post ${PostID} (record: ${postRecord.id}) for user ${user.id}, balance reduced from ${shomatoBalance} to ${newShomatoBalance}`);
     
     return res.status(200).json({ 
       ok: true, 
       message: 'Shomato sent successfully',
       postId: postRecord.id,
       postID: PostID,
-      newSSSBalance: newSSSBalance
+      newBalance: newShomatoBalance
     });
 
   } catch (error) {
