@@ -4,8 +4,13 @@ import dynamic from "next/dynamic";
 
 const PlayGameComponent = dynamic(() => import("@/components/utils/playGameComponent"), { ssr: false });
 
-export default function PostAttachmentRenderer({ content, attachments, playLink, gameName, thumbnailUrl, slackId, createdAt, token, onPlayCreated, badges, HoursSpent, gamePageUrl, postType, timelapseVideoId, githubImageLink, timeScreenshotId, hoursSpent, minutesSpent }) {
+export default function PostAttachmentRenderer({ content, attachments, playLink, gameName, thumbnailUrl, slackId, createdAt, token, onPlayCreated, badges, HoursSpent, gamePageUrl, postType, timelapseVideoId, githubImageLink, timeScreenshotId, hoursSpent, minutesSpent, posterShomatoSeeds, postId }) {
   const [slackProfile, setSlackProfile] = useState(null);
+  const [localShomatoSeeds, setLocalShomatoSeeds] = useState(posterShomatoSeeds || 0);
+  const [isSendingShomato, setIsSendingShomato] = useState(false);
+  const [showAudio, setShowAudio] = useState(false);
+  const [hasUserShomatoed, setHasUserShomatoed] = useState(false);
+  
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -44,6 +49,82 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
       gameId = '';
     }
   }
+
+  // Update local shomato seeds when prop changes
+  useEffect(() => {
+    setLocalShomatoSeeds(posterShomatoSeeds || 0);
+  }, [posterShomatoSeeds]);
+
+  // Check if user has already shomatoed this post from cookies
+  useEffect(() => {
+    if (!postId) return;
+    
+    const shomatoedPosts = getShomatoedPostsFromCookies();
+    if (shomatoedPosts.includes(postId)) {
+      setHasUserShomatoed(true);
+    }
+  }, [postId]);
+
+  // Helper functions for cookie management
+  const getShomatoedPostsFromCookies = () => {
+    if (typeof document === 'undefined') return [];
+    const cookies = document.cookie.split(';');
+    const shomatoCookie = cookies.find(cookie => cookie.trim().startsWith('shomatoedPosts='));
+    if (shomatoCookie) {
+      try {
+        return JSON.parse(decodeURIComponent(shomatoCookie.split('=')[1]));
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  };
+
+  const addShomatoedPostToCookies = (postId) => {
+    if (typeof document === 'undefined') return;
+    const shomatoedPosts = getShomatoedPostsFromCookies();
+    if (!shomatoedPosts.includes(postId)) {
+      shomatoedPosts.push(postId);
+      document.cookie = `shomatoedPosts=${encodeURIComponent(JSON.stringify(shomatoedPosts))}; path=/; max-age=2592000`; // 30 days
+    }
+  };
+
+
+
+  // Handle sending shomato
+  const handleSendShomato = async () => {
+    if (!token || !postId || isSendingShomato || hasUserShomatoed) return;
+    
+    // Show audio element to play sound
+    setShowAudio(true);
+    
+    setIsSendingShomato(true);
+    try {
+      const res = await fetch('/api/sendShomatoToPost', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, PostID: postId }),
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok && data.ok) {
+        // Increment local count on send success
+        setLocalShomatoSeeds(prev => prev + 1);
+        setHasUserShomatoed(true);
+        // Store in cookies
+        addShomatoedPostToCookies(postId);
+      } else {
+        // Show error message
+        alert(data.message || 'Failed to send shomato');
+      }
+    } catch (error) {
+      console.error('Error sending shomato:', error);
+      alert('Failed to send shomato');
+    } finally {
+      setIsSendingShomato(false);
+    }
+  };
 
   // Utility: classify attachment kind using MIME and filename extension
   const classifyKind = (att) => {
@@ -315,6 +396,78 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
       
       
       <div style={{ whiteSpace: 'pre-wrap' }}>{content || ''}</div>
+
+      {/* Shomato Button - only show if token and postId are provided */}
+      {token && postId && (
+        <div style={{ 
+          position: 'absolute',
+          top: '8px',
+          right: '8px',
+          zIndex: 10
+        }}>
+          <button
+            onClick={handleSendShomato}
+            disabled={isSendingShomato || hasUserShomatoed}
+            style={{
+              background: hasUserShomatoed ? 'rgb(220, 53, 69)' : 'rgb(255, 255, 255)',
+              border: '1px solid rgba(255, 111, 165, 0.3)',
+              cursor: (isSendingShomato || hasUserShomatoed) ? 'not-allowed' : 'pointer',
+              padding: '6px 8px',
+              borderRadius: '6px',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+            }}
+            title={hasUserShomatoed ? "Already shomatoed" : "Send shomato"}
+          >
+            <img
+              src="/shomato.png"
+              alt="Shomato"
+              style={{
+                width: '16px',
+                height: '16px',
+                filter: isSendingShomato ? 'grayscale(50%)' : 'none'
+              }}
+            />
+            <span style={{ 
+              fontSize: '11px', 
+              color: hasUserShomatoed ? '#fff' : '#666',
+              fontWeight: '600'
+            }}>
+              {localShomatoSeeds}
+            </span>
+          </button>
+          {isSendingShomato && (
+            <div style={{ 
+              position: 'absolute',
+              top: '100%',
+              right: '0',
+              marginTop: '4px',
+              fontSize: '10px', 
+              color: '#999',
+              whiteSpace: 'nowrap',
+              background: 'rgba(255, 255, 255, 0.9)',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              border: '1px solid rgba(0, 0, 0, 0.1)'
+            }}>
+              Sending...
+            </div>
+          )}
+          
+          {/* Audio element - conditionally rendered */}
+          {showAudio && (
+            <audio
+              src="/tomato.mp3"
+              autoPlay
+              onEnded={() => setShowAudio(false)}
+              onError={() => setShowAudio(false)}
+            />
+          )}
+        </div>
+      )}
 
       {/* Debug logging */}
       {console.log('PostAttachmentRenderer artlog check:', {

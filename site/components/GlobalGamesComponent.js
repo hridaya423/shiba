@@ -32,6 +32,7 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
   const [hasMore, setHasMore] = useState(true);
   const [selectedView, setSelectedView] = useState('global'); // 'global' | 'playtests'
   const [playtestsFetched, setPlaytestsFetched] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const circleRef = useRef(null);
 
   useEffect(() => {
@@ -61,6 +62,31 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  // Fetch user profile for shomato balance
+  useEffect(() => {
+    let cancelled = false;
+    const fetchProfile = async () => {
+      if (!token) return;
+      try {
+        const res = await fetch("/api/getMyProfile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok && data?.ok) {
+          setUserProfile(data.profile || null);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
   useEffect(() => {
     let cancelled = false;
     const fetchPosts = async () => {
@@ -87,6 +113,7 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
                 timeScreenshotId: p.timeScreenshotId || '',
                 hoursSpent: p.hoursSpent || 0,
                 minutesSpent: p.minutesSpent || 0,
+                posterShomatoSeeds: p.posterShomatoSeeds || 0,
               }))
             : [];
           setPosts(normalized);
@@ -223,6 +250,93 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
 
         {selectedView === 'global' ? (
           <>
+            {/* Shiba Shomato Showdown Banner */}
+            <div style={{
+              background: 'rgba(220, 53, 69, 0.9)',
+              border: '2px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '16px',
+              padding: '20px',
+              marginBottom: '24px',
+              textAlign: 'center',
+              position: 'relative'
+            }}>
+              
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: 'bold',
+                color: '#fff',
+                marginBottom: '4px',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '12px'
+              }}>
+                <img
+                  src="/shomato.png"
+                  alt="Shomato"
+                  style={{
+                    width: '28px',
+                    height: '28px'
+                  }}
+                />
+                SHIBA SHOMATO SHOWDOWN
+                <img
+                  src="/shomato.png"
+                  alt="Shomato"
+                  style={{
+                    width: '28px',
+                    height: '28px'
+                  }}
+                />
+              </h2>
+              
+              <p style={{
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.8)',
+                marginBottom: '12px',
+                textAlign: 'center',
+                fontStyle: 'italic'
+              }}>
+                Friday August 29th - Monday September 1st
+              </p>
+              
+              <p style={{
+                fontSize: '16px',
+                color: '#fff',
+                marginBottom: '12px',
+                lineHeight: '1.5',
+                position: 'relative',
+                textAlign: 'left'
+              }}>
+                You currently have <strong style={{ fontSize: '16px', color: '#fff' }}>
+                  {userProfile?.shomatoBalance || 0}
+                </strong> Shomatos.
+                <span style={{ 
+                  display: 'block', 
+                  marginTop: '8px',
+                  fontSize: '16px',
+                  color: '#ffeb3b',
+                  fontWeight: 'bold'
+                }}>
+                  You have been given {userProfile?.shomatoSeeds || 0} Shomato Seeds.
+                </span>
+              </p>
+              
+              <p style={{
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                lineHeight: '1.4',
+                position: 'relative',
+                textAlign: 'left'
+              }}>
+                Every 15 minutes you work on your project this weekend (3 day weekend), you'll receive a Shomato. 
+                You must shoot your shomato at folk's ships in the Global Games Page to release seeds into their ship. 
+                The shiba ship with the most seeds at the end of Monday (PST) will be pronounced the winner and win a grant to put their game onto the Steam Store. 
+                The top 10 will receive an honorary Shomato Badge.
+              </p>
+            </div>
+
             <h1 style={{ textAlign: 'center', marginBottom: 2, color: '#fff' }}>Global Updates</h1>
             <p style={{ textAlign: 'center', marginBottom: 20, color: '#fff' }}>see the latest devlogs & demos posted in Shiba</p>
             <div
@@ -241,6 +355,7 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
                     borderRadius: 10,
                     background: 'rgba(255,255,255,0.8)',
                     padding: 12,
+                    position: 'relative',
                   }}
                 >
                   <PostAttachmentRenderer
@@ -263,6 +378,8 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
                     timeScreenshotId={p.timeScreenshotId}
                     hoursSpent={p.hoursSpent}
                     minutesSpent={p.minutesSpent}
+                    posterShomatoSeeds={p.posterShomatoSeeds}
+                    postId={p.postId}
                   />
                 </div>
               ))}
@@ -397,6 +514,17 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
           z-index: 2;
           transform: translate(-50%, -50%);
           display: none;
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.3;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.6;
+            transform: scale(1.1);
+          }
         }
       `}</style>
     </div>

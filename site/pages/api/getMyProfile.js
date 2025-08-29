@@ -194,6 +194,8 @@ function normalizeProfileFields(f) {
     referralNumber: typeof f['ReferralNumber'] === 'number' ? f['ReferralNumber'] : (typeof f['ReferralNumber'] === 'string' ? parseInt(f['ReferralNumber']) || 0 : 0),
     hasOnboarded: hasOnboarded,
     sssBalance: sssBalance,
+    shomatoBalance: typeof f['ShomatoBalance'] === 'number' ? f['ShomatoBalance'] : 0,
+    shomatoSeeds: typeof f['ShomatoSeeds'] === 'number' ? f['ShomatoSeeds'] : 0,
     address: {
       street1: typeof f['street address'] === 'string' ? f['street address'] : '',
       street2: typeof f['street address #2'] === 'string' ? f['street address #2'] : '',
