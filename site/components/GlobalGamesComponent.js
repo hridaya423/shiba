@@ -81,6 +81,12 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
                 postId: p.PostID || '',
                 gameThumbnail: p.GameThumbnail || '',
                 badges: Array.isArray(p.Badges) ? p.Badges : [],
+                postType: p.postType || 'devlog',
+                timelapseVideoId: p.timelapseVideoId || '',
+                githubImageLink: p.githubImageLink || '',
+                timeScreenshotId: p.timeScreenshotId || '',
+                hoursSpent: p.hoursSpent || 0,
+                minutesSpent: p.minutesSpent || 0,
               }))
             : [];
           setPosts(normalized);
@@ -251,6 +257,12 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
                     onPlayCreated={(play) => {
                       console.log('Play created:', play);
                     }}
+                    postType={p.postType}
+                    timelapseVideoId={p.timelapseVideoId}
+                    githubImageLink={p.githubImageLink}
+                    timeScreenshotId={p.timeScreenshotId}
+                    hoursSpent={p.hoursSpent}
+                    minutesSpent={p.minutesSpent}
                   />
                 </div>
               ))}

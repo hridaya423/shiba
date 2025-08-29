@@ -303,6 +303,12 @@ export default function GamesPage({ gameData, error }) {
                     onPlayCreated={(play) => {
                       console.log("Play created:", play);
                     }}
+                    postType={p.postType}
+                    timelapseVideoId={p.timelapseVideoId}
+                    githubImageLink={p.githubImageLink}
+                    timeScreenshotId={p.timeScreenshotId}
+                    hoursSpent={p.hoursSpent || p.HoursSpent || 0}
+                    minutesSpent={p.minutesSpent}
                   />
                 </div>
               ))}

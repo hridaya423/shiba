@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 
 const PlayGameComponent = dynamic(() => import("@/components/utils/playGameComponent"), { ssr: false });
 
-export default function PostAttachmentRenderer({ content, attachments, playLink, gameName, thumbnailUrl, slackId, createdAt, token, onPlayCreated, badges, HoursSpent, gamePageUrl }) {
+export default function PostAttachmentRenderer({ content, attachments, playLink, gameName, thumbnailUrl, slackId, createdAt, token, onPlayCreated, badges, HoursSpent, gamePageUrl, postType, timelapseVideoId, githubImageLink, timeScreenshotId, hoursSpent, minutesSpent }) {
   const [slackProfile, setSlackProfile] = useState(null);
   useEffect(() => {
     let cancelled = false;
@@ -311,7 +311,131 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
           </div>
         </div>
       ) : null}
+      
+      
+      
       <div style={{ whiteSpace: 'pre-wrap' }}>{content || ''}</div>
+
+      {/* Debug logging */}
+      {console.log('PostAttachmentRenderer artlog check:', {
+        postType,
+        timelapseVideoId,
+        githubImageLink,
+        hoursSpent,
+        condition: postType === 'artlog' || (timelapseVideoId && githubImageLink && hoursSpent > 0)
+      })}
+      
+      {/* Artlog-specific rendering */}
+      {(postType === 'artlog' || (timelapseVideoId && githubImageLink && hoursSpent > 0)) && (
+        <div style={{ 
+          border: '2px solid #ff6fa5', 
+          borderRadius: '12px', 
+          padding: '16px', 
+          marginBottom: '16px',
+          background: 'rgba(255, 111, 165, 0.05)'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            marginBottom: '12px',
+            color: '#ff6fa5',
+            fontWeight: 'bold',
+            fontSize: '14px'
+          }}>
+            🎨 Artlog
+          </div>
+          
+          {/* Timelapse Video */}
+          {timelapseVideoId && (
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Timelapse:</div>
+              <video
+                src={timelapseVideoId}
+                controls
+                playsInline
+                style={{
+                  width: '100%',
+                  maxHeight: '300px',
+                  borderRadius: '8px',
+                  background: '#000'
+                }}
+                onError={(e) => {
+                  console.error('Video error:', e);
+                  console.error('Video src:', timelapseVideoId);
+                }}
+                onLoadStart={() => {
+                  console.log('Video loading started:', timelapseVideoId);
+                }}
+                onCanPlay={() => {
+                  console.log('Video can play:', timelapseVideoId);
+                }}
+              />
+
+            </div>
+          )}
+          
+          {/* GitHub Image Link (dropdown) */}
+          {githubImageLink && (
+            <details style={{ marginBottom: '12px' }}>
+              <summary style={{ fontSize: '12px', color: '#666', marginBottom: '4px', cursor: 'pointer', outline: 'none' }}>
+                GitHub Link
+              </summary>
+              <a 
+                href={githubImageLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ 
+                  color: '#007bff', 
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                  wordBreak: 'break-all'
+                }}
+              >
+                {githubImageLink}
+              </a>
+            </details>
+          )}
+          
+          {/* Time Screenshot (dropdown) */}
+          {timeScreenshotId && (
+            <details style={{ marginBottom: '12px' }}>
+              <summary style={{ fontSize: '12px', color: '#666', marginBottom: '4px', cursor: 'pointer', outline: 'none' }}>
+                Time Screenshot
+              </summary>
+              <img 
+                src={typeof timeScreenshotId === 'string' ? timeScreenshotId : timeScreenshotId?.[0]?.url || ''}
+                alt="Time spent screenshot"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '200px',
+                  borderRadius: '8px',
+                  border: '1px solid #ddd',
+                  marginTop: '8px'
+                }}
+              />
+            </details>
+          )}
+          
+          {/* Time Display */}
+          {hoursSpent > 0 && (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              fontSize: '14px',
+              color: '#666'
+            }}>
+              <span>⏱️</span>
+              <span>
+                {hoursSpent >= 1 ? `${Math.floor(hoursSpent)}h` : ''}
+                {hoursSpent % 1 > 0 ? `${Math.round((hoursSpent % 1) * 60)}m` : ''}
+                {hoursSpent < 1 ? `${Math.round(hoursSpent * 60)}m` : ''}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
       {gameId ? (
         <PlayGameComponent
           gameId={gameId}
