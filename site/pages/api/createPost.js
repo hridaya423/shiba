@@ -25,9 +25,9 @@ export default async function handler(req, res) {
   
   // Validate artlog-specific fields
   if (postType === 'artlog') {
-    if (!timelapseVideoId || !githubImageLink || !timeScreenshotId || hoursSpent === undefined || minutesSpent === undefined) {
+    if (!timelapseVideoId || !githubImageLink || hoursSpent === undefined || minutesSpent === undefined) {
       return res.status(400).json({ 
-        message: 'Artlog posts require timelapseVideoId, githubImageLink, timeScreenshotId, hoursSpent, and minutesSpent' 
+        message: 'Artlog posts require timelapseVideoId, githubImageLink, hoursSpent, and minutesSpent. TimeScreenshotId is optional.' 
       });
     }
   }
@@ -63,7 +63,10 @@ export default async function handler(req, res) {
     if (postType === 'artlog') {
       fields.Timelapse = timelapseVideoId;
       fields['Link to Github Asset'] = githubImageLink;
-      fields.TimeScreenshotFile = [{ url: timeScreenshotId }];
+      // Only set screenshot field if it has a valid value
+      if (timeScreenshotId && timeScreenshotId.trim() !== '') {
+        fields.TimeScreenshotFile = [{ url: timeScreenshotId }];
+      }
       fields.HoursSpent = parseFloat(hoursSpent) + (parseFloat(minutesSpent) / 60);
     }
 
