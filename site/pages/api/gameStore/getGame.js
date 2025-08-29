@@ -10,6 +10,7 @@ const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
 const AIRTABLE_GAMES_TABLE = process.env.AIRTABLE_GAMES_TABLE || 'Games';
 const AIRTABLE_POSTS_TABLE = process.env.AIRTABLE_POSTS_TABLE || 'Posts';
+const AIRTABLE_PLAYS_TABLE = process.env.AIRTABLE_PLAYS_TABLE || 'Plays';
 const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
 
 export default async function handler(req, res) {
@@ -82,6 +83,9 @@ export default async function handler(req, res) {
     // Fetch posts for this game
     const posts = await fetchPostsForGame(targetGame.id);
 
+    // Fetch plays for this game
+    const plays = await fetchPlaysForGame(sanitizedGameName, sanitizedSlackId);
+
     // Explicitly select only the fields we want to expose (defense in depth)
     const allowedFields = [
       'Name', 'Description', 'Thumbnail', 'Playable URL', 'GitHubURL', 'GithubURL',
@@ -116,6 +120,8 @@ export default async function handler(req, res) {
       Feedback: targetGame.fields?.Feedback || '',
       lastUpdated: targetGame.fields?.['Last Updated'] || targetGame.createdTime || '',
       posts,
+      plays,
+      playsCount: plays.length,
     };
 
     return res.status(200).json(game);
@@ -263,4 +269,117 @@ async function fetchPostsForGame(gameId) {
     })(),
     badges: Array.isArray(rec.fields?.Badges) ? rec.fields.Badges : [],
   }));
+}
+
+async function fetchPlaysForGame(gameName, creatorSlackId) {
+  console.log('[getGame] fetchPlaysForGame gameName:', gameName, 'creatorSlackId:', creatorSlackId);
+  
+  // First, we need to get the game's Airtable record ID to filter plays
+  const gameRecord = await findGameBySlackIdAndName(creatorSlackId, gameName);
+  if (!gameRecord) {
+    console.log('[getGame] Game record not found for plays lookup');
+    return [];
+  }
+  
+  const gameId = gameRecord.id;
+  console.log('[getGame] Found game ID for plays lookup:', gameId);
+  
+  // First, try filtering server-side for performance
+  const tryServerFilter = async () => {
+    // Filter by Game field which contains the game's Airtable record ID
+    const formula = `{Game} = "${gameId}"`;
+    const params = new URLSearchParams();
+    params.set('pageSize', '100');
+    params.set('filterByFormula', formula);
+    params.set('sort[0][field]', 'Created At');
+    params.set('sort[0][direction]', 'desc');
+    
+    const url = `${encodeURIComponent(AIRTABLE_PLAYS_TABLE)}?${params.toString()}`;
+    const page = await airtableRequest(url, { method: 'GET' });
+    const records = Array.isArray(page?.records) ? page.records : [];
+    console.log(`[getGame] server filter plays count for game ${gameId}:`, records.length);
+    return records;
+  };
+
+  let records = await tryServerFilter();
+  if (!records || records.length === 0) {
+    // Fallback: fetch all pages and filter in code
+    let allRecords = [];
+    let offset;
+    do {
+      const params = new URLSearchParams();
+      params.set('pageSize', '100');
+      if (offset) params.set('offset', offset);
+      const url = `${encodeURIComponent(AIRTABLE_PLAYS_TABLE)}?${params.toString()}`;
+      const page = await airtableRequest(url, { method: 'GET' });
+      const pageRecords = (page?.records || []).filter((rec) => {
+        const gameIds = Array.isArray(rec.fields?.Game) ? rec.fields.Game : [];
+        return gameIds.includes(gameId);
+      });
+      allRecords = allRecords.concat(pageRecords);
+      offset = page?.offset;
+    } while (offset);
+    console.log(`[getGame] fallback client-filter plays count for game ${gameId}:`, allRecords.length);
+    records = allRecords;
+  }
+
+  // Extract unique player IDs and fetch their Slack IDs
+  const uniquePlayerIds = [...new Set(
+    records
+      .map(rec => rec.fields?.Player?.[0])
+      .filter(playerId => playerId && typeof playerId === 'string')
+  )];
+
+  console.log(`[getGame] unique player IDs for game ${gameId}:`, uniquePlayerIds.length);
+
+  // Fetch player Slack IDs from Users table
+  const playersWithSlackIds = await Promise.all(
+    uniquePlayerIds.map(async (playerId) => {
+      try {
+        const params = new URLSearchParams();
+        params.set('filterByFormula', `RECORD_ID() = "${playerId}"`);
+        params.set('pageSize', '1');
+        
+        const url = `${encodeURIComponent(AIRTABLE_USERS_TABLE)}?${params.toString()}`;
+        const data = await airtableRequest(url, { method: 'GET' });
+        const userRecord = data.records && data.records[0];
+        
+        if (userRecord) {
+          return userRecord.fields?.['slack id'] || '';
+        }
+        return '';
+      } catch (error) {
+        console.error(`[getGame] Error fetching user for player ID ${playerId}:`, error);
+        return '';
+      }
+    })
+  );
+
+  const uniquePlayerSlackIds = playersWithSlackIds.filter(slackId => slackId && typeof slackId === 'string');
+  console.log(`[getGame] unique player Slack IDs for game ${gameId}:`, uniquePlayerSlackIds.length);
+
+  // Fetch profile data for each player
+  const playersWithProfiles = await Promise.all(
+    uniquePlayerSlackIds.map(async (slackId) => {
+      try {
+        const response = await fetch(`https://cachet.dunkirk.sh/users/${encodeURIComponent(slackId)}`);
+        const profileData = await response.json().catch(() => ({}));
+        
+        return {
+          slackId,
+          displayName: profileData.displayName || '',
+          image: profileData.image || '',
+        };
+      } catch (error) {
+        console.error(`[getGame] Error fetching profile for ${slackId}:`, error);
+        return {
+          slackId,
+          displayName: '',
+          image: '',
+        };
+      }
+    })
+  );
+
+  return playersWithProfiles;
 }

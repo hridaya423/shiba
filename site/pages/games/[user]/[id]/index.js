@@ -11,6 +11,8 @@ export default function GamesPage({ gameData, error }) {
   const { user, id } = router.query;
   const [loading, setLoading] = useState(false);
   const [slackProfile, setSlackProfile] = useState(null);
+  const [selectedView, setSelectedView] = useState('Devlogs'); // 'Devlogs' | 'Plays'
+  const [hoveredPlayer, setHoveredPlayer] = useState(null);
 
   // Fetch Slack displayName and image via cachet
   useEffect(() => {
@@ -252,6 +254,7 @@ export default function GamesPage({ gameData, error }) {
             <p style={{marginTop: 16, marginBottom: 8}}>{gameData.description}</p>
           )}
 
+          {/* View Selector */}
           <div style={{
             display: "flex",
             alignItems: "center",
@@ -260,57 +263,173 @@ export default function GamesPage({ gameData, error }) {
             marginBottom: 16,
             marginLeft: "auto",
             marginRight: "auto",
-            padding: "6px 12px",
+            padding: "4px 6px",
             backgroundColor: "#fff",
-            borderRadius: "8px",
-            border: "1px solid #666",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
             width: "fit-content",
-            fontSize: "14px"
+            gap: "8px",
+            borderRadius: "12px",
+            border: "1px solid #ccc"
           }}>
-            <span>Devlogs</span>
-            {Array.isArray(gameData?.posts) && gameData.posts.length > 0 && (() => {
-              const totalHours = gameData.posts.reduce((sum, post) => sum + (post.HoursSpent || 0), 0);
-                          return totalHours > 0 ? (
-              <span style={{ marginLeft: "8px", color: "#666" }}>
-                ({totalHours.toFixed(2)} hours)
+            <button
+              onClick={() => setSelectedView("Devlogs")}
+              style={{
+                appearance: "none",
+                border: selectedView === "Devlogs" ? "2px solid #000" : "1px solid #ccc",
+                background: selectedView === "Devlogs" ? "#000" : "#fff",
+                color: selectedView === "Devlogs" ? "#fff" : "#000",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                cursor: "pointer",
+                fontWeight: "700",
+                fontSize: "14px",
+                transition: "all 0.2s ease"
+              }}
+            >
+              Devlogs
+              {Array.isArray(gameData?.posts) && gameData.posts.length > 0 && (() => {
+                const totalHours = gameData.posts.reduce((sum, post) => sum + (post.HoursSpent || 0), 0);
+                return totalHours > 0 ? (
+                  <span style={{ marginLeft: "6px", opacity: 0.8 }}>
+                    ({totalHours.toFixed(2)} hours)
+                  </span>
+                ) : null;
+              })()}
+            </button>
+            
+            <button
+              onClick={() => setSelectedView("Plays")}
+              style={{
+                appearance: "none",
+                border: selectedView === "Plays" ? "2px solid #000" : "1px solid #ccc",
+                background: selectedView === "Plays" ? "#000" : "#fff",
+                color: selectedView === "Plays" ? "#fff" : "#000",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                cursor: "pointer",
+                fontWeight: "700",
+                fontSize: "14px",
+                transition: "all 0.2s ease"
+              }}
+            >
+              Plays
+              <span style={{ marginLeft: "6px", opacity: 0.8 }}>
+                ({gameData?.playsCount || 0})
               </span>
-            ) : null;
-            })()}
+            </button>
           </div>
-          {Array.isArray(gameData?.posts) && gameData.posts.length > 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: "32px" }}>
-              {gameData.posts.map((p, pIdx) => (
-                <div key={p.id || pIdx} className="moment-card" style={{ 
-                  position: "relative",
-                  border: "1px solid rgba(0, 0, 0, 0.18)",
-                  borderRadius: "10px",
-                  background: "rgba(255, 255, 255, 0.8)",
-                  padding: "12px"
-                }}>
-                  <PostAttachmentRenderer
-                    content={p.content}
-                    attachments={p.attachments}
-                    playLink={p.PlayLink}
-                    gameName={gameData?.name || ""}
-                    thumbnailUrl={gameData?.thumbnailUrl || ""}
-                    token={null}
-                    slackId={user}
-                    createdAt={p.createdAt}
-                    badges={p.badges}
-                    HoursSpent={p.HoursSpent}
-                    gamePageUrl={`https://shiba.hackclub.com/games/${user}/${encodeURIComponent(gameData?.name || id)}`}
-                    onPlayCreated={(play) => {
-                      console.log("Play created:", play);
-                    }}
-                  />
+
+          {/* Devlogs View */}
+          {selectedView === "Devlogs" && (
+            <>
+              {Array.isArray(gameData?.posts) && gameData.posts.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: "32px" }}>
+                  {gameData.posts.map((p, pIdx) => (
+                    <div key={p.id || pIdx} className="moment-card" style={{ 
+                      position: "relative",
+                      border: "1px solid rgba(0, 0, 0, 0.18)",
+                      borderRadius: "10px",
+                      background: "rgba(255, 255, 255, 0.8)",
+                      padding: "12px"
+                    }}>
+                      <PostAttachmentRenderer
+                        content={p.content}
+                        attachments={p.attachments}
+                        playLink={p.PlayLink}
+                        gameName={gameData?.name || ""}
+                        thumbnailUrl={gameData?.thumbnailUrl || ""}
+                        token={null}
+                        slackId={user}
+                        createdAt={p.createdAt}
+                        badges={p.badges}
+                        HoursSpent={p.HoursSpent}
+                        gamePageUrl={`https://shiba.hackclub.com/games/${user}/${encodeURIComponent(gameData?.name || id)}`}
+                        onPlayCreated={(play) => {
+                          console.log("Play created:", play);
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{width: "100%", border: "1px solid #000", padding: 16}}>
-              <p>No posts yet</p>
-            </div>
+              ) : (
+                <div style={{width: "100%", border: "1px solid #000", padding: 16}}>
+                  <p>No posts yet</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Plays View */}
+          {selectedView === "Plays" && (
+            <>
+              {Array.isArray(gameData?.plays) && gameData.plays.length > 0 ? (
+                <div style={{
+                  width: "100%",
+                  backgroundColor: "#fff",
+                  border: "1px solid #666",
+                  padding: "8px",
+                  marginTop: "16px"
+                }}>
+                  <div style={{ 
+                    display: "grid", 
+                    gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))", 
+                    gap: "8px"
+                  }}>
+                    {gameData.plays.map((player, idx) => {
+                      const isHovered = hoveredPlayer === player.slackId;
+                      return (
+                        <a
+                          key={player.slackId || idx}
+                          href={`https://hackclub.slack.com/team/${player.slackId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "block",
+                            textDecoration: "none",
+                            color: "inherit",
+                            transition: "transform 0.3s ease"
+                          }}
+                          onMouseEnter={() => setHoveredPlayer(player.slackId)}
+                          onMouseLeave={() => setHoveredPlayer(null)}
+                        >
+                          <div style={{
+                            width: "40px",
+                            height: "40px",
+                            border: isHovered ? "1px solid #000" : "1px solid #ccc",
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            backgroundColor: "#f0f0f0",
+                            backgroundImage: player.image ? `url(${player.image})` : "none",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "10px",
+                            fontWeight: "600",
+                            color: "#666",
+                            overflow: "hidden",
+                            transform: isHovered ? "scale(1.1)" : "scale(1)",
+                            transition: "transform 0.3s ease, border-color 0.3s ease"
+                          }}>
+                            {!player.image && (
+                              <span>{player.displayName ? player.displayName.charAt(0).toUpperCase() : "?"}</span>
+                            )}
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  width: "100%",
+                  backgroundColor: "#fff",
+                  border: "1px solid #666",
+                  padding: "16px",
+                  marginTop: "16px"
+                }}>
+                  <p>No plays yet</p>
+                </div>
+              )}
+            </>
           )}
         </div>
         </div>
