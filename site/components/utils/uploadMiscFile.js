@@ -55,12 +55,12 @@ export async function uploadMiscFile({ file, apiBase }) {
     };
   }
 
-  // Validate file size (50MB max)
-  const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+  // Validate file size (100MB max - increased from 50MB)
+  const maxSize = 100 * 1024 * 1024; // 100MB in bytes
   if (file.size > maxSize) {
     return { 
       ok: false, 
-      error: `File too large. Maximum size is 50MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB` 
+      error: `File too large. Maximum size is 100MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB` 
     };
   }
 
@@ -72,11 +72,17 @@ export async function uploadMiscFile({ file, apiBase }) {
   formData.append("file", file);
 
   try {
-    // Upload the file
+    // Upload the file with timeout for large files
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout
+    
     const response = await fetch(`${base}/uploadMiscFile`, {
       method: "POST",
       body: formData,
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     // Parse response
     const responseText = await response.text();
@@ -108,6 +114,12 @@ export async function uploadMiscFile({ file, apiBase }) {
     };
 
   } catch (error) {
+    if (error.name === 'AbortError') {
+      return { 
+        ok: false, 
+        error: "Upload timed out. Please try again with a smaller file or check your connection." 
+      };
+    }
     return { 
       ok: false, 
       error: `Network error: ${error.message || String(error)}` 
