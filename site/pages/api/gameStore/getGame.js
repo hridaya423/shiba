@@ -338,8 +338,8 @@ async function fetchPlaysForGame(gameName, creatorSlackId) {
 
   console.log(`[getGame] unique player IDs for game ${gameId}:`, uniquePlayerIds.length);
 
-  // Fetch player Slack IDs from Users table
-  const playersWithSlackIds = await Promise.all(
+  // Fetch player Slack IDs from Users table with timeout and better error handling
+  const playersWithSlackIds = await Promise.allSettled(
     uniquePlayerIds.map(async (playerId) => {
       try {
         const params = new URLSearchParams();
@@ -361,14 +361,30 @@ async function fetchPlaysForGame(gameName, creatorSlackId) {
     })
   );
 
-  const uniquePlayerSlackIds = playersWithSlackIds.filter(slackId => slackId && typeof slackId === 'string');
-  console.log(`[getGame] unique player Slack IDs for game ${gameId}:`, uniquePlayerSlackIds.length);
+  // Extract successful results only
+  const successfulSlackIds = playersWithSlackIds
+    .filter(result => result.status === 'fulfilled' && result.value && typeof result.value === 'string')
+    .map(result => result.value);
 
-  // Fetch profile data for each player
-  const playersWithProfiles = await Promise.all(
-    uniquePlayerSlackIds.map(async (slackId) => {
+  console.log(`[getGame] successful player Slack IDs for game ${gameId}:`, successfulSlackIds.length);
+
+  // Fetch profile data for each player with timeout and better error handling
+  const playersWithProfiles = await Promise.allSettled(
+    successfulSlackIds.map(async (slackId) => {
       try {
-        const response = await fetch(`https://cachet.dunkirk.sh/users/${encodeURIComponent(slackId)}`);
+        // Add timeout to the fetch request
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const response = await fetch(`https://cachet.dunkirk.sh/users/${encodeURIComponent(slackId)}`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
         const profileData = await response.json().catch(() => ({}));
         
         return {
@@ -378,6 +394,7 @@ async function fetchPlaysForGame(gameName, creatorSlackId) {
         };
       } catch (error) {
         console.error(`[getGame] Error fetching profile for ${slackId}:`, error);
+        // Return a fallback object instead of failing completely
         return {
           slackId,
           displayName: '',
@@ -387,5 +404,12 @@ async function fetchPlaysForGame(gameName, creatorSlackId) {
     })
   );
 
-  return playersWithProfiles;
+  // Extract successful results and filter out failed ones
+  const successfulProfiles = playersWithProfiles
+    .filter(result => result.status === 'fulfilled')
+    .map(result => result.value);
+
+  console.log(`[getGame] final successful profiles for game ${gameId}:`, successfulProfiles.length);
+
+  return successfulProfiles;
 }

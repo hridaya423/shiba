@@ -15,11 +15,34 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// responseWriter wraps http.ResponseWriter to track if headers have been written
+type responseWriter struct {
+	http.ResponseWriter
+	written bool
+}
+
+func (rw *responseWriter) WriteHeader(statusCode int) {
+	rw.written = true
+	rw.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (rw *responseWriter) Write(data []byte) (int, error) {
+	rw.written = true
+	return rw.ResponseWriter.Write(data)
+}
+
+func (rw *responseWriter) Written() bool {
+	return rw.written
+}
+
 func ServeMiscFileHandler(srv *structs.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Wrap the response writer to track if headers have been written
+		rw := &responseWriter{ResponseWriter: w}
+		
 		fileId := chi.URLParam(r, "fileId")
 		if fileId == "" {
-			http.Error(w, "File ID is required", http.StatusBadRequest)
+			http.Error(rw, "File ID is required", http.StatusBadRequest)
 			return
 		}
 		
@@ -48,25 +71,28 @@ func ServeMiscFileHandler(srv *structs.Server) http.HandlerFunc {
 		})
 		if err != nil {
 			log.Printf("Failed to get file %s from R2: %v", fileId, err)
-			http.Error(w, "File not found", http.StatusNotFound)
+			http.Error(rw, "File not found", http.StatusNotFound)
 			return
 		}
 		defer resp.Body.Close()
 
 		// Set appropriate headers
 		if resp.ContentType != nil {
-			w.Header().Set("Content-Type", *resp.ContentType)
+			rw.Header().Set("Content-Type", *resp.ContentType)
 		}
 		if resp.ContentLength != nil {
-			w.Header().Set("Content-Length", fmt.Sprintf("%d", *resp.ContentLength))
+			rw.Header().Set("Content-Length", fmt.Sprintf("%d", *resp.ContentLength))
 		}
-		w.Header().Set("Cache-Control", "public, max-age=31536000") // Cache for 1 year
+		rw.Header().Set("Cache-Control", "public, max-age=31536000") // Cache for 1 year
 
 		// Stream the file content
-		_, err = io.Copy(w, resp.Body)
+		_, err = io.Copy(rw, resp.Body)
 		if err != nil {
 			log.Printf("Failed to stream file %s: %v", fileId, err)
-			http.Error(w, "Failed to serve file", http.StatusInternalServerError)
+			// Only send error response if headers haven't been written yet
+			if !rw.Written() {
+				http.Error(rw, "Failed to serve file", http.StatusInternalServerError)
+			}
 			return
 		}
 	}
