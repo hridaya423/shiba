@@ -202,7 +202,11 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
               handlePostDevlog();
             }
             break;
-          case 10: // Complete Onboarding
+          case 10: // Tutorial Link
+            playSound?.("next.mp3");
+            setOnboardingStage(11);
+            break;
+          case 11: // Complete Onboarding
             if (!completingOnboarding) {
               handleCompleteOnboarding();
             }
@@ -270,7 +274,7 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
               onClick={() => {
                 playSound?.("prev.mp3");
                 // Reset states when going back from post creation stage
-                if (onboardingStage === 10) {
+                if (onboardingStage === 9) {
                   setDevlogContent("");
                   setDevlogMessage("");
                 }
@@ -313,7 +317,7 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
               overflow: "hidden"
             }}>
               <div style={{
-                width: `${((onboardingStage + 1) / 11) * 100}%`,
+                width: `${((onboardingStage + 1) / 12) * 100}%`,
                 height: "100%",
                 backgroundColor: "var(--yellow)",
                 transition: "width 0.3s ease"
@@ -1453,8 +1457,103 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
           </div>
         )}
         
-        {/* Stage 10: You're done! */}
+        {/* Stage 10: Tutorial Link */}
         {onboardingStage === 10 && (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              flex: 1,
+              padding: "20px",
+            }}
+          >
+            <h1 style={{ 
+              margin: 0, 
+              color: "black", 
+              fontSize: "28px", 
+              fontWeight: "bold", 
+              marginBottom: "32px",
+              opacity: 0,
+              animation: "fadeIn 1s ease forwards"
+            }}>
+              Need a start?
+            </h1>
+            
+            <p style={{ 
+              margin: 0, 
+              color: "black", 
+              fontSize: "16px", 
+              lineHeight: "1.6",
+              textAlign: "center",
+              maxWidth: "500px",
+              marginBottom: "32px",
+              opacity: 0,
+              animation: "fadeIn 1s ease forwards 0.3s"
+            }}>
+              If you are a beginner, and need somewhere to start, you can find a great written tutorial for making a platformer game using Godot{" "}
+              <a 
+                href="https://jumpstart.hackclub.com/guide.html" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  color: "#ff6fa5",
+                  textDecoration: "underline",
+                  fontWeight: "bold"
+                }}
+              >
+                here
+              </a>
+              {" "}and a video speedrun{" "}
+              <a 
+                href="https://www.youtube.com/watch?v=6V6sAGBowL0" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  color: "#ff6fa5",
+                  textDecoration: "underline",
+                  fontWeight: "bold"
+                }}
+              >
+                here
+              </a>
+              .
+            </p>
+            
+            <div style={{ marginTop: "24px", display: "flex", justifyContent: "center" }}>
+              <button
+                onClick={() => {
+                  playSound?.("next.mp3");
+                  setOnboardingStage(11);
+                }}
+                style={{
+                  appearance: "none",
+                  border: "2px solid black",
+                  background: "var(--yellow)",
+                  color: "black",
+                  borderRadius: "8px",
+                  padding: "12px 24px",
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#f7b748";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "var(--yellow)";
+                }}
+              >
+                Okay!
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Stage 11: You're done! */}
+        {onboardingStage === 11 && (
           <div
             style={{
               display: "flex",
