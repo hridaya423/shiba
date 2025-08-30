@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -37,14 +36,16 @@ func UploadMiscFileHandler(srv *structs.Server) http.HandlerFunc {
 			return
 		}
 
-		// Parse multipart form with 50MB max size
-		if err := r.ParseMultipartForm(50 << 20); err != nil {
+		// Parse multipart form with 100MB max size (increased from 50MB)
+		if err := r.ParseMultipartForm(100 << 20); err != nil {
+			log.Printf("Failed to parse multipart form: %v", err)
 			http.Error(w, "Failed to parse form: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		file, header, err := r.FormFile("file")
 		if err != nil {
+			log.Printf("Failed to get file from form: %v", err)
 			http.Error(w, "Missing file field 'file': "+err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -69,14 +70,6 @@ func UploadMiscFileHandler(srv *structs.Server) http.HandlerFunc {
 		filename := id.String() + ext
 		key := "misc-files/" + filename
 
-		// Read file content
-		fileContent, err := io.ReadAll(file)
-		if err != nil {
-			log.Printf("Failed to read file content: %v", err)
-			http.Error(w, "Failed to read file content", http.StatusInternalServerError)
-			return
-		}
-
 		// Determine content type based on extension
 		contentType := getContentType(ext)
 
@@ -86,12 +79,12 @@ func UploadMiscFileHandler(srv *structs.Server) http.HandlerFunc {
 			bucket = "shiba-arcade" // fallback
 		}
 
-		// Upload to R2
-		log.Printf("Uploading file to R2: bucket=%s, key=%s, size=%d bytes", bucket, key, len(fileContent))
+		// Upload to R2 using streaming (no memory loading)
+		log.Printf("Uploading file to R2: bucket=%s, key=%s, size=%d bytes", bucket, key, header.Size)
 		_, err = srv.S3Client.PutObject(context.Background(), &s3.PutObjectInput{
 			Bucket:      aws.String(bucket),
 			Key:         aws.String(key),
-			Body:        bytes.NewReader(fileContent),
+			Body:        file, // Stream directly from the uploaded file
 			ContentType: aws.String(contentType),
 		})
 
