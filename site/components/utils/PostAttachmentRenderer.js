@@ -6,7 +6,7 @@ const PlayGameComponent = dynamic(() => import("@/components/utils/playGameCompo
 
 export default function PostAttachmentRenderer({ content, attachments, playLink, gameName, thumbnailUrl, slackId, createdAt, token, onPlayCreated, badges, HoursSpent, gamePageUrl, postType, timelapseVideoId, githubImageLink, timeScreenshotId, hoursSpent, minutesSpent, posterShomatoSeeds, postId, setProfile }) {
   const [slackProfile, setSlackProfile] = useState(null);
-  const [localShomatoSeeds, setLocalShomatoSeeds] = useState(posterShomatoSeeds || 0);
+  const [localShomatoSeeds, setLocalShomatoSeeds] = useState(Number(posterShomatoSeeds) || 0);
   const [isSendingShomato, setIsSendingShomato] = useState(false);
   const [showAudio, setShowAudio] = useState(false);
   const [hasUserShomatoed, setHasUserShomatoed] = useState(false);
@@ -52,7 +52,7 @@ export default function PostAttachmentRenderer({ content, attachments, playLink,
 
   // Update local shomato seeds when prop changes
   useEffect(() => {
-    setLocalShomatoSeeds(posterShomatoSeeds || 0);
+    setLocalShomatoSeeds(Number(posterShomatoSeeds) || 0);
   }, [posterShomatoSeeds]);
 
   // Check if user has already shomatoed this post from cookies

@@ -4,6 +4,7 @@ const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appg245A41MWc6Rej';
 const AIRTABLE_USERS_TABLE = process.env.AIRTABLE_USERS_TABLE || 'Users';
 const AIRTABLE_POSTS_TABLE = process.env.AIRTABLE_POSTS_TABLE || 'Posts';
+const AIRTABLE_GAMES_TABLE = process.env.AIRTABLE_GAMES_TABLE || 'Games';
 const AIRTABLE_API_BASE = 'https://api.airtable.com/v0';
 
 export default async function handler(req, res) {
@@ -41,6 +42,19 @@ export default async function handler(req, res) {
     const postRecord = await findPostByPostID(PostID);
     if (!postRecord) {
       return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Check if the post belongs to the user (prevent self-shomatoing)
+    const gameIds = normalizeLinkedIds(postRecord.fields?.Game);
+    if (gameIds.length > 0) {
+      // Get the first game (posts typically have one game)
+      const gameId = gameIds[0];
+      const game = await airtableRequest(`${encodeURIComponent(AIRTABLE_GAMES_TABLE)}/${encodeURIComponent(gameId)}`, { method: 'GET' });
+      const ownerIds = normalizeLinkedIds(game?.fields?.Owner);
+      
+      if (ownerIds.includes(user.id)) {
+        return res.status(403).json({ message: 'You cannot send shomato to your own post' });
+      }
     }
 
     // Get current SendShomatoToPost field value
@@ -145,4 +159,15 @@ async function findPostByPostID(PostID) {
   } while (offset);
   
   return null; // Post not found
+}
+
+function normalizeLinkedIds(value) {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return [];
+    if (typeof value[0] === 'string') return value;
+    if (typeof value[0] === 'object' && value[0] && typeof value[0].id === 'string') {
+      return value.map((v) => v.id);
+    }
+  }
+  return [];
 }
