@@ -17,6 +17,13 @@ RUN chown appuser:appgroup /server
 RUN mkdir -p /games && chown appuser:appgroup /games
 # Declare volume for persistent storage
 VOLUME ["/games"]
+
+# Set timeout environment variables for large file uploads
+ENV NGINX_CLIENT_MAX_BODY_SIZE=100M
+ENV NGINX_PROXY_READ_TIMEOUT=300s
+ENV NGINX_PROXY_CONNECT_TIMEOUT=300s
+ENV NGINX_PROXY_SEND_TIMEOUT=300s
+
 EXPOSE 3001
 USER appuser
 HEALTHCHECK CMD exit 0
