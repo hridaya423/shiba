@@ -234,8 +234,9 @@ async function airtableRequest(path, options = {}) {
 }
 
 async function findUserByEmail(email) {
-  // For email searches, use simple exact match without complex escaping
-  const formula = `{Email} = "${email}"`;
+  // SECURITY FIX: Escape the email to prevent formula injection
+  const emailEscaped = safeEscapeFormulaString(email);
+  const formula = `{Email} = "${emailEscaped}"`;
   const params = new URLSearchParams({
     filterByFormula: formula,
     pageSize: '1',
@@ -274,7 +275,8 @@ async function findUserByEmailFallback(email) {
   
   for (const emailVar of emailVariations) {
     try {
-      const formula = `{Email} = "${emailVar}"`;
+      const emailVarEscaped = safeEscapeFormulaString(emailVar);
+      const formula = `{Email} = "${emailVarEscaped}"`;
       const params = new URLSearchParams({
         filterByFormula: formula,
         pageSize: '10',
@@ -362,7 +364,8 @@ async function hasRecentOtpForEmail(email, secondsWindow) {
 }
 
 async function getMostRecentOtpRecordForEmail(email) {
-  const emailEscaped = email;
+  // SECURITY FIX: Escape the email to prevent formula injection
+  const emailEscaped = safeEscapeFormulaString(email);
   const params = new URLSearchParams();
   params.set('filterByFormula', `LOWER(SUBSTITUTE({Email}, " ", "")) = "${emailEscaped}"`);
   params.set('pageSize', '1');
@@ -483,7 +486,9 @@ async function findAllUsersByEmail(email) {
 
 // Main function using simple exact match
 async function findAllUsersByEmailWithFormula(email) {
-  const formula = `{Email} = "${email}"`;
+  // SECURITY FIX: Escape the email to prevent formula injection
+  const emailEscaped = safeEscapeFormulaString(email);
+  const formula = `{Email} = "${emailEscaped}"`;
   
   let allRecords = [];
   let offset = null;
@@ -533,7 +538,8 @@ async function findAllUsersByEmailFallback(email) {
   
   for (const emailVar of emailVariations) {
     try {
-      const formula = `{Email} = "${emailVar}"`;
+      const emailVarEscaped = safeEscapeFormulaString(emailVar);
+      const formula = `{Email} = "${emailVarEscaped}"`;
       
       let offset = null;
       do {
@@ -733,7 +739,8 @@ async function findUserByReferralCode(referralCode) {
   
   for (const fieldName of candidateFields) {
     try {
-      const formula = `{${fieldName}} = "${referralCode.trim()}"`;
+      const referralCodeEscaped = safeEscapeFormulaString(referralCode.trim());
+      const formula = `{${fieldName}} = "${referralCodeEscaped}"`;
       const params = new URLSearchParams({
         filterByFormula: formula,
         pageSize: '1',

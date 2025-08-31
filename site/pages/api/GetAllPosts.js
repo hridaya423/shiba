@@ -220,7 +220,7 @@ async function fetchRecordsByIds(tableName, ids) {
 
   const results = [];
   for (const chunk of chunks) {
-    const formula = `OR(${chunk.map((id) => `RECORD_ID() = "${id}"`).join(',')})`;
+    const formula = `OR(${chunk.map((id) => `RECORD_ID() = "${safeEscapeFormulaString(id)}"`).join(',')})`;
     const params = new URLSearchParams({ filterByFormula: formula, pageSize: '100' });
     const page = await airtableRequest(`${encodeURIComponent(tableName)}?${params.toString()}`, { method: 'GET' });
     results.push(...(page?.records || []));

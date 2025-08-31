@@ -293,7 +293,9 @@ async function fetchPlaysForGame(gameName, creatorSlackId) {
   // First, try filtering server-side for performance
   const tryServerFilter = async () => {
     // Filter by Game field which contains the game's Airtable record ID
-    const formula = `{Game} = "${gameId}"`;
+    // SECURITY FIX: Escape the gameId to prevent formula injection
+    const gameIdEscaped = safeEscapeFormulaString(gameId);
+    const formula = `{Game} = "${gameIdEscaped}"`;
     const params = new URLSearchParams();
     params.set('pageSize', '100');
     params.set('filterByFormula', formula);
@@ -343,7 +345,9 @@ async function fetchPlaysForGame(gameName, creatorSlackId) {
     uniquePlayerIds.map(async (playerId) => {
       try {
         const params = new URLSearchParams();
-        params.set('filterByFormula', `RECORD_ID() = "${playerId}"`);
+        // SECURITY FIX: Escape the playerId to prevent formula injection
+        const playerIdEscaped = safeEscapeFormulaString(playerId);
+        params.set('filterByFormula', `RECORD_ID() = "${playerIdEscaped}"`);
         params.set('pageSize', '1');
         
         const url = `${encodeURIComponent(AIRTABLE_USERS_TABLE)}?${params.toString()}`;

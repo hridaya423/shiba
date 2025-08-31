@@ -112,8 +112,10 @@ async function findUserByToken(token) {
 }
 
 async function findExistingRSVP(userId, event) {
+  // SECURITY FIX: Escape both userId and event to prevent formula injection
+  const userIdEscaped = safeEscapeFormulaString(userId);
   const eventEscaped = safeEscapeFormulaString(event);
-  const formula = `AND({User} = "${userId}", {Event} = "${eventEscaped}")`;
+  const formula = `AND({User} = "${userIdEscaped}", {Event} = "${eventEscaped}")`;
   console.log('🔍 Airtable formula for existing RSVP:', formula);
   const params = new URLSearchParams({
     filterByFormula: formula,

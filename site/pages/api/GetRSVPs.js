@@ -128,7 +128,9 @@ async function fetchRSVPRecords(rsvpIds) {
 
 async function getUserRSVPs(userId) {
   console.log('🎫 getUserRSVPs called with userId:', userId);
-  const formula = `{User} = "${userId}"`;
+  // SECURITY FIX: Escape the userId to prevent formula injection
+  const userIdEscaped = safeEscapeFormulaString(userId);
+  const formula = `{User} = "${userIdEscaped}"`;
   console.log('🎫 Airtable formula:', formula);
   const params = new URLSearchParams({
     filterByFormula: formula,

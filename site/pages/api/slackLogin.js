@@ -1,5 +1,6 @@
 import Airtable from "airtable";
 import crypto from "crypto";
+import { safeEscapeFormulaString } from './utils/security.js';
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -50,9 +51,11 @@ export default async function handler(req, res) {
       process.env.AIRTABLE_BASE_ID,
     );
 
+    // SECURITY FIX: Escape the email to prevent formula injection
+    const emailEscaped = safeEscapeFormulaString(email);
     const records = await new Promise((resolve, reject) => {
       base("Users")
-        .select({ maxRecords: 1, filterByFormula: `{email} = "${email}"` })
+        .select({ maxRecords: 1, filterByFormula: `{email} = "${emailEscaped}"` })
         .firstPage((err, records) => (err ? reject(err) : resolve(records)));
     });
 

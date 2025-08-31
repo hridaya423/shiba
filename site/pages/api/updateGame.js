@@ -1,4 +1,4 @@
-import { isValidUrl } from './utils/security.js';
+import { isValidUrl, safeEscapeFormulaString } from './utils/security.js';
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || "appg245A41MWc6Rej";
@@ -279,8 +279,9 @@ async function airtableContentUpload({
 }
 
 async function findUserByToken(token) {
-  // For token searches, use simple exact match without complex escaping
-  const formula = `{token} = "${token}"`;
+  // SECURITY FIX: Escape the token to prevent formula injection
+  const escapedToken = safeEscapeFormulaString(token);
+  const formula = `{token} = "${escapedToken}"`;
   const params = new URLSearchParams({
     filterByFormula: formula,
     pageSize: "1",
