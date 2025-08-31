@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"shiba-api/structs"
 
@@ -80,7 +81,12 @@ func UploadMiscFileHandler(srv *structs.Server) http.HandlerFunc {
 
 		// Upload to R2 using streaming (no memory loading)
 		log.Printf("Uploading file to R2: bucket=%s, key=%s, size=%d bytes", bucket, key, header.Size)
-		_, err = srv.S3Client.PutObject(context.Background(), &s3.PutObjectInput{
+		
+		// Create a context with timeout for the upload
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+		
+		_, err = srv.S3Client.PutObject(ctx, &s3.PutObjectInput{
 			Bucket:      aws.String(bucket),
 			Key:         aws.String(key),
 			Body:        file, // Stream directly from the uploaded file

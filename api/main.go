@@ -137,8 +137,17 @@ func main() {
 
 	api.SetupRoutes(r, srv)
 
+	// Create HTTP server with timeout configurations
+	server := &http.Server{
+		Addr:         ":3001",
+		Handler:      r,
+		ReadTimeout:  5 * time.Minute,  // 5 minutes for large uploads
+		WriteTimeout: 5 * time.Minute,  // 5 minutes for large responses
+		IdleTimeout:  120 * time.Second, // 2 minutes idle timeout
+	}
+
 	log.Println("Listening on :3001")
-	if err := http.ListenAndServe(":3001", r); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }
