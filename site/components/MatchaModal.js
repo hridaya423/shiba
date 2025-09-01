@@ -16,6 +16,29 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [connectingProjects, setConnectingProjects] = useState(false);
 
+  // Function to handle closing the modal
+  const handleClose = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      setShouldRender(false);
+      setIsExiting(false);
+      // Reset all state when closing
+      setShowTitle(false);
+      setShowDescription(false);
+      setShowButton(false);
+      setShowCallToAction(false);
+      setStage(0);
+      setUserGames([]);
+      setSelectedGame(null);
+      setHackatimeProjects([]);
+      setSelectedProjects([]);
+      setLoadingGames(false);
+      setLoadingProjects(false);
+      setConnectingProjects(false);
+      onClose?.();
+    }, 260);
+  };
+
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
@@ -51,15 +74,6 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
       return () => clearTimeout(t);
     }
   }, [isOpen, shouldRender]);
-
-  // Play background music when modal opens (like OnboardingModal)
-  useEffect(() => {
-    if (isOpen && !isMuted) {
-      // Stop any existing audio and play the Zelda song
-      try { stopAll?.(); } catch (_) {}
-      playClip?.("zeldaSong.mp3");
-    }
-  }, [isOpen, playClip, stopAll, isMuted]);
 
 
 
@@ -134,8 +148,42 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
           justifyContent: "center",
           textAlign: "center",
           padding: "24px",
+          position: "relative",
         }}
       >
+        {/* Close button */}
+        <button
+          onClick={handleClose}
+          style={{
+            position: "absolute",
+            top: "12px",
+            right: "12px",
+            background: "none",
+            border: "none",
+            fontSize: "24px",
+            cursor: "pointer",
+            color: "#2E8B57",
+            width: "32px",
+            height: "32px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "50%",
+            transition: "all 0.2s ease",
+            zIndex: 1,
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = "rgba(46, 139, 87, 0.1)";
+            e.target.style.transform = "scale(1.1)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = "none";
+            e.target.style.transform = "scale(1)";
+          }}
+        >
+          ×
+        </button>
+
         {stage === 0 && (
           <>
             <h2 
@@ -622,7 +670,7 @@ export default function MatchaModal({ isOpen, playSound, playClip, stopAll, isMu
               }}
               onClick={() => {
                 // Close the modal
-                onClose?.();
+                handleClose();
               }}
               onMouseEnter={(e) => {
                 e.target.style.background = "#3cb371";

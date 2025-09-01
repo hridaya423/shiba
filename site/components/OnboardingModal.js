@@ -580,43 +580,62 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
             <h1 style={{ margin: 0, color: "black", fontSize: "24px", fontWeight: "bold", marginBottom: "16px" }}>
               Connect your Slack Account
             </h1>
-            <p style={{ 
-              margin: 0, 
-              color: "black", 
-              fontSize: "14px", 
-              lineHeight: "1.5",
+            <div style={{
               marginBottom: "16px",
-              maxWidth: "500px"
+              padding: "12px",
+              backgroundColor: "#ffebee",
+              border: "2px solid #f44336",
+              borderRadius: "8px",
+              textAlign: "left",
+              display: "flex",
+              justifyContent: "center"
             }}>
-              Once you've joined the slack, head over to{" "}
-              <a 
-                href="https://hackclub.slack.com/archives/C039PAG1AV7" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{
-                  color: "#ff6fa5",
-                  textDecoration: "underline",
-                  fontWeight: "bold"
-                }}
-              >
-                #slack-welcome-start
-              </a>
-              {" "}to become a full user.               Once you're a full user, tap Login with Slack to connect your Shiba account to the Hack Club Slack.
-
-            </p>
+              <div style={{
+                maxWidth: "500px"
+              }}>
+                <p style={{
+                  margin: 0,
+                  color: "#d32f2f",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  lineHeight: "1.4"
+                }}>
+                  If you get "not having permissions to connect Shiba" error, go to{" "}
+                  <a 
+                    href="https://hackclub.slack.com/archives/C039PAG1AV7" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{
+                      color: "#d32f2f",
+                      textDecoration: "underline",
+                      fontWeight: "bold"
+                    }}
+                  >
+                    #slack-welcome-start
+                  </a>
+                  {" "}and click "Explore The Cave"
+                </p>
+              </div>
+            </div>
             
-            <img 
-              src="/slack-welcome-start.png" 
-              alt="Slack Welcome Start Channel" 
-              style={{
-                width: "100%",
-                maxWidth: "200px",
-                height: "auto",
-                border: "2px solid black",
-                borderRadius: "8px",
-                marginBottom: "20px"
-              }}
-            />
+            <div style={{
+              display: "flex",
+              justifyContent: "center",
+              width: "100%",
+              marginBottom: "20px"
+            }}>
+              <img 
+                src="/slack-welcome-start.png" 
+                alt="Slack Welcome Start Channel" 
+                style={{
+                  maxWidth: "200px",
+                  width: "auto",
+                  height: "auto",
+                  border: "2px solid black",
+                  borderRadius: "8px"
+                }}
+              />
+            </div>
 
             <div style={{ display: "flex", gap: "12px", justifyContent: "center", width: "100%" }}>
               <button
@@ -669,7 +688,7 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
                 Login with Slack
               </button>
               
-              <button
+              {/* <button
                 onClick={() => {
                   playSound?.("next.mp3");
                   setOnboardingStage(4); // Skip to the next stage (Godot download)
@@ -694,7 +713,9 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
                 }}
               >
                 Skip for now
-              </button>
+              </button> */}
+              
+
             </div>
           </div>
         )}
@@ -881,21 +902,27 @@ export default function OnboardingModal({ isOpen, token, onCompleted, playSound,
                 Hackatime tracks your coding time and awards play tickets. Set it up to start earning playtest tickets for your time spent on your game. Make sure to login with Slack
               </p>
               
-              <iframe 
-                width="200" 
-                height="120" 
-                src="https://www.youtube.com/embed/eFVA_ZWnzDk?si=z_HsFWNBop5T_K2x" 
-                title="YouTube video player" 
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                referrerPolicy="strict-origin-when-cross-origin" 
-                allowFullScreen
-                style={{
-                  border: "2px solid black",
-                  borderRadius: "8px",
-                  marginBottom: "24px"
-                }}
-              />
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+                width: "100%",
+                marginBottom: "24px"
+              }}>
+                <iframe 
+                  width="200" 
+                  height="120" 
+                  src="https://www.youtube.com/embed/a938RgsBzNg?si=zS4w2a7XgZlnCfAS" 
+                  title="YouTube video player" 
+                  frameBorder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  referrerPolicy="strict-origin-when-cross-origin" 
+                  allowFullScreen
+                  style={{
+                    border: "2px solid black",
+                    borderRadius: "8px"
+                  }}
+                />
+              </div>
             </div>
             
             <div style={{ display: "flex", gap: "12px", justifyContent: "center", width: "100%" }}>

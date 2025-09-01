@@ -573,11 +573,10 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           </div>
 
           <div className="faq">
-            <div className="shiba-direct">
-              <img src="/landing/shiba_direct.png" />
-              <p>22 august · 4pm–5pm pacific time (7-8pm eastern)</p>
-              <p>get LIVE shiba news and the latest information.</p>
-              <p>sign up to rsvp.</p>
+            <div className="shiba-start">
+              <img src="/ShibaStartCall.png" />
+              <p>5 september · 4pm–5pm PST</p>
+              <p>shiba start call<br/> <i style={{fontSize: "0.5em"}}>(feel free to start your games before Shiba Start)</i></p>
             </div>
 
             <details>
@@ -588,7 +587,7 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             <details>
               <summary>how long will shiba run for?</summary>
               <p>
-                shiba starts on august 18 and ends on october 20. then, we'll
+                shiba has begun and will end on october 20. then, we'll
                 build an arcade in tokyo from november 5-12th.
               </p>
             </details>
@@ -600,6 +599,34 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
                 teach you how to make games in godot. you will also get plenty
                 of feedback about your games and get the chance to make multiple
                 :)
+              </p>
+            </details>
+
+            <details>
+              <summary>how much does it cost?</summary>
+              <p>
+                the event is totally free to participate in! we provide flight stipends for those who get enough SSS to get their ticket to build the shiba arcade in japan. housing, food, etc. is covered for your time in japan from november 5-12th.
+              </p>
+            </details>
+
+            <details>
+              <summary>how do i earn SSS (shiba arcade currency)?</summary>
+              <p>
+                you earn SSS when people play your game and give it ratings. players rate games on a scale of 1-5 across five categories: fun, art, creativity, audio, and mood. the maximum SSS you can earn from a single play is 25 SSS (5 points × 5 categories).
+              </p>
+            </details>
+
+            <details>
+              <summary>how do i get playtest tickets?</summary>
+              <p>
+                you earn playtest tickets by uploading your game demo and getting approved for time spent making your game through hackatime. the more time you log working on your game, the more playtest tickets you'll receive.
+              </p>
+            </details>
+
+            <details>
+              <summary>how do i qualify for the tokyo trip?</summary>
+              <p>
+                to qualify for the tokyo trip, you need to earn enough SSS by creating a great game that receives high ratings from other players. the SSS you earn can be used to purchase a ticket to tokyo, where you'll help build the arcade from november 5-12th.
               </p>
             </details>
           </div>
@@ -1054,10 +1081,10 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           background-color: black;
         }
 
-        .shiba-direct {
-          border: 4px solid var(--red);
+        .shiba-start {
+          border: 4px solid #000;
           border-radius: 8px;
-          background: linear-gradient(to bottom, #ffb7b5, #ed7874);
+          background: linear-gradient(to bottom, white, var(--yellow));
           display: flex;
           flex-flow: column;
           align-items: center;
@@ -1067,11 +1094,11 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
           padding: 16px;
         }
 
-        .shiba-direct p {
+        .shiba-start p {
           font-weight: bold;
         }
 
-        .shiba-direct img {
+        .shiba-start img {
           width: 80%;
           margin-bottom: 8px;
         }
@@ -1269,13 +1296,15 @@ export default function StartScreen({ setToken, requestOtp, verifyOtp }) {
             padding: 16px;
           }
 
-          .shiba-direct {
+          .shiba-start {
             padding: 12px;
           }
 
-          .shiba-direct img {
+          .shiba-start img {
             width: 90%;
           }
+
+
 
           .faq details {
             padding: 15px;

@@ -189,7 +189,7 @@ export default function ShopComponent({ profile, token, setProfile }) {
             margin: "0",
             color: "#2d5a27"
           }}>
-            The Shiba Shop will launch at Shiba Direct on August 22nd.
+            The Shiba Shop is now open!
           </p>
         </div>
         */}

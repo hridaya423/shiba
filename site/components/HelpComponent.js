@@ -95,16 +95,7 @@ export default function HelpComponent() {
       backgroundColor: "#FFF2E5",
       borderColor: "#CC6600"
     },
-    {
-      question: "What is Shiba Direct?",
-      answer: (
-        <p style={{ marginTop: "16px", lineHeight: "1.6" }}>
-          Shiba Direct is a live event on August 22nd where you can get the latest news and information about Shiba Arcade. It&apos;s also when the shop will officially launch. Make sure to RSVP to attend!
-        </p>
-      ),
-      backgroundColor: "#F0E5FF",
-      borderColor: "#6600CC"
-    },
+
     {
       question: "How do I qualify for the Tokyo trip?",
       answer: (
