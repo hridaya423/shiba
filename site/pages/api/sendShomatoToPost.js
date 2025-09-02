@@ -1,3 +1,5 @@
+// Shomato API endpoint disabled - event is over
+/*
 import { safeEscapeFormulaString } from './utils/security.js';
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
@@ -170,4 +172,10 @@ function normalizeLinkedIds(value) {
     }
   }
   return [];
+}
+*/
+
+// Placeholder function to prevent errors
+export default async function handler(req, res) {
+  return res.status(410).json({ message: 'Shomato event is over. This endpoint has been disabled.' });
 }
