@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 
 const PostAttachmentRenderer = dynamic(() => import('@/components/utils/PostAttachmentRenderer'), { ssr: false });
 const PlaytestTicket = dynamic(() => import('@/components/PlaytestTicket'), { ssr: false });
+const ShippingOverview = dynamic(() => import('@/components/ShippingOverview'), { ssr: false });
 
 function ShaderToyBackground() {
   return (
@@ -30,7 +31,7 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
   const [playtestsError, setPlaytestsError] = useState('');
   const [displayCount, setDisplayCount] = useState(12);
   const [hasMore, setHasMore] = useState(true);
-  const [selectedView, setSelectedView] = useState('global'); // 'global' | 'playtests'
+  const [selectedView, setSelectedView] = useState('global'); // 'global' | 'playtests' | 'ships'
   const [playtestsFetched, setPlaytestsFetched] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const circleRef = useRef(null);
@@ -246,10 +247,28 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
             >
               My Playtests
             </button>
+            <button
+              type="button"
+              style={{
+                appearance: 'none',
+                border: 0,
+                background: selectedView === 'ships' ? 'linear-gradient(180deg, #ff8ec3 0%, #ff6fa5 100%)' : 'rgba(255,255,255,0.2)',
+                color: selectedView === 'ships' ? '#fff' : 'rgba(255,255,255,0.8)',
+                borderRadius: 9999,
+                padding: '8px 16px',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: 14,
+                transition: 'all 120ms ease',
+              }}
+              onClick={() => setSelectedView('ships')}
+            >
+              My Ships
+            </button>
           </div>
         </div>
 
-        {selectedView === 'global' ? (
+        {selectedView === 'global' && (
           <>
             <h1 style={{ textAlign: 'center', marginBottom: 2, color: '#fff' }}>Global Updates</h1>
             <p style={{ textAlign: 'center', marginBottom: 20, color: '#fff' }}>see the latest devlogs & demos posted in Shiba</p>
@@ -333,11 +352,13 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
               </div>
             )}
           </>
-        ) : (
+        )}
+
+        {selectedView === 'playtests' && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <h1 style={{ textAlign: 'center', marginBottom: 2, color: '#fff' }}>My Playtests</h1>
             <p style={{ textAlign: 'center', marginBottom: 20, color: '#fff' }}>view and complete your assigned playtests</p>
-            
+
             {playtestsLoading ? (
               <div style={{ 
                 textAlign: 'center', 
@@ -410,6 +431,17 @@ export default function GlobalGamesComponent({ token, playtestMode, setPlaytestM
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {selectedView === 'ships' && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h1 style={{ textAlign: 'center', marginBottom: 2, color: '#fff' }}>My Ships</h1>
+            <p style={{ textAlign: 'center', marginBottom: 20, color: '#fff' }}>track your demo ships and approval status</p>
+
+            <div style={{ width: '100%', maxWidth: 800 }}>
+              <ShippingOverview token={token} />
+            </div>
           </div>
         )}
       </div>
